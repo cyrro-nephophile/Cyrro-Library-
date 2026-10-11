@@ -121,7 +121,7 @@ canvas{display:block;width:100%;height:auto;touch-action:none;cursor:pointer}
 
 
 
-<p class="hint">GESER DI LAYAR UNTUK GERAK · KETUK UNTUK MULAI<br/>DI DESKTOP: PANAH / WASD · SPASI = JEDA · ENTER = MULAI<br/><b>BUILD PM3</b></p>
+<p class="hint">GESER DI LAYAR UNTUK GERAK · KETUK UNTUK MULAI<br/>DI DESKTOP: PANAH / WASD · SPASI = JEDA · ENTER = MULAI<br/><b>BUILD PM4</b></p>
 
 <script>
 /* Kirim skor langsung ke REST Supabase pakai token login yang tersimpan di browser (tanpa library) */
@@ -136,11 +136,11 @@ function pmSession(){
     return (j && j.access_token) ? j : null;
   }catch(e){ return null; }
 }
-function submitPacmanScore(){
+function submitPacmanScore(finalScore, finalLevel){
   try{
     var sess = pmSession();
     if(!sess){ pmMsg = 'LOGIN DULU'; return; }
-    if(score <= 0){ pmMsg = ''; return; }
+    if(finalScore <= 0){ pmMsg = ''; return; }
     pmMsg = 'MENGIRIM...';
     var u = sess.user || {};
     var m = u.user_metadata || {};
@@ -153,7 +153,7 @@ function submitPacmanScore(){
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal'
       },
-      body: JSON.stringify({ user_id: u.id, name: name, score: score, level: level })
+      body: JSON.stringify({ user_id: u.id, name: name, score: finalScore, level: finalLevel })
     }).then(function(r){
       if(r.ok) pmMsg = 'TERSIMPAN';
       else if(r.status === 401 || r.status === 403) pmMsg = 'SESI HABIS, LOGIN LAGI';
@@ -434,7 +434,7 @@ function update(dt){
     stateTimer-=dt;
     if(stateTimer<=0){
       if(lives<=0){
-        state='over';saveHi();setTimeout(submitPacmanScore,0);
+        state='over';saveHi();setTimeout(function(){ submitPacmanScore(score, level); }, 0);
         sfx('gameover');
       }else{resetPositions();state='ready';}
     }
