@@ -435,6 +435,31 @@ body.gm-open{overflow:hidden}
 .lb-tabs button:focus-visible{outline:3px solid var(--pink);outline-offset:-6px}
 .lb-box[open] #lbList{margin-top:14px}
 </style>
+<style>
+.lb-tabs{display:flex;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.lb-tabs::-webkit-scrollbar{display:none}
+.lb-tabs button{flex:0 0 auto;white-space:nowrap;padding:10px 14px}
+.lb-tabs button+button{border-left:3px solid var(--line)}
+.lainnya-inner[open] > .sec{margin-top:24px}
+</style>
+<style>
+.lb-beta{display:inline-block;align-self:center;flex:none;font-family:'JetBrains Mono',monospace;font-style:normal;font-weight:700;font-size:11px;letter-spacing:.08em;line-height:1;background:var(--pink);color:#fff;border:2px solid #0a0a0a;padding:4px 6px 3px;box-shadow:2px 2px 0 #0a0a0a;transform:rotate(-4deg);margin-left:-4px}
+.lb-hint{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:18px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--mut)}
+.lb-hint[hidden]{display:none}
+.lb-hint span{display:inline-block;font-size:14px;color:var(--fg);animation:nudge 1.4s ease-in-out infinite}
+@keyframes nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
+@media (prefers-reduced-motion:reduce){.lb-hint span{animation:none}}
+.lb-tabs-wrap{position:relative;margin-top:6px}
+.lb-tabs-wrap .lb-tabs{margin-top:0}
+.lb-tabs-wrap::after{content:'';position:absolute;top:3px;right:3px;bottom:3px;width:44px;pointer-events:none;background:linear-gradient(90deg,transparent,var(--card));transition:opacity .2s ease}
+.lb-tabs-wrap.end::after,.lb-tabs-wrap.noscroll::after{opacity:0}
+</style>
+<style>
+.lb-box summary.sh{flex-wrap:wrap;row-gap:10px;gap:10px 12px}
+.lb-box summary.sh h2{font-size:clamp(24px,7vw,34px);white-space:nowrap}
+.lb-box summary.sh i{flex:1 1 12px;min-width:12px;height:3px}
+.lb-box summary.sh span{flex:none;white-space:nowrap}
+</style>
 </head>
 <body>
 <div id="intro" class="pre" aria-hidden="true">
@@ -484,10 +509,16 @@ body.gm-open{overflow:hidden}
 
   <section class="sec lb" id="lbSec" aria-labelledby="h-lb">
   <details class="lb-box" open>
-    <summary class="sh"><h2 id="h-lb">Leaderboard</h2><i></i><span>TOP 10</span></summary>
+    <summary class="sh"><h2 id="h-lb">Leaderboard</h2><em class="lb-beta">BETA</em><i></i><span>TOP 10</span></summary>
+    <p class="lb-hint" id="lbHint">GESER TAB UNTUK GAME LAIN <span aria-hidden="true">→</span></p>
+    <div class="lb-tabs-wrap" id="lbTabsWrap">
     <div class="lb-tabs" role="tablist">
-      <button type="button" role="tab" id="lbTabCatur" aria-selected="true">CATUR</button>
-      <button type="button" role="tab" id="lbTabPac" aria-selected="false">PAC-MAN</button>
+      <button type="button" role="tab" data-g="catur" aria-selected="true">CATUR</button>
+      <button type="button" role="tab" data-g="pacman" aria-selected="false">PAC-MAN</button>
+      <button type="button" role="tab" data-g="tetris" aria-selected="false">TETRIS</button>
+      <button type="button" role="tab" data-g="blockblast" aria-selected="false">BLOCK BLAST</button>
+      <button type="button" role="tab" data-g="minesweeper" aria-selected="false">MINESWEEPER</button>
+    </div>
     </div>
     <ol id="lbList"><li class="empty">Memuat skor...</li></ol>
   </details>
@@ -534,7 +565,10 @@ body.gm-open{overflow:hidden}
     </ol>
   </section>
 
-  <section class="sec" aria-labelledby="h-pl">
+  <section class="sec lb" id="lainnyaSec" aria-labelledby="h-lain">
+  <details class="lb-box lainnya-inner">
+    <summary class="sh"><h2 id="h-lain">Lainnya</h2><i></i><span>PLAYLIST · TOOL</span></summary>
+    <section class="sec" aria-labelledby="h-pl">
     <div class="sh"><h2 id="h-pl">Playlist</h2><i></i><span>02 LIST</span></div>
     <ol class="items g2">
       <li><a class="card pl p2" href="https://music.youtube.com/playlist?list=PLawOvByz18PU&amp;si=MDmpCU9IhHpjT03b" target="_blank" rel="noopener" aria-label="Cyrrokestra, buka di YouTube Music (tab baru)">
@@ -591,6 +625,8 @@ body.gm-open{overflow:hidden}
       </a></li>
     </ol>
   </section>
+  </details>
+</section>
 </main>
 <div class="gm" id="gmOverlay" hidden>
   <div class="gm-bar"><button class="gm-back" id="gmBack" type="button">← BALIK</button><span class="gm-title" id="gmTitle"></span></div>
@@ -996,10 +1032,25 @@ body.gm-open{overflow:hidden}
 (async function(){
   var sbLb = window.supabase.createClient('https://nmfoshrrflgnuubsxuhk.supabase.co', 'sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l');
   var list = document.getElementById('lbList');
-  var tabC = document.getElementById('lbTabCatur');
-  var tabP = document.getElementById('lbTabPac');
-  var data = { catur: null, pacman: null };
-  var failed = { catur: false, pacman: false };
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.lb-tabs button'));
+  var data = {}, failed = {};
+
+  var queries = {
+    catur: function(){ return sbLb.from('chess_leaderboard').select('name,level,moves').order('level',{ascending:false}).order('moves',{ascending:true}).limit(10); },
+    pacman: function(){ return sbLb.from('pacman_leaderboard').select('name,score,level').order('score',{ascending:false}).limit(10); },
+    tetris: function(){ return sbLb.from('tetris_leaderboard').select('name,score,level,lines').order('score',{ascending:false}).limit(10); },
+    blockblast: function(){ return sbLb.from('blockblast_leaderboard').select('name,score').order('score',{ascending:false}).limit(10); },
+    minesweeper: function(){ return sbLb.from('minesweeper_leaderboard').select('name,level,secs,level_rank').order('level_rank',{ascending:false}).order('secs',{ascending:true}).limit(10); }
+  };
+
+  var fmt = function(n){ return Number(n).toLocaleString('id-ID'); };
+  var meta = {
+    catur: function(r){ return 'LVL ' + r.level + ' · ' + r.moves + ' LANGKAH'; },
+    pacman: function(r){ return fmt(r.score) + ' POIN'; },
+    tetris: function(r){ return fmt(r.score) + ' POIN · LVL ' + r.level; },
+    blockblast: function(r){ return fmt(r.score) + ' POIN'; },
+    minesweeper: function(r){ return String(r.level).toUpperCase() + ' · ' + r.secs + ' DETIK'; }
+  };
 
   function empty(text){
     list.innerHTML = '';
@@ -1007,38 +1058,44 @@ body.gm-open{overflow:hidden}
   }
 
   function render(g){
-    var rows = data[g];
     if(failed[g]) return empty('Skor belum bisa dimuat.');
+    var rows = data[g];
     if(!rows || !rows.length) return empty('Belum ada skor. Jadi yang pertama!');
     list.innerHTML = '';
     rows.forEach(function(row, i){
       var li = document.createElement('li');
       var rk = document.createElement('span'); rk.className = 'rk'; rk.textContent = String(i + 1).padStart(2, '0');
       var nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = row.name;
-      var mt = document.createElement('span'); mt.className = 'mt';
-      mt.textContent = g === 'catur'
-        ? 'LVL ' + row.level + ' · ' + row.moves + ' LANGKAH'
-        : Number(row.score).toLocaleString('id-ID') + ' POIN';
+      var mt = document.createElement('span'); mt.className = 'mt'; mt.textContent = meta[g](row);
       li.append(rk, nm, mt);
       list.appendChild(li);
     });
   }
 
   function select(g){
-    tabC.setAttribute('aria-selected', String(g === 'catur'));
-    tabP.setAttribute('aria-selected', String(g === 'pacman'));
+    tabs.forEach(function(b){ b.setAttribute('aria-selected', String(b.dataset.g === g)); });
     render(g);
   }
-  tabC.addEventListener('click', function(){ select('catur'); });
-  tabP.addEventListener('click', function(){ select('pacman'); });
+  tabs.forEach(function(b){ b.addEventListener('click', function(){ select(b.dataset.g); }); });
 
-  var a = await sbLb.from('chess_leaderboard').select('name,level,moves')
-    .order('level', { ascending: false }).order('moves', { ascending: true }).limit(10);
-  if(a.error) failed.catur = true; else data.catur = a.data;
+  var bar = document.querySelector('.lb-tabs');
+  var wrap = document.getElementById('lbTabsWrap');
+  var hint = document.getElementById('lbHint');
+  function edge(){
+    var over = bar.scrollWidth > bar.clientWidth + 2;
+    hint.hidden = !over;
+    wrap.classList.toggle('noscroll', !over);
+    wrap.classList.toggle('end', !over || bar.scrollLeft + bar.clientWidth >= bar.scrollWidth - 4);
+  }
+  bar.addEventListener('scroll', edge, { passive: true });
+  window.addEventListener('resize', edge);
+  edge();
 
-  var b = await sbLb.from('pacman_leaderboard').select('name,score,level')
-    .order('score', { ascending: false }).limit(10);
-  if(b.error) failed.pacman = true; else data.pacman = b.data;
+  await Promise.all(Object.keys(queries).map(function(k){
+    return queries[k]().then(function(r){
+      if(r.error) failed[k] = true; else data[k] = r.data;
+    }).catch(function(){ failed[k] = true; });
+  }));
 
   select('catur');
 })();
