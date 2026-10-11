@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cyrro Library</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <title>Login — Cyrro Library</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
   <h1>Login</h1>
@@ -19,33 +19,31 @@
 
   <script>
     const SUPABASE_URL = 'https://nmfoshrrflgnuubsxuhk.supabase.co';
-  <script>
-  const SUPABASE_URL = 'https://nmfoshrrflgnuubsxuhk.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l';
+    const SUPABASE_KEY = 'sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l';
 
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  const msg = document.getElementById('status');
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const msg = document.getElementById('status');
 
-  document.getElementById('signup').onclick = async () => {
-    const { error } = await sb.auth.signUp({
-      email: document.getElementById('email').value,
-      password: document.getElementById('password').value,
-    });
-    msg.textContent = error ? 'Gagal: ' + error.message : 'Daftar berhasil, cek email buat konfirmasi.';
-  };
+    document.getElementById('signup').onclick = async () => {
+      const { error } = await sb.auth.signUp({
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+      });
+      msg.textContent = error ? 'Gagal: ' + error.message : 'Daftar berhasil, cek email buat konfirmasi.';
+    };
 
-  document.getElementById('login').onclick = async () => {
-    const { data, error } = await sb.auth.signInWithPassword({
-      email: document.getElementById('email').value,
-      password: document.getElementById('password').value,
-    });
-    msg.textContent = error ? 'Gagal: ' + error.message : 'Login berhasil, halo ' + data.user.email;
-  };
+    document.getElementById('login').onclick = async () => {
+      const { data, error } = await sb.auth.signInWithPassword({
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+      });
+      msg.textContent = error ? 'Gagal: ' + error.message : 'Login berhasil, halo ' + data.user.email;
+    };
 
-  document.getElementById('logout').onclick = async () => {
-    await sb.auth.signOut();
-    msg.textContent = 'Sudah logout.';
-  };
-</script>
+    document.getElementById('logout').onclick = async () => {
+      await sb.auth.signOut();
+      msg.textContent = 'Sudah logout.';
+    };
+  </script>
 </body>
-    </html>
+</html>
