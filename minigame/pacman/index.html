@@ -130,12 +130,16 @@ var pmUser = null;
 pmClient.auth.getSession().then(function(r){ pmUser = r.data.session ? r.data.session.user : null; });
 pmClient.auth.onAuthStateChange(function(_e, s){ pmUser = s ? s.user : null; });
 function submitPacmanScore(){
-  if(!pmUser || score <= 0) return;
-  var m = pmUser.user_metadata || {};
-  var name = m.display_name || pmUser.email.split('@')[0];
-  pmClient.from('pacman_scores')
-    .insert({ user_id: pmUser.id, name: name, score: score, level: level })
-    .then(function(r){ if(r.error) console.warn(r.error.message); });
+  try{
+    if(!pmUser || !pmClient || score <= 0) return;
+    var m = pmUser.user_metadata || {};
+    var name = m.display_name || (pmUser.email || 'pemain').split('@')[0];
+    pmClient.from('pacman_scores')
+      .insert({ user_id: pmUser.id, name: name, score: score, level: level })
+      .then(function(r){ if(r.error) console.warn(r.error.message); }, function(err){ console.warn(err); });
+  }catch(err){
+    console.warn(err);
+  }
 }
 </script>
 <script>
@@ -408,7 +412,7 @@ function update(dt){
     stateTimer-=dt;
     if(stateTimer<=0){
       if(lives<=0){
-        state='over';saveHi();submitPacmanScore();
+        state='over';saveHi();setTimeout(submitPacmanScore,0);
         sfx('gameover');
       }else{resetPositions();state='ready';}
     }
@@ -611,9 +615,13 @@ function frame(ts){
   if(last===null)last=ts;
   var dt=Math.min(0.05,(ts-last)/1000);
   last=ts;
-  update(dt);
-  draw();
-  hud();
+  try{
+    update(dt);
+    draw();
+    hud();
+  }catch(err){
+    console.error(err);
+  }
   requestAnimationFrame(frame);
 }
 
