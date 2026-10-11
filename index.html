@@ -427,6 +427,14 @@ body.gm-open{overflow:hidden}
 .lb-box summary:focus-visible{outline:3px solid var(--pink);outline-offset:4px}
 .lb-box[open] #lbList{margin-top:18px}
 </style>
+<style>
+.lb-tabs{display:grid;grid-template-columns:1fr 1fr;border:3px solid var(--line);box-shadow:4px 4px 0 var(--sh);margin-top:18px}
+.lb-tabs button{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;letter-spacing:.06em;padding:10px;cursor:pointer;background:var(--card);color:var(--fg);border:0;transition:background .15s ease,color .15s ease}
+.lb-tabs button+button{border-left:3px solid var(--line)}
+.lb-tabs button[aria-selected="true"]{background:var(--lime);color:#0a0a0a}
+.lb-tabs button:focus-visible{outline:3px solid var(--pink);outline-offset:-6px}
+.lb-box[open] #lbList{margin-top:14px}
+</style>
 </head>
 <body>
 <div id="intro" class="pre" aria-hidden="true">
@@ -476,7 +484,11 @@ body.gm-open{overflow:hidden}
 
   <section class="sec lb" id="lbSec" aria-labelledby="h-lb">
   <details class="lb-box" open>
-    <summary class="sh"><h2 id="h-lb">Leaderboard</h2><i></i><span>CATUR</span></summary>
+    <summary class="sh"><h2 id="h-lb">Leaderboard</h2><i></i><span>TOP 10</span></summary>
+    <div class="lb-tabs" role="tablist">
+      <button type="button" role="tab" id="lbTabCatur" aria-selected="true">CATUR</button>
+      <button type="button" role="tab" id="lbTabPac" aria-selected="false">PAC-MAN</button>
+    </div>
     <ol id="lbList"><li class="empty">Memuat skor...</li></ol>
   </details>
 </section>
@@ -984,20 +996,51 @@ body.gm-open{overflow:hidden}
 (async function(){
   var sbLb = window.supabase.createClient('https://nmfoshrrflgnuubsxuhk.supabase.co', 'sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l');
   var list = document.getElementById('lbList');
-  function empty(text){ list.innerHTML = ''; var li = document.createElement('li'); li.className = 'empty'; li.textContent = text; list.appendChild(li); }
-  var r = await sbLb.from('chess_leaderboard').select('name,level,moves')
+  var tabC = document.getElementById('lbTabCatur');
+  var tabP = document.getElementById('lbTabPac');
+  var data = { catur: null, pacman: null };
+  var failed = { catur: false, pacman: false };
+
+  function empty(text){
+    list.innerHTML = '';
+    var li = document.createElement('li'); li.className = 'empty'; li.textContent = text; list.appendChild(li);
+  }
+
+  function render(g){
+    var rows = data[g];
+    if(failed[g]) return empty('Skor belum bisa dimuat.');
+    if(!rows || !rows.length) return empty('Belum ada skor. Jadi yang pertama!');
+    list.innerHTML = '';
+    rows.forEach(function(row, i){
+      var li = document.createElement('li');
+      var rk = document.createElement('span'); rk.className = 'rk'; rk.textContent = String(i + 1).padStart(2, '0');
+      var nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = row.name;
+      var mt = document.createElement('span'); mt.className = 'mt';
+      mt.textContent = g === 'catur'
+        ? 'LVL ' + row.level + ' · ' + row.moves + ' LANGKAH'
+        : Number(row.score).toLocaleString('id-ID') + ' POIN';
+      li.append(rk, nm, mt);
+      list.appendChild(li);
+    });
+  }
+
+  function select(g){
+    tabC.setAttribute('aria-selected', String(g === 'catur'));
+    tabP.setAttribute('aria-selected', String(g === 'pacman'));
+    render(g);
+  }
+  tabC.addEventListener('click', function(){ select('catur'); });
+  tabP.addEventListener('click', function(){ select('pacman'); });
+
+  var a = await sbLb.from('chess_leaderboard').select('name,level,moves')
     .order('level', { ascending: false }).order('moves', { ascending: true }).limit(10);
-  if(r.error){ empty('Skor belum bisa dimuat.'); return; }
-  if(!r.data || !r.data.length){ empty('Belum ada skor. Jadi yang pertama!'); return; }
-  list.innerHTML = '';
-  r.data.forEach(function(row, i){
-    var li = document.createElement('li');
-    var rk = document.createElement('span'); rk.className = 'rk'; rk.textContent = String(i + 1).padStart(2, '0');
-    var nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = row.name;
-    var mt = document.createElement('span'); mt.className = 'mt'; mt.textContent = 'LVL ' + row.level + ' · ' + row.moves + ' LANGKAH';
-    li.append(rk, nm, mt);
-    list.appendChild(li);
-  });
+  if(a.error) failed.catur = true; else data.catur = a.data;
+
+  var b = await sbLb.from('pacman_leaderboard').select('name,score,level')
+    .order('score', { ascending: false }).limit(10);
+  if(b.error) failed.pacman = true; else data.pacman = b.data;
+
+  select('catur');
 })();
 </script>
 </body>
