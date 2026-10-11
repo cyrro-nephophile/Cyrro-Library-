@@ -245,19 +245,42 @@ select:disabled{opacity:.5;cursor:not-allowed}
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var sbClient = window.supabase.createClient('https://nmfoshrrflgnuubsxuhk.supabase.co', 'sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l');
-var sbUser = null;
-sbClient.auth.getSession().then(function(r){ sbUser = r.data.session ? r.data.session.user : null; });
-sbClient.auth.onAuthStateChange(function(_e, s){ sbUser = s ? s.user : null; });
+/* Kirim skor catur langsung ke REST Supabase pakai token login yang tersimpan di browser */
+var CH_URL = 'https://nmfoshrrflgnuubsxuhk.supabase.co';
+var CH_KEY = 'sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l';
+function chessSession(){
+  try{
+    var raw = localStorage.getItem('sb-nmfoshrrflgnuubsxuhk-auth-token');
+    if(!raw) return null;
+    var j = JSON.parse(raw);
+    return (j && j.access_token) ? j : null;
+  }catch(e){ return null; }
+}
 function saveWin(level, moves){
-  if(!sbUser) return Promise.resolve(false);
-  var m = sbUser.user_metadata || {};
-  var name = m.display_name || sbUser.email.split('@')[0];
-  return sbClient.from('chess_scores')
-    .insert({ user_id: sbUser.id, name: name, level: level, moves: moves })
-    .then(function(r){ return !r.error; });
+  try{
+    var sess = chessSession();
+    if(!sess) return Promise.resolve('LOGIN DULU');
+    var u = sess.user || {};
+    var m = u.user_metadata || {};
+    var name = m.display_name || (u.email || 'pemain').split('@')[0];
+    return fetch(CH_URL + '/rest/v1/chess_scores', {
+      method: 'POST',
+      headers: {
+        'apikey': CH_KEY,
+        'Authorization': 'Bearer ' + sess.access_token,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ user_id: u.id, name: name, level: level, moves: moves })
+    }).then(function(r){
+      if(r.ok) return 'ok';
+      if(r.status === 401 || r.status === 403) return 'SESI HABIS';
+      return 'gagal';
+    }).catch(function(){ return 'gagal'; });
+  }catch(e){
+    return Promise.resolve('gagal');
+  }
 }
 </script>
 <script src="chess.js"></script>
@@ -444,8 +467,12 @@ function showResult() {
         text += ' Partai ini pakai undo, jadi nggak masuk leaderboard.';
       } else {
         var moveCount = Math.ceil(game.history().length / 2);
-        saveWin($level.value | 0, moveCount).then(function(ok){
-          $resText.textContent += ok ? ' Skor kamu masuk leaderboard.' : ' (Login dulu biar skor masuk leaderboard.)';
+        saveWin($level.value | 0, moveCount).then(function(st){
+          var extra = st === 'ok' ? ' Skor kamu masuk leaderboard.'
+            : st === 'LOGIN DULU' ? ' (Login dulu biar skor masuk leaderboard.)'
+            : st === 'SESI HABIS' ? ' (Sesi habis, login lagi biar skor masuk.)'
+            : ' (Skor gagal dikirim.)';
+          $resText.textContent += extra;
         });
       }
     } else {
