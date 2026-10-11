@@ -1,49 +1,296 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login — Cyrro Library</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<script>try{var _t=localStorage.getItem('theme');if(_t==='dark'||_t==='light')document.documentElement.setAttribute('data-theme',_t);else if(matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}</script>
+<title>Login — Cyrro Library</title>
+<meta name="robots" content="noindex"/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#fcfbf7;--fg:#0a0a0a;--mut:#4b5240;--line:#0a0a0a;--card:#fff;--lime:#ccff00;--pink:#ff0055;--sh:#0a0a0a}
+:root[data-theme="dark"]{--bg:#0a0a0a;--fg:#f4f4f0;--mut:#b9c0a8;--line:#f4f4f0;--card:#141414;--sh:#ccff00}
+html,body{min-height:100%}
+body{
+  font-family:'Outfit',system-ui,sans-serif;font-size:16px;line-height:1.5;color:var(--fg);background:var(--bg);
+  background-image:
+    linear-gradient(rgba(10,10,10,.14) 1.5px,transparent 1.5px),linear-gradient(90deg,rgba(10,10,10,.14) 1.5px,transparent 1.5px),
+    linear-gradient(rgba(10,10,10,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(10,10,10,.05) 1px,transparent 1px);
+  background-size:160px 160px,160px 160px,32px 32px,32px 32px;min-height:100vh;min-height:100dvh;
+}
+:root[data-theme="dark"] body{
+  background-image:
+    linear-gradient(rgba(244,244,240,.12) 1.5px,transparent 1.5px),linear-gradient(90deg,rgba(244,244,240,.12) 1.5px,transparent 1.5px),
+    linear-gradient(rgba(244,244,240,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(244,244,240,.05) 1px,transparent 1px);
+}
+:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.disp{font-family:'Anton',Impact,sans-serif;text-transform:uppercase;letter-spacing:.01em;line-height:.95}
+
+/* header */
+.top{
+  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;
+  height:calc(env(safe-area-inset-top,0px) + 64px);padding:env(safe-area-inset-top,0px) 16px 0;
+  background:#101510;border-bottom:4px solid #0a0a0a;
+}
+.top .wm{color:#fff;font-size:30px;flex:1;text-decoration:none}
+.top .wm i{font-style:normal;color:var(--lime)}
+.top .back{
+  font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;text-decoration:none;color:#0a0a0a;
+  background:var(--lime);border:3px solid #0a0a0a;padding:8px 12px;box-shadow:3px 3px 0 #0a0a0a;white-space:nowrap;
+  transition:transform .15s ease,box-shadow .15s ease;
+}
+.top .back:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 #0a0a0a}
+.top .back:active{transform:translate(2px,2px);box-shadow:none}
+.top .mode{
+  width:44px;height:44px;flex:none;cursor:pointer;background:#fff;border:3px solid #0a0a0a;
+  display:grid;place-items:center;box-shadow:3px 3px 0 #0a0a0a;
+}
+
+/* layout */
+main{max-width:440px;margin:0 auto;padding:28px 16px 64px}
+.kicker{display:inline-block;background:#0a0a0a;color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
+  padding:3px 8px;border:2px solid #0a0a0a;letter-spacing:.08em}
+h1.disp{font-size:clamp(56px,16vw,96px);margin-top:14px}
+.hl{display:inline-block;background:var(--lime);color:#0a0a0a;border:3px solid #0a0a0a;padding:2px 12px 0;transform:rotate(-1.5deg);box-shadow:5px 5px 0 #0a0a0a;margin-top:6px}
+.sub{margin-top:14px;color:var(--mut);max-width:40ch}
+
+/* card */
+.card{
+  margin-top:28px;background:var(--card);color:var(--fg);border:3px solid var(--line);box-shadow:8px 8px 0 var(--sh);padding:20px;
+  animation:rise .5s cubic-bezier(.2,.8,.2,1) both;
+}
+.tabs{display:grid;grid-template-columns:1fr 1fr;border:3px solid var(--line);margin-bottom:20px;box-shadow:4px 4px 0 var(--sh)}
+.tabs button{
+  font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;letter-spacing:.06em;padding:10px;cursor:pointer;
+  background:var(--card);color:var(--fg);border:0;transition:background .15s ease,color .15s ease;
+}
+.tabs button + button{border-left:3px solid var(--line)}
+.tabs button[aria-selected="true"]{background:var(--lime);color:#0a0a0a}
+
+label{display:block;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--mut);margin:14px 0 6px}
+input{
+  width:100%;padding:11px 12px;font:inherit;font-size:16px;color:var(--fg);background:var(--bg);
+  border:3px solid var(--line);border-radius:0;appearance:none;
+}
+input::placeholder{color:var(--mut);opacity:.7}
+input:focus{outline:none;box-shadow:4px 4px 0 var(--pink)}
+.hint{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mut);margin-top:6px}
+
+.btn{
+  margin-top:22px;width:100%;cursor:pointer;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;letter-spacing:.04em;
+  padding:13px;border:3px solid #0a0a0a;box-shadow:4px 4px 0 #0a0a0a;background:var(--lime);color:#0a0a0a;
+  transition:transform .15s ease,box-shadow .15s ease;
+}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 #0a0a0a}
+.btn:active{transform:translate(2px,2px);box-shadow:none}
+.btn:disabled{opacity:.55;cursor:wait;transform:none;box-shadow:4px 4px 0 #0a0a0a}
+.btn.sec{background:#fff;color:#0a0a0a;margin-top:10px}
+.btn.dng{background:var(--pink);color:#fff}
+
+.status{
+  margin-top:16px;padding:10px 12px;border:3px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:13px;
+  background:var(--card);display:none;
+}
+.status.show{display:block;animation:rise .3s ease both}
+.status.ok{background:var(--lime);color:#0a0a0a;border-color:#0a0a0a}
+.status.err{background:var(--pink);color:#fff;border-color:#0a0a0a}
+
+.member{text-align:left}
+.member .who{font-family:'Anton',Impact,sans-serif;text-transform:uppercase;font-size:34px;line-height:1.05;word-break:break-word}
+.member .mail{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--mut);margin-top:6px;word-break:break-all}
+
+.foot{margin-top:24px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mut)}
+.foot a{color:var(--fg)}
+
+[hidden]{display:none!important}
+
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes pop{from{transform:scale(.9) rotate(-2deg);opacity:0}to{transform:rotate(-1.5deg);opacity:1}}
+h1.disp{animation:pop .5s cubic-bezier(.2,1.4,.4,1) both}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* animasi tambahan, mirip Library */
+body{animation:gridMove 12s linear infinite}
+@keyframes gridMove{to{background-position:160px 160px,160px 160px,32px 32px,32px 32px}}
+.hl{animation:glitch 4.5s steps(1,end) infinite}
+@keyframes glitch{
+  0%,90%,100%{transform:rotate(-1.5deg);text-shadow:none}
+  91%{transform:rotate(-1.5deg) translate(-4px,1px);text-shadow:3px 0 var(--pink),-3px 0 #00e5ff}
+  92%{transform:rotate(-1.5deg) translate(4px,-1px);text-shadow:-3px 0 var(--pink),3px 0 #00e5ff}
+  93%{transform:rotate(-1.5deg);text-shadow:none}
+}
+.btn{position:relative;overflow:hidden}
+.btn::after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;pointer-events:none;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.75),transparent);transform:skewX(-20deg)}
+.btn:hover::after{animation:sheen .6s ease}
+@keyframes sheen{to{left:130%}}
+.tabs button{position:relative}
+.tabs button[aria-selected="true"]{animation:tabIn .3s cubic-bezier(.3,1.4,.5,1)}
+@keyframes tabIn{from{transform:scale(.94)}to{transform:none}}
+.card:hover{box-shadow:10px 10px 0 var(--sh);transition:box-shadow .2s ease}
+</style>
 </head>
 <body>
-  <h1>Login</h1>
+<header class="top">
+  <a class="wm disp" href="index.html">CYR<i>RO</i></a>
+  <a class="back mono" href="index.html">BALIK</a>
+  <button class="mode" id="modeBtn" type="button" aria-label="Ganti tema"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="#0a0a0a"/></svg></button>
+</header>
 
-  <input id="email" type="email" placeholder="Email"><br>
-  <input id="password" type="password" placeholder="Password"><br>
-  <button id="signup">Daftar</button>
-  <button id="login">Login</button>
-  <button id="logout">Logout</button>
+<main>
+  <span class="kicker">AKUN LIBRARY</span>
+  <h1 class="disp"><span class="hl" id="title">MASUK</span></h1>
+  <p class="sub" id="sub">Masuk buat nyimpan nama dan avatar kamu di Library.</p>
 
-  <p id="status"></p>
+  <section class="card" id="guestCard">
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tabLogin" aria-selected="true" aria-controls="guestCard">MASUK</button>
+      <button type="button" role="tab" id="tabSignup" aria-selected="false" aria-controls="guestCard">DAFTAR</button>
+    </div>
 
-  <script>
-    const SUPABASE_URL = 'https://nmfoshrrflgnuubsxuhk.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l';
+    <form id="authForm" novalidate>
+      <label for="email">EMAIL</label>
+      <input id="email" type="email" autocomplete="email" placeholder="nama@email.com" required>
 
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    const msg = document.getElementById('status');
+      <label for="password">PASSWORD</label>
+      <input id="password" type="password" autocomplete="current-password" placeholder="minimal 6 karakter" minlength="6" required>
+      <p class="hint" id="pwHint" hidden>Minimal 6 karakter.</p>
 
-    document.getElementById('signup').onclick = async () => {
-      const { error } = await sb.auth.signUp({
-        email: document.getElementById('email').value,
-        password: document.getElementById('password').value,
-      });
-      msg.textContent = error ? 'Gagal: ' + error.message : 'Daftar berhasil, cek email buat konfirmasi.';
-    };
+      <button class="btn" id="submitBtn" type="submit">MASUK SEKARANG</button>
+    </form>
 
-    document.getElementById('login').onclick = async () => {
-      const { data, error } = await sb.auth.signInWithPassword({
-        email: document.getElementById('email').value,
-        password: document.getElementById('password').value,
-      });
-      msg.textContent = error ? 'Gagal: ' + error.message : 'Login berhasil, halo ' + data.user.email;
-    };
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+  </section>
 
-    document.getElementById('logout').onclick = async () => {
-      await sb.auth.signOut();
-      msg.textContent = 'Sudah logout.';
-    };
-  </script>
+  <section class="card member" id="memberCard" hidden>
+    <p class="mono" style="font-size:11px;font-weight:700;color:var(--mut);letter-spacing:.08em">SUDAH MASUK</p>
+    <div class="who" id="who" style="margin-top:8px">—</div>
+    <p class="mail" id="mail"></p>
+    <button class="btn" type="button" onclick="location.href='index.html'">KE LIBRARY</button>
+    <button class="btn sec" id="logoutBtn" type="button">KELUAR</button>
+    <div class="status" id="memberStatus" role="status" aria-live="polite"></div>
+  </section>
+
+  <p class="foot">Dengan mendaftar, email kamu dipakai buat konfirmasi akun.</p>
+</main>
+
+<script>
+(function(){
+  var root = document.documentElement;
+  var modeBtn = document.getElementById('modeBtn');
+  modeBtn.addEventListener('click', function(){
+    var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try{ localStorage.setItem('theme', next); }catch(e){}
+  });
+})();
+</script>
+
+<script>
+(async function(){
+  var sb = window.supabase.createClient('https://nmfoshrrflgnuubsxuhk.supabase.co', 'sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l');
+
+  var mode = 'login';
+  var tabLogin = document.getElementById('tabLogin');
+  var tabSignup = document.getElementById('tabSignup');
+  var form = document.getElementById('authForm');
+  var emailIn = document.getElementById('email');
+  var pwIn = document.getElementById('password');
+  var pwHint = document.getElementById('pwHint');
+  var submitBtn = document.getElementById('submitBtn');
+  var statusEl = document.getElementById('status');
+  var guestCard = document.getElementById('guestCard');
+  var memberCard = document.getElementById('memberCard');
+  var title = document.getElementById('title');
+  var sub = document.getElementById('sub');
+
+  function say(el, text, kind){
+    el.textContent = text;
+    el.className = 'status show ' + (kind || '');
+  }
+
+  function friendly(err){
+    var m = (err && err.message) || '';
+    if(/invalid login/i.test(m)) return 'Email atau password salah. Kalau baru daftar, cek dulu email konfirmasinya.';
+    if(/email not confirmed/i.test(m)) return 'Email belum dikonfirmasi. Cek kotak masuk (atau folder spam).';
+    if(/already registered|already exists/i.test(m)) return 'Email ini sudah terdaftar. Coba masuk aja.';
+    if(/for security purposes|rate limit|seconds/i.test(m)) return 'Terlalu sering dicoba. Tunggu sebentar lalu coba lagi.';
+    if(/valid email/i.test(m)) return 'Format email belum benar.';
+    return 'Gagal: ' + m;
+  }
+
+  function setMode(next){
+    mode = next;
+    var isLogin = next === 'login';
+    tabLogin.setAttribute('aria-selected', String(isLogin));
+    tabSignup.setAttribute('aria-selected', String(!isLogin));
+    title.textContent = isLogin ? 'MASUK' : 'DAFTAR';
+    sub.textContent = isLogin
+      ? 'Masuk buat nyimpen nama dan avatar kamu di Library.'
+      : 'Bikin akun baru, gratis. Cuma perlu email dan password.';
+    submitBtn.textContent = isLogin ? 'MASUK SEKARANG' : 'DAFTAR SEKARANG';
+    pwIn.autocomplete = isLogin ? 'current-password' : 'new-password';
+    pwHint.hidden = isLogin;
+    statusEl.className = 'status';
+  }
+  tabLogin.addEventListener('click', function(){ setMode('login'); });
+  tabSignup.addEventListener('click', function(){ setMode('signup'); });
+
+  form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    var email = emailIn.value.trim();
+    var password = pwIn.value;
+    if(!email || !password){ say(statusEl, 'Isi email dan password dulu.', 'err'); return; }
+    if(mode === 'signup' && password.length < 6){ say(statusEl, 'Password minimal 6 karakter.', 'err'); return; }
+
+    submitBtn.disabled = true;
+    say(statusEl, mode === 'login' ? 'Lagi masuk...' : 'Lagi bikin akun...', '');
+
+    if(mode === 'login'){
+      var r = await sb.auth.signInWithPassword({ email: email, password: password });
+      submitBtn.disabled = false;
+      if(r.error){ say(statusEl, friendly(r.error), 'err'); return; }
+      say(statusEl, 'Berhasil masuk. Mengarahkan ke Library...', 'ok');
+      setTimeout(function(){ location.href = 'index.html'; }, 700);
+    } else {
+      var s = await sb.auth.signUp({ email: email, password: password });
+      submitBtn.disabled = false;
+      if(s.error){ say(statusEl, friendly(s.error), 'err'); return; }
+      say(statusEl, 'Akun dibuat. Cek email kamu buat konfirmasi, lalu masuk.', 'ok');
+      setMode('login');
+    }
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async function(){
+    await sb.auth.signOut();
+    paint(null);
+    say(document.getElementById('memberStatus'), 'Kamu sudah keluar.', 'ok');
+  });
+
+  function paint(user){
+    if(user){
+      guestCard.hidden = true;
+      memberCard.hidden = false;
+      var m = user.user_metadata || {};
+      document.getElementById('who').textContent = m.display_name || user.email.split('@')[0];
+      document.getElementById('mail').textContent = user.email;
+      title.textContent = 'HALO';
+      sub.textContent = 'Kamu sudah masuk. Nama dan avatar bisa diatur dari Library.';
+    } else {
+      memberCard.hidden = true;
+      guestCard.hidden = false;
+      setMode(mode);
+    }
+  }
+
+  var res = await sb.auth.getSession();
+  paint(res.data.session ? res.data.session.user : null);
+  sb.auth.onAuthStateChange(function(_e, session){ paint(session ? session.user : null); });
+})();
+</script>
 </body>
 </html>
