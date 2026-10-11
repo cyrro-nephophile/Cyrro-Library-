@@ -123,6 +123,21 @@ canvas{display:block;width:100%;height:auto;touch-action:none;cursor:pointer}
 
 <p class="hint">GESER DI LAYAR UNTUK GERAK · KETUK UNTUK MULAI<br/>DI DESKTOP: PANAH / WASD · SPASI = JEDA · ENTER = MULAI</p>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+var pmClient = window.supabase.createClient('https://nmfoshrrflgnuubsxuhk.supabase.co', 'sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l');
+var pmUser = null;
+pmClient.auth.getSession().then(function(r){ pmUser = r.data.session ? r.data.session.user : null; });
+pmClient.auth.onAuthStateChange(function(_e, s){ pmUser = s ? s.user : null; });
+function submitPacmanScore(){
+  if(!pmUser || score <= 0) return;
+  var m = pmUser.user_metadata || {};
+  var name = m.display_name || pmUser.email.split('@')[0];
+  pmClient.from('pacman_scores')
+    .insert({ user_id: pmUser.id, name: name, score: score, level: level })
+    .then(function(r){ if(r.error) console.warn(r.error.message); });
+}
+</script>
 <script>
 (function(){
 'use strict';
@@ -393,7 +408,7 @@ function update(dt){
     stateTimer-=dt;
     if(stateTimer<=0){
       if(lives<=0){
-        state='over';saveHi();
+        state='over';saveHi();submitPacmanScore();
         sfx('gameover');
       }else{resetPositions();state='ready';}
     }
