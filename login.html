@@ -19,31 +19,33 @@
 
   <script>
     const SUPABASE_URL = 'https://nmfoshrrflgnuubsxuhk.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l';
+  <script>
+  const SUPABASE_URL = 'https://nmfoshrrflgnuubsxuhk.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l';
 
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    const status = document.getElementById('status');
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const msg = document.getElementById('status');
 
-    document.getElementById('signup').onclick = async () => {
-      const { error } = await supabase.auth.signUp({
-        email: document.getElementById('email').value,
-        password: document.getElementById('password').value,
-      });
-      status.textContent = error ? 'Gagal: ' + error.message : 'Daftar berhasil, cek email buat konfirmasi.';
-    };
+  document.getElementById('signup').onclick = async () => {
+    const { error } = await sb.auth.signUp({
+      email: document.getElementById('email').value,
+      password: document.getElementById('password').value,
+    });
+    msg.textContent = error ? 'Gagal: ' + error.message : 'Daftar berhasil, cek email buat konfirmasi.';
+  };
 
-    document.getElementById('login').onclick = async () => {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: document.getElementById('email').value,
-        password: document.getElementById('password').value,
-      });
-      status.textContent = error ? 'Gagal: ' + error.message : 'Login berhasil, halo ' + data.user.email;
-    };
+  document.getElementById('login').onclick = async () => {
+    const { data, error } = await sb.auth.signInWithPassword({
+      email: document.getElementById('email').value,
+      password: document.getElementById('password').value,
+    });
+    msg.textContent = error ? 'Gagal: ' + error.message : 'Login berhasil, halo ' + data.user.email;
+  };
 
-    document.getElementById('logout').onclick = async () => {
-      await supabase.auth.signOut();
-      status.textContent = 'Sudah logout.';
-    };
-  </script>
+  document.getElementById('logout').onclick = async () => {
+    await sb.auth.signOut();
+    msg.textContent = 'Sudah logout.';
+  };
+</script>
 </body>
     </html>
