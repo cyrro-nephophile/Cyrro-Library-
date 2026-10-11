@@ -123,7 +123,47 @@ canvas{display:block;width:100%;height:auto;touch-action:none;cursor:pointer}
 
 <p class="hint">GESER DI LAYAR UNTUK GERAK · KETUK UNTUK MULAI<br/>DI DESKTOP: PANAH / WASD · SPASI = JEDA · ENTER = MULAI</p>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* Kirim skor langsung ke REST Supabase pakai token login yang tersimpan di browser (tanpa library) */
+var PM_URL = 'https://nmfoshrrflgnuubsxuhk.supabase.co';
+var PM_KEY = 'sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l';
+var pmMsg = '';
+function pmSession(){
+  try{
+    var raw = localStorage.getItem('sb-nmfoshrrflgnuubsxuhk-auth-token');
+    if(!raw) return null;
+    var j = JSON.parse(raw);
+    return (j && j.access_token) ? j : null;
+  }catch(e){ return null; }
+}
+function submitPacmanScore(){
+  try{
+    var sess = pmSession();
+    if(!sess){ pmMsg = 'LOGIN DULU'; return; }
+    if(score <= 0){ pmMsg = ''; return; }
+    pmMsg = 'MENGIRIM...';
+    var u = sess.user || {};
+    var m = u.user_metadata || {};
+    var name = m.display_name || (u.email || 'pemain').split('@')[0];
+    fetch(PM_URL + '/rest/v1/pacman_scores', {
+      method: 'POST',
+      headers: {
+        'apikey': PM_KEY,
+        'Authorization': 'Bearer ' + sess.access_token,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ user_id: u.id, name: name, score: score, level: level })
+    }).then(function(r){
+      if(r.ok) pmMsg = 'TERSIMPAN';
+      else if(r.status === 401 || r.status === 403) pmMsg = 'SESI HABIS, LOGIN LAGI';
+      else pmMsg = 'GAGAL KIRIM ' + r.status;
+    }).catch(function(){ pmMsg = 'GAGAL KIRIM'; });
+  }catch(err){
+    pmMsg = 'GAGAL KIRIM';
+  }
+}
+</script>
 <script>
 var pmClient = window.supabase.createClient('https://nmfoshrrflgnuubsxuhk.supabase.co', 'sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l');
 var pmUser = null;
