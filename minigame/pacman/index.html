@@ -165,28 +165,6 @@ function submitPacmanScore(){
 }
 </script>
 <script>
-var pmClient = window.supabase.createClient('https://nmfoshrrflgnuubsxuhk.supabase.co', 'sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l');
-var pmUser = null;
-var pmMsg = '';
-pmClient.auth.getSession().then(function(r){ pmUser = r.data.session ? r.data.session.user : null; });
-pmClient.auth.onAuthStateChange(function(_e, s){ pmUser = s ? s.user : null; });
-function submitPacmanScore(){
-  try{
-    if(!pmClient){ pmMsg = 'GAGAL KIRIM'; return; }
-    if(!pmUser){ pmMsg = 'LOGIN DULU'; return; }
-    if(score <= 0){ pmMsg = ''; return; }
-    pmMsg = 'MENGIRIM...';
-    var m = pmUser.user_metadata || {};
-    var name = m.display_name || (pmUser.email || 'pemain').split('@')[0];
-    pmClient.from('pacman_scores')
-      .insert({ user_id: pmUser.id, name: name, score: score, level: level })
-      .then(function(r){ pmMsg = r.error ? 'GAGAL KIRIM' : 'TERSIMPAN'; }, function(){ pmMsg = 'GAGAL KIRIM'; });
-  }catch(err){
-    pmMsg = 'GAGAL KIRIM';
-  }
-}
-</script>
-<script>
 (function(){
 'use strict';
 
