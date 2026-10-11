@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyrro Library</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+  <h1>Login</h1>
+
+  <input id="email" type="email" placeholder="Email"><br>
+  <input id="password" type="password" placeholder="Password"><br>
+  <button id="signup">Daftar</button>
+  <button id="login">Login</button>
+  <button id="logout">Logout</button>
+
+  <p id="status"></p>
+
+  <script>
+    const SUPABASE_URL = 'https://nmfoshrrflgnuubsxuhk.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l';
+
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const status = document.getElementById('status');
+
+    document.getElementById('signup').onclick = async () => {
+      const { error } = await supabase.auth.signUp({
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+      });
+      status.textContent = error ? 'Gagal: ' + error.message : 'Daftar berhasil, cek email buat konfirmasi.';
+    };
+
+    document.getElementById('login').onclick = async () => {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+      });
+      status.textContent = error ? 'Gagal: ' + error.message : 'Login berhasil, halo ' + data.user.email;
+    };
+
+    document.getElementById('logout').onclick = async () => {
+      await supabase.auth.signOut();
+      status.textContent = 'Sudah logout.';
+    };
+  </script>
+</body>
+    </html>
