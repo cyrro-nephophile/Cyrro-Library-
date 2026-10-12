@@ -460,6 +460,11 @@ body.gm-open{overflow:hidden}
 .lb-box summary.sh i{flex:1 1 12px;min-width:12px;height:3px}
 .lb-box summary.sh span{flex:none;white-space:nowrap}
 </style>
+<style>
+/* ikon SVG kartu mini game */
+.card.mg .tile svg{width:124px;height:124px;display:block;overflow:visible}
+@media (max-width:639px){.card.mg .tile svg{width:54px;height:54px}}
+</style>
 </head>
 <body>
 <div id="intro" class="pre" aria-hidden="true">
@@ -518,6 +523,7 @@ body.gm-open{overflow:hidden}
       <button type="button" role="tab" data-g="tetris" aria-selected="false">TETRIS</button>
       <button type="button" role="tab" data-g="blockblast" aria-selected="false">BLOCK BLAST</button>
       <button type="button" role="tab" data-g="minesweeper" aria-selected="false">MINESWEEPER</button>
+      <button type="button" role="tab" data-g="game2048" aria-selected="false">2048</button>
     </div>
     </div>
     <ol id="lbList"><li class="empty">Memuat skor...</li></ol>
@@ -528,39 +534,149 @@ body.gm-open{overflow:hidden}
     <ol class="items g3">
       <li><a class="card mg p3" href="/game/chess/?v=2">
         <span class="n">01</span>
-        <span class="tile" aria-hidden="true">♞</span>
+        <span class="tile" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="ic-catur-kg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#b8bcc4"/>
+    </linearGradient>
+    <linearGradient id="ic-catur-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5a6270"/><stop offset="1" stop-color="#262b33"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="32" cy="58.5" rx="21" ry="2.8" fill="#000" opacity=".2"/>
+  <rect x="13" y="52" width="38" height="6" rx="2" fill="url(#ic-catur-bg)"/>
+  <rect x="18" y="46" width="28" height="7" rx="2" fill="url(#ic-catur-bg)"/>
+  <path d="M21 46 C21 40 25 36 27 32 C24 30 17 29 13 26 L9 22 C9 19 11 17 14 17 L22 16 C24 10 28 6 34 4 L36 1 L38 6 C44 8 48 14 48 22 C48 30 46 36 46 46 Z" fill="url(#ic-catur-kg)" stroke="#6b7280" stroke-width="1.1" stroke-linejoin="round"/>
+  <circle cx="21" cy="21" r="1.9" fill="#262b33"/>
+  <path d="M36 12 C40 16 41 22 40 28 M31 24 C34 26 36 30 35 36" fill="none" stroke="#9aa0aa" stroke-width="1.1"/>
+</svg></span>
         <span class="tx"><b>Catur</b><small>LAWAN STOCKFISH, JALAN DI HP</small></span>
       </a></li>
     </ol>
   </section>
 
   <section class="sec" aria-labelledby="h-mg">
-    <div class="sh"><h2 id="h-mg">Mini game</h2><i></i><span>05 GAME</span></div>
+    <div class="sh"><h2 id="h-mg">Mini game</h2><i></i><span>06 GAME</span></div>
     <ol class="items g3">
       <li><a class="card mg p1" href="/minigame/sudoku/">
         <span class="n">01</span>
-        <span class="tile" aria-hidden="true">🔢</span>
+        <span class="tile" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect x="4" y="4" width="56" height="56" rx="4" fill="#ffffff" stroke="#c9ccd3" stroke-width="1"/>
+  <g stroke="#d6d9df" stroke-width="1">
+    <path d="M4 22.7h56M4 41.3h56M22.7 4v56M41.3 4v56"/>
+  </g>
+  <g stroke="#2b2f36" stroke-width="2.4" fill="none">
+    <rect x="4" y="4" width="56" height="56" rx="4"/>
+    <path d="M22.7 4v56M41.3 4v56M4 22.7h56M4 41.3h56"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="13" text-anchor="middle" fill="#1d4ed8">
+    <text x="13.3" y="17.5">5</text>
+    <text x="32" y="36">3</text>
+    <text x="50.7" y="54.5">7</text>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="13" text-anchor="middle" fill="#374151">
+    <text x="50.7" y="17.5">9</text>
+    <text x="13.3" y="54.5">1</text>
+  </g>
+</svg></span>
         <span class="tx"><b>Sudoku</b><small>ISI ANGKA 1–9</small></span>
       </a></li>
       <li><a class="card mg p2" href="/minigame/minesweeper/">
         <span class="n">02</span>
-        <span class="tile" aria-hidden="true">💣</span>
+        <span class="tile" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="ic-minesweeper-bomb" cx="0.35" cy="0.35" r="0.7">
+      <stop offset="0" stop-color="#6b7077"/><stop offset="1" stop-color="#1a1d21"/>
+    </radialGradient>
+    <radialGradient id="ic-minesweeper-spark" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff6a8"/><stop offset="0.5" stop-color="#ffb020"/><stop offset="1" stop-color="#ff5a00" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <path d="M30 20 C34 12 40 9 46 10" fill="none" stroke="#7a5a3a" stroke-width="2.6" stroke-linecap="round"/>
+  <circle cx="47" cy="10" r="10" fill="url(#ic-minesweeper-spark)"/>
+  <path d="M47 4 L48.5 9 L53 7.5 L50 11 L53 14.5 L48.5 13 L47 17 L45.5 13 L41 14.5 L44 11 L41 7.5 L45.5 9 Z" fill="#ffd23f" stroke="#e8820c" stroke-width=".8"/>
+  <circle cx="30" cy="38" r="18" fill="url(#ic-minesweeper-bomb)"/>
+  <rect x="25" y="16" width="10" height="5" rx="1" fill="#3a3f46"/>
+  <ellipse cx="23" cy="31" rx="4" ry="3" fill="#ffffff" opacity=".35"/>
+</svg></span>
         <span class="tx"><b>Minesweeper</b><small>HINDARI BOM</small></span>
       </a></li>
       <li><a class="card mg p3" href="/minigame/blockblast/">
         <span class="n">03</span>
-        <span class="tile" aria-hidden="true">🧱</span>
+        <span class="tile" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="ic-blockblast-b1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fc3ff"/><stop offset="1" stop-color="#1679d6"/></linearGradient>
+    <linearGradient id="ic-blockblast-b2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb84d"/><stop offset="1" stop-color="#e8740c"/></linearGradient>
+    <linearGradient id="ic-blockblast-b3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7ee07e"/><stop offset="1" stop-color="#2fa23a"/></linearGradient>
+  </defs>
+  <rect x="6" y="38" width="16" height="16" rx="2.5" fill="url(#ic-blockblast-b1)"/>
+  <rect x="24" y="38" width="16" height="16" rx="2.5" fill="url(#ic-blockblast-b1)"/>
+  <rect x="42" y="38" width="16" height="16" rx="2.5" fill="url(#ic-blockblast-b1)"/>
+  <rect x="42" y="20" width="16" height="16" rx="2.5" fill="url(#ic-blockblast-b2)"/>
+  <rect x="24" y="20" width="16" height="16" rx="2.5" fill="url(#ic-blockblast-b3)"/>
+  <g fill="#fff" opacity=".35">
+    <rect x="8" y="40" width="12" height="2.5" rx="1"/>
+    <rect x="26" y="40" width="12" height="2.5" rx="1"/>
+    <rect x="44" y="40" width="12" height="2.5" rx="1"/>
+    <rect x="44" y="22" width="12" height="2.5" rx="1"/>
+    <rect x="26" y="22" width="12" height="2.5" rx="1"/>
+  </g>
+</svg></span>
         <span class="tx"><b>Block Blast</b><small>SUSUN BLOK</small></span>
       </a></li>
       <li><a class="card mg p1" href="/minigame/pacman/">
         <span class="n">04</span>
-        <span class="tile" aria-hidden="true">🟡</span>
+        <span class="tile" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="ic-pacman-pm" cx="0.4" cy="0.35" r="0.75">
+      <stop offset="0" stop-color="#fff27a"/><stop offset="1" stop-color="#f2b400"/>
+    </radialGradient>
+  </defs>
+  <path d="M32 32 L57.5 18.5 A27 27 0 1 0 57.5 45.5 Z" fill="url(#ic-pacman-pm)" stroke="#c98f00" stroke-width="1"/>
+  <circle cx="32" cy="19" r="3" fill="#1d1d1d"/>
+</svg></span>
         <span class="tx"><b>Pac-Man</b><small>MAKAN TITIK, HINDARI HANTU</small></span>
       </a></li>
       <li><a class="card mg p2" href="/minigame/tetris/">
         <span class="n">05</span>
-        <span class="tile" aria-hidden="true">🟦</span>
+        <span class="tile" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="ic-tetris-tc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7ef0ff"/><stop offset="1" stop-color="#11b5d6"/></linearGradient>
+    <linearGradient id="ic-tetris-tp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d28bff"/><stop offset="1" stop-color="#8a2fd1"/></linearGradient>
+  </defs>
+  <rect x="6" y="18" width="16" height="16" rx="2.5" fill="url(#ic-tetris-tc)"/>
+  <rect x="24" y="18" width="16" height="16" rx="2.5" fill="url(#ic-tetris-tc)"/>
+  <rect x="42" y="18" width="16" height="16" rx="2.5" fill="url(#ic-tetris-tc)"/>
+  <rect x="24" y="36" width="16" height="16" rx="2.5" fill="url(#ic-tetris-tp)"/>
+  <g fill="#fff" opacity=".35">
+    <rect x="8" y="20" width="12" height="2.5" rx="1"/>
+    <rect x="26" y="20" width="12" height="2.5" rx="1"/>
+    <rect x="44" y="20" width="12" height="2.5" rx="1"/>
+    <rect x="26" y="38" width="12" height="2.5" rx="1"/>
+  </g>
+</svg></span>
         <span class="tx"><b>Tetris</b><small>SUSUN BALOK, BERSIHKAN BARIS</small></span>
+      </a></li>
+      <li><a class="card mg p3" href="/minigame/2048/?embed=1">
+        <span class="n">06</span>
+        <span class="tile" aria-hidden="true" style="font-family:'Anton',Impact,sans-serif"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="ic-game2048-t2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbeed2"/><stop offset="1" stop-color="#eadbb9"/></linearGradient>
+    <linearGradient id="ic-game2048-t4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7b35a"/><stop offset="1" stop-color="#ec8c1f"/></linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="8" fill="#bbada0"/>
+  <rect x="9" y="9" width="22" height="22" rx="4" fill="url(#ic-game2048-t2)"/>
+  <rect x="33" y="9" width="22" height="22" rx="4" fill="url(#ic-game2048-t4)"/>
+  <rect x="9" y="33" width="22" height="22" rx="4" fill="#edc22e"/>
+  <rect x="33" y="33" width="22" height="22" rx="4" fill="#776e65"/>
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="700" text-anchor="middle">
+    <text x="20" y="25" font-size="13" fill="#776e65">2</text>
+    <text x="44" y="25" font-size="13" fill="#ffffff">4</text>
+    <text x="20" y="49" font-size="13" fill="#ffffff">8</text>
+    <text x="44" y="49" font-size="11" fill="#ffffff">2048</text>
+  </g>
+</svg></span>
+        <span class="tx"><b>2048</b><small>GESER UBIN, CAPAI 2048</small></span>
       </a></li>
     </ol>
   </section>
@@ -1040,7 +1156,8 @@ body.gm-open{overflow:hidden}
     pacman: function(){ return sbLb.from('pacman_leaderboard').select('name,score,level').order('score',{ascending:false}).limit(10); },
     tetris: function(){ return sbLb.from('tetris_leaderboard').select('name,score,level,lines').order('score',{ascending:false}).limit(10); },
     blockblast: function(){ return sbLb.from('blockblast_leaderboard').select('name,score').order('score',{ascending:false}).limit(10); },
-    minesweeper: function(){ return sbLb.from('minesweeper_leaderboard').select('name,level,secs,level_rank').order('level_rank',{ascending:false}).order('secs',{ascending:true}).limit(10); }
+    minesweeper: function(){ return sbLb.from('minesweeper_leaderboard').select('name,level,secs,level_rank').order('level_rank',{ascending:false}).order('secs',{ascending:true}).limit(10); },
+    game2048: function(){ return sbLb.from('game2048_leaderboard').select('name,score,max_tile').order('score',{ascending:false}).limit(10); }
   };
 
   var fmt = function(n){ return Number(n).toLocaleString('id-ID'); };
@@ -1049,7 +1166,8 @@ body.gm-open{overflow:hidden}
     pacman: function(r){ return fmt(r.score) + ' POIN'; },
     tetris: function(r){ return fmt(r.score) + ' POIN · LVL ' + r.level; },
     blockblast: function(r){ return fmt(r.score) + ' POIN'; },
-    minesweeper: function(r){ return String(r.level).toUpperCase() + ' · ' + r.secs + ' DETIK'; }
+    minesweeper: function(r){ return String(r.level).toUpperCase() + ' · ' + r.secs + ' DETIK'; },
+    game2048: function(r){ return fmt(r.score) + ' POIN · UBIN ' + r.max_tile; }
   };
 
   function empty(text){
