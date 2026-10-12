@@ -595,9 +595,10 @@
     }
   }
 
+  // nama dari Library disimpan di metadata akun sebagai display_name
   function displayName(s){
     const m = s.user.user_metadata || {};
-    const n = m.name || m.full_name || m.username || (s.user.email || 'pemain').split('@')[0];
+    const n = (m.display_name || '').trim() || 'PEMAIN';
     return String(n).slice(0, 30);
   }
 
