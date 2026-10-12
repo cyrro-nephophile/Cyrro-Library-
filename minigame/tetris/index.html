@@ -646,5 +646,11 @@ function bbSubmit(sc){ lbSubmit('blockblast_scores', { score: sc }, 'BLOCK BLAST
 function tetSubmit(sc, lv, ln){ lbSubmit('tetris_scores', { score: sc, level: lv, lines: ln }, 'TETRIS'); }
 function msSubmit(lv, sec){ lbSubmit('minesweeper_scores', { level: lv, secs: sec }, 'MINESWEEPER'); }
 </script>
+
+<!-- Vercel Web Analytics -->
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

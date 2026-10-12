@@ -1,0 +1,26 @@
+{
+  "name": "cyr-library",
+  "version": "1.0.0",
+  "description": "Library — koleksi favorit Cyrro: mini game, playlist, dan tool",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cyrro-nephophile/Cyrro-Library-.git"
+  },
+  "keywords": [
+    "library",
+    "games",
+    "playlist"
+  ],
+  "author": "Cyrro",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cyrro-nephophile/Cyrro-Library-/issues"
+  },
+  "homepage": "https://cyr-library.vercel.app/",
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
+  }
+}
