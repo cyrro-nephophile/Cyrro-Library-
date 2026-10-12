@@ -170,7 +170,15 @@ h1.disp{font-size:clamp(64px,15vw,150px)}
 @keyframes bob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-7px) rotate(-3deg)}}
 @keyframes glitch{0%,90%,100%{transform:none;text-shadow:none}91%{transform:translate(-2px,1px);text-shadow:3px 0 #ff0055,-3px 0 #ccff00}93%{transform:translate(2px,-1px);text-shadow:-3px 0 #ff0055,3px 0 #ccff00}95%{transform:none;text-shadow:none}}
 
-body{animation:grid 14s linear infinite}
+body{animation:none!important}
+body{background-image:none!important}
+:root{--gc1:rgba(10,10,10,.16);--gc2:rgba(10,10,10,.06)}
+:root[data-theme="dark"]{--gc1:rgba(244,244,240,.12);--gc2:rgba(244,244,240,.05)}
+body::before{content:"";position:fixed;left:-160px;top:-160px;right:-160px;bottom:-160px;z-index:-1;pointer-events:none;
+  background-image:linear-gradient(var(--gc1) 1.5px,transparent 1.5px),linear-gradient(90deg,var(--gc1) 1.5px,transparent 1.5px),linear-gradient(var(--gc2) 1px,transparent 1px),linear-gradient(90deg,var(--gc2) 1px,transparent 1px);
+  background-size:160px 160px,160px 160px,32px 32px,160px 160px;
+  animation:gridmove 14s linear infinite;will-change:transform}
+@keyframes gridmove{from{transform:translate3d(0,0,0)}to{transform:translate3d(160px,160px,0)}}
 
 /* ticker */
 .ticker{height:24px;background-color:#0a0a0a;background-image:linear-gradient(45deg,#ccff00 25%,#0a0a0a 25%,#0a0a0a 50%,#ccff00 50%,#ccff00 75%,#0a0a0a 75%,#0a0a0a);background-size:28px 28px;animation:tape .8s linear infinite;border-top:3px solid #0a0a0a;border-bottom:3px solid #0a0a0a;overflow:hidden}
@@ -498,6 +506,7 @@ body{padding-bottom:0!important;touch-action:none}
 .hero h1.disp{animation:none}
 .hero .ch{display:inline-block;animation:popin .7s cubic-bezier(.3,1.4,.5,1) both}
 .hero:not(.go) .ch{opacity:0}
+@media (max-width:799px){#vsTrack .card,#vsTrack .sh,#vsTrack #lbList li,#vsTrack .tags .tag,#vsTrack .hero .ch,#vsTrack .hero .hl{will-change:transform}}
 .ticker{animation:none!important;position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 63px);z-index:15;height:24px;transition:top .5s cubic-bezier(.2,.8,.2,1)}
 .ticker.up{top:env(safe-area-inset-top,0px)}
 .top{transition:translate .5s cubic-bezier(.2,.8,.2,1)}
@@ -1369,6 +1378,13 @@ body{padding-bottom:0!important;touch-action:none}
   var SPEED=1.2, EASE=0.22;
   var y=0, target=0, vel=0, max=0, dragging=false, ignoring=false, lastY=0, lastT=0, prevY=0, lag=0;
   var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // ?fps=1 menampilkan angka FPS di pojok kiri bawah (untuk cek di HP)
+  var fpsBox=null, fpsOn=/[?&]fps=1/.test(location.search), fpsT=performance.now(), fpsN=0;
+  if(fpsOn){
+    fpsBox=document.createElement('div');
+    fpsBox.style.cssText='position:fixed;left:8px;bottom:8px;z-index:99;background:#0a0a0a;color:#ccff00;font:700 12px/1.3 monospace;padding:4px 6px;border:2px solid #ccff00;pointer-events:none';
+    document.body.appendChild(fpsBox);
+  }
   // area yang punya scroll/kontrol sendiri: jangan dibajak
   var SKIP='#gmOverlay,#plWrap,#cyAuthPanel,#intro,input,textarea,select,[contenteditable="true"]';
   // elemen yang ikut berefek kedalaman saat digeser
@@ -1391,6 +1407,10 @@ body{padding-bottom:0!important;touch-action:none}
   var FX_SHIFT=14;     // geser vertikal di tepi layar (px)
   var FX_LAG=1.0;      // seberapa jauh elemen tertinggal saat digeser
   var LAG_MAX=24;      // batas maksimal tertinggal (px)
+  var DESK_K=1;        // pengali efek: di desktop dibuat lebih halus
+  var deskMQ=window.matchMedia('(min-width: 800px)');
+  function setDesk(){ DESK_K=deskMQ.matches?0.35:1; }
+  setDesk(); if(deskMQ.addEventListener) deskMQ.addEventListener('change',setDesk);
 
   function skip(t){ return !!(t && t.closest && t.closest(SKIP)); }
   function clamp(){ target=Math.min(max,Math.max(0,target)); }
@@ -1502,12 +1522,21 @@ body{padding-bottom:0!important;touch-action:none}
         var cy=f.base-y;             // posisi tengah elemen di layar
         var d=(cy-half)/half;        // -1 di atas, 1 di bawah
         if(d<-1.7||d>1.7) continue;
-        var s=1-FX_SCALE*d*d;        // mengecil di tepi layar
-        var rot=(d*FX_ROT+lag*0.2*f.boost)*f.dir;
-        var ty=(lag*f.depth+d*FX_SHIFT*f.depth)*f.boost;
-        f.el.style.scale=s.toFixed(3);
-        f.el.style.rotate=rot.toFixed(2)+'deg';
-        f.el.style.translate='0 '+ty.toFixed(2)+'px';
+        var s=1-FX_SCALE*DESK_K*d*d;        // mengecil di tepi layar
+        var rot=(d*FX_ROT*DESK_K+lag*0.2*f.boost*DESK_K)*f.dir;
+        var ty=(lag*f.depth+d*FX_SHIFT*f.depth)*f.boost*DESK_K;
+        var ls=s.toFixed(3), lr=rot.toFixed(2), lt=ty.toFixed(2);
+        if(ls!==f.ls){ f.el.style.scale=ls; f.ls=ls; }
+        if(lr!==f.lr){ f.el.style.rotate=lr+'deg'; f.lr=lr; }
+        if(lt!==f.lt){ f.el.style.translate='0 '+lt+'px'; f.lt=lt; }
+      }
+    }
+    if(fpsBox){
+      fpsN++;
+      var now=performance.now();
+      if(now-fpsT>=500){
+        fpsBox.textContent='FPS '+Math.round(fpsN*1000/(now-fpsT));
+        fpsN=0; fpsT=now;
       }
     }
     requestAnimationFrame(frame);
