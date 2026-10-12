@@ -1,1 +1,699 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Dino Runner · Cyrro Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+<script>
+  try {
+    var t = localStorage.getItem('theme');
+    document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+  } catch (e) {}
+  document.documentElement.classList.toggle('embed', /[?&]embed=1/.test(location.search));
+</script>
+<style>
+  :root{
+    --bg:#FCFBF7; --ink:#0A0A0A; --ink-dim:#4B5240; --card:#FFFFFF;
+    --line:#0A0A0A; --shadow:#0A0A0A; --grid:rgba(10,10,10,.12);
+    --lime:#CCFF00; --pink:#FF0055;
+    --ease:cubic-bezier(.2,.8,.2,1);
+  }
+  :root[data-theme="dark"]{
+    --bg:#0A0A0A; --ink:#F4F4F0; --ink-dim:#B9C0A8; --card:#141414;
+    --line:#F4F4F0; --shadow:#CCFF00; --grid:rgba(244,244,240,.12);
+  }
+  *{box-sizing:border-box;margin:0}
+  [hidden]{display:none!important}
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation}
+  body{
+    font-family:Outfit,system-ui,sans-serif;color:var(--ink);background-color:var(--bg);
+    background-image:
+      linear-gradient(var(--grid) 1.5px,transparent 1.5px),
+      linear-gradient(90deg,var(--grid) 1.5px,transparent 1.5px);
+    background-size:40px 40px;
+    position:fixed;inset:0;width:100%;
+    padding:12px 12px 16px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    -webkit-tap-highlight-color:transparent;
+    animation:drift 24s linear infinite;
+  }
+  html.embed body{padding-bottom:120px} /* ruang buat player bar di Library */
+  @keyframes drift{from{background-position:0 0}to{background-position:40px 40px}}
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
+  .wrap{width:min(100%,640px);display:flex;flex-direction:column;align-items:center;gap:12px}
+  .top,.row,.hint{width:100%}
+
+  /* ---------- header ---------- */
+  .top{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap}
+  .brand{display:flex;flex-direction:column;align-items:flex-start;gap:6px;animation:rise .6s var(--ease) both}
+  .title{
+    font-family:Anton,Impact,sans-serif;font-weight:400;font-size:46px;line-height:1;text-transform:uppercase;
+    background:var(--lime);color:#0A0A0A;border:3px solid #0A0A0A;padding:4px 12px 0;
+    box-shadow:4px 4px 0 var(--shadow);
+  }
+  .cap{font:700 10px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.14em;color:var(--ink-dim)}
+  .scores{display:flex;gap:10px}
+  .box{
+    position:relative;background:var(--card);border:3px solid var(--line);box-shadow:4px 4px 0 var(--shadow);
+    padding:4px 12px;min-width:84px;text-align:center;animation:rise .6s var(--ease) .1s both;
+  }
+  .box + .box{animation-delay:.18s}
+  .lbl{display:block;font:700 10px/1.3 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.12em;color:var(--ink-dim)}
+  .val{display:block;font-family:Anton,Impact,sans-serif;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
+  .hint{
+    font:400 11px/1.6 'JetBrains Mono',ui-monospace,monospace;color:var(--ink-dim);
+    text-transform:uppercase;letter-spacing:.04em;animation:rise .6s var(--ease) .2s both;
+  }
+
+  /* ---------- arena (canvas) ---------- */
+  .arena{
+    position:relative;width:100%;aspect-ratio:5/2;
+    border:3px solid var(--line);box-shadow:8px 8px 0 var(--shadow);
+    overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;
+    animation:rise .7s var(--ease) .15s both;
+  }
+  .arena canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+  .ov{
+    position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:14px;
+    background:rgba(10,10,10,.55);opacity:0;pointer-events:none;transition:opacity .25s ease;
+  }
+  .ov.show{opacity:1;pointer-events:auto}
+  .ovcard{
+    width:100%;max-width:300px;background:var(--card);color:var(--ink);border:3px solid var(--line);
+    box-shadow:5px 5px 0 var(--shadow);padding:10px 12px;display:flex;flex-direction:column;gap:8px;text-align:center;
+    transform:translateY(12px) scale(.96);transition:transform .35s var(--ease);
+  }
+  .ov.show .ovcard{transform:none}
+  .ovcard h2{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:28px;line-height:1;text-transform:uppercase}
+  .statline{font:700 12px/1.3 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase}
+  .statline b{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:18px;letter-spacing:0}
+  @keyframes blink{to{visibility:hidden}}
+  .ovcard .tag{
+    font-family:Anton,Impact,sans-serif;font-size:20px;text-transform:uppercase;letter-spacing:.02em;
+    background:var(--lime);color:#0A0A0A;border:3px solid #0A0A0A;padding:4px 10px;align-self:center;
+    animation:blink 1s steps(2,start) infinite;
+  }
+  .ov-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+  /* ---------- tombol ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    font:700 13px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;
+    color:#0A0A0A;background:#FFFFFF;border:3px solid var(--line);box-shadow:3px 3px 0 var(--shadow);
+    padding:12px 14px;cursor:pointer;
+    transition:transform .08s ease,box-shadow .08s ease,background-color .2s ease;
+  }
+  .btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--shadow)}
+  .btn:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--shadow)}
+  .btn.lime{background:var(--lime)}
+  .btn.white{background:#FFFFFF}
+  .btn.pink{background:var(--pink);color:#FFFFFF}
+  .btn.big{padding:12px 18px;font-size:14px;min-width:150px}
+  .btn:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+
+  .row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .pad{display:flex;gap:8px;margin-left:auto}
+  .arr{
+    width:64px;height:56px;display:flex;align-items:center;justify-content:center;
+    background:var(--card);color:var(--ink);border:3px solid var(--line);box-shadow:3px 3px 0 var(--shadow);
+    cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;
+    transition:transform .08s ease,box-shadow .08s ease,background-color .12s ease,color .12s ease;
+  }
+  .arr svg{width:22px;height:22px;pointer-events:none}
+  #btnDuck svg{transform:rotate(180deg)}
+  .arr:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--shadow)}
+  .arr.on{transform:translate(2px,2px);box-shadow:0 0 0 var(--shadow);background:var(--lime);color:#0A0A0A}
+  .arr:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+  @media (max-width:359px){
+    .arr{width:56px;height:50px}
+    .btn.big{min-width:0;padding:12px 14px}
+  }
+  .status{
+    font:700 11px/1.3 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--ink-dim);min-height:14px;text-align:center;width:100%;
+  }
+  .status.err{color:var(--pink)}
+
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+  /* ===== splash intro (sama seperti Library) ===== */
+  /* ===== intro ===== */
+  .intro{position:fixed;inset:0;z-index:200;background:#0a0a0a;display:grid;place-content:center;justify-items:center;gap:10px;text-align:center;padding:20px;transition:opacity .45s ease,visibility .45s;overflow:hidden}
+  .intro.out{opacity:0;visibility:hidden}
+  .intro::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(204,255,0,.12) 1.5px,transparent 1.5px),linear-gradient(90deg,rgba(204,255,0,.12) 1.5px,transparent 1.5px);background-size:40px 40px;animation:intro-grid 1.6s linear infinite;pointer-events:none}
+  .intro-t{position:relative;font-family:'Anton',Impact,sans-serif;text-transform:uppercase;font-size:clamp(52px,18vw,96px);line-height:1;color:#fff;animation:intro-pop .6s cubic-bezier(.2,.9,.3,1.2) both,intro-glitch 2.4s steps(1) .8s infinite}
+  .intro-t .hl{color:var(--lime,#ccff00)}
+  .intro-s{position:relative;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;letter-spacing:.2em;color:var(--pink,#ff0055);animation:intro-rise .5s .35s both}
+  .intro-bar{position:relative;width:min(60vw,240px);height:14px;border:3px solid #fff;box-shadow:3px 3px 0 #ccff00;margin-top:12px;overflow:hidden}
+  .intro-bar i{display:block;height:100%;background:#ccff00;transform-origin:left;animation:intro-grow 1.1s .2s cubic-bezier(.6,0,.2,1) both}
+  @keyframes intro-pop{0%{opacity:0;transform:scale(.6)}70%{opacity:1;transform:scale(1.06)}100%{opacity:1;transform:none}}
+  @keyframes intro-rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+  @keyframes intro-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  @keyframes intro-grid{to{background-position:40px 40px}}
+  @keyframes intro-glitch{0%,90%,100%{transform:none;text-shadow:none}91%{transform:translate(-3px,1px);text-shadow:3px 0 #ff0055,-3px 0 #ccff00}93%{transform:translate(3px,-1px);text-shadow:-3px 0 #ff0055,3px 0 #ccff00}95%{transform:none;text-shadow:none}}
+  @media (prefers-reduced-motion: reduce){.intro{display:none}}
+</style>
+</head>
+<body>
+<div class="intro" id="intro" aria-hidden="true">
+  <div class="intro-t">DINO<span class="hl">-</span>RUNNER</div>
+  <div class="intro-s">BERSIAP…</div>
+  <div class="intro-bar"><i></i></div>
+</div>
+<main class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1 class="title">Dino</h1>
+      <span class="cap">MINI GAME · CYRRO</span>
+    </div>
+    <div class="scores">
+      <div class="box"><span class="lbl">SKOR</span><span class="val" id="score">0</span></div>
+      <div class="box"><span class="lbl">TERBAIK</span><span class="val" id="best">0</span></div>
+    </div>
+  </header>
+
+  <p class="hint">Tap, spasi, atau ▲ buat lompat · tahan ▼ atau ↓ buat nunduk</p>
+
+  <div class="arena" id="arena">
+    <canvas id="cv" aria-label="Dino runner"></canvas>
+
+    <div class="ov" id="startOv">
+      <div class="ovcard">
+        <span class="tag">TAP / SPASI</span>
+        <p class="statline">buat mulai main</p>
+      </div>
+    </div>
+
+    <div class="ov" id="overOv">
+      <div class="ovcard">
+        <h2>GAME OVER</h2>
+        <p class="statline">skor <b id="ovScore">0</b> · terbaik <b id="ovBest">0</b></p>
+        <div class="ov-btns">
+          <button class="btn white" id="btnRetry" type="button">MAIN LAGI</button>
+          <button class="btn pink" id="btnResend" type="button" hidden>KIRIM SKOR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <button class="btn big lime" id="btnNew" type="button">ULANGI</button>
+    <div class="pad" aria-label="Tombol kontrol">
+      <button class="arr" id="btnDuck" type="button" aria-label="Tunduk (tahan)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6 L20 18 L4 18 Z" fill="currentColor"/></svg></button>
+      <button class="arr" id="btnJump" type="button" aria-label="Lompat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6 L20 18 L4 18 Z" fill="currentColor"/></svg></button>
+    </div>
+  </div>
+  <div class="status" id="status" aria-live="polite"></div>
+</main>
+
+<script>
+(() => {
+  const SB_URL = 'https://nmfoshrrflgnuubsxuhk.supabase.co';
+  const SB_KEY = 'sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l';
+  const BEST_KEY = 'dino_best';
+
+  // ==== CORE (murni, tanpa DOM) ====
+  const W = 600, H = 240, GROUND = 200, DINO_X = 48, GRAV = 0.6, JUMP_V = 11;
+
+  function newWorld(){
+    return {
+      mode: 'ready', dy: 0, vy: 0, onGround: true, duck: false,
+      legT: 0, dist: 0, speed: 6, score: 0, nextSpawn: 260,
+      obs: [], gx: 0, flapT: 0,
+      clouds: [{ x: 120, y: 44, s: 1 }, { x: 390, y: 70, s: 0.8 }, { x: 540, y: 38, s: 1.1 }]
+    };
+  }
+
+  // kotak tabrakan dino (lebih kecil dari gambar biar adil)
+  function dinoBox(st){
+    const bottom = GROUND - st.dy;
+    if (st.duck && st.onGround) return { x: DINO_X + 4, y: bottom - 22, w: 50, h: 16 };
+    return { x: DINO_X + 6, y: bottom - 40, w: 32, h: 34 };
+  }
+
+  function obsBox(o){
+    if (o.type === 'bird') return { x: o.x + 6, y: o.y + 6, w: o.w - 12, h: 22 };
+    return { x: o.x + 3, y: GROUND - o.h + 2, w: o.w - 6, h: o.h - 2 };
+  }
+
+  function hit(a, b){
+    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  }
+
+  function spawn(st){
+    if (st.score > 120 && Math.random() < 0.28){
+      // burung: y 146 harus dinunduk, y 176 harus dilompati
+      st.obs.push({ type: 'bird', x: W + 20, y: Math.random() < 0.5 ? 176 : 146, w: 46, h: 34 });
+    } else {
+      const r = Math.random();
+      const k = r < 0.5 ? { w: 18, h: 36, n: 1 } : r < 0.8 ? { w: 26, h: 50, n: 1 } : { w: 50, h: 36, n: 2 };
+      st.obs.push({ type: 'cactus', x: W + 20, w: k.w, h: k.h, n: k.n });
+    }
+    st.nextSpawn = st.dist + st.speed * (38 + Math.random() * 40);
+  }
+
+  function jump(st){
+    if (st.mode === 'running' && st.onGround){ st.vy = JUMP_V; st.onGround = false; }
+  }
+
+  // maju satu langkah (dt = 1 kira-kira satu frame di 60fps). Return true kalau nabrak.
+  function update(st, dt){
+    st.speed = Math.min(14, 6 + st.dist / 1500);
+    st.dist += st.speed * dt;
+    st.score = Math.floor(st.dist * 0.1);
+    st.gx = (st.gx + st.speed * dt) % 40;
+    st.flapT += dt * 0.2;
+
+    if (!st.onGround){
+      if (st.duck) st.vy -= 0.9 * dt; // jatuh lebih cepat kalau ditekan ↓
+      st.vy -= GRAV * dt;
+      st.dy += st.vy * dt;
+      if (st.dy <= 0){ st.dy = 0; st.vy = 0; st.onGround = true; }
+    } else {
+      st.legT += dt * 0.22;
+    }
+
+    for (const c of st.clouds){
+      c.x -= st.speed * 0.25 * dt;
+      if (c.x < -60){ c.x = W + 40 + Math.random() * 120; c.y = 30 + Math.random() * 60; }
+    }
+
+    if (st.dist >= st.nextSpawn) spawn(st);
+    for (const o of st.obs) o.x -= st.speed * dt;
+    st.obs = st.obs.filter(o => o.x + o.w > -10);
+
+    const d = dinoBox(st);
+    for (const o of st.obs) if (hit(d, obsBox(o))) return true;
+    return false;
+  }
+  // ==== END CORE ====
+
+  // ==== DOM & UI ====
+  const $ = id => document.getElementById(id);
+  const arena = $('arena');
+  const cv = $('cv');
+  const ctx = cv.getContext('2d');
+  const scoreEl = $('score');
+  const bestEl = $('best');
+  const startOv = $('startOv');
+  const overOv = $('overOv');
+  const ovScoreEl = $('ovScore');
+  const ovBestEl = $('ovBest');
+  const btnRetry = $('btnRetry');
+  const btnResend = $('btnResend');
+  const btnNew = $('btnNew');
+  const statusEl = $('status');
+
+  function lsGet(k){ try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v){ try { localStorage.setItem(k, v); } catch (e) {} }
+
+  let best = parseInt(lsGet(BEST_KEY), 10) || 0;
+  let st = newWorld();
+  st.mode = 'intro'; st.introT = 0; st.introX = -90;
+  let gameNo = 0, pendingScore = 0, sending = false, saved = false;
+  let dpr = 1, cssScale = 1;
+  let last = 0, overAt = 0, lastTouchAt = 0, shownScore = -1;
+
+  function isDark(){ return document.documentElement.dataset.theme === 'dark'; }
+
+  function fit(){
+    const r = arena.getBoundingClientRect();
+    dpr = Math.max(1, window.devicePixelRatio || 1);
+    cv.width = Math.round(r.width * dpr);
+    cv.height = Math.round(r.height * dpr);
+    cssScale = r.width / W;
+  }
+  window.addEventListener('resize', fit);
+
+  // ---------- gambar ----------
+  function rr(x, y, w, h, r){
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function circle(x, y, r){ ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
+
+  function drawCloud(c, col){
+    ctx.fillStyle = col;
+    circle(c.x, c.y, 10 * c.s);
+    circle(c.x + 14 * c.s, c.y - 4 * c.s, 12 * c.s);
+    circle(c.x + 28 * c.s, c.y, 9 * c.s);
+  }
+
+  function drawCactus(o, dark){
+    const col = dark ? '#49c46a' : '#2f9e44';
+    ctx.fillStyle = col;
+    const unit = o.w / o.n;
+    for (let k = 0; k < o.n; k++){
+      const x0 = o.x + k * unit;
+      const tw = unit * 0.5;
+      const tx = x0 + unit * 0.25;
+      const top = GROUND - o.h;
+      rr(tx, top, tw, o.h, tw / 2);
+      if (o.h > 40){
+        rr(tx - 5, top + o.h * 0.42, 6, 10, 3);
+        rr(tx - 5, top + o.h * 0.42 - 8, 6, 10, 3);
+        rr(tx + tw - 1, top + o.h * 0.5, 6, 10, 3);
+        rr(tx + tw - 1, top + o.h * 0.5 - 8, 6, 10, 3);
+      }
+    }
+  }
+
+  function drawBird(o, dark){
+    ctx.fillStyle = dark ? '#ff6b7a' : '#d1495b';
+    const bx = o.x, by = o.y;
+    rr(bx + 6, by + 12, 30, 14, 7);
+    rr(bx + 30, by + 8, 12, 10, 4);
+    rr(bx + 40, by + 11, 8, 4, 2);
+    const up = Math.floor(st.flapT) % 2 === 0;
+    ctx.beginPath();
+    if (up){ ctx.moveTo(bx + 14, by + 12); ctx.lineTo(bx + 22, by - 2); ctx.lineTo(bx + 30, by + 12); }
+    else { ctx.moveTo(bx + 14, by + 14); ctx.lineTo(bx + 22, by + 30); ctx.lineTo(bx + 30, by + 14); }
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = dark ? '#101510' : '#ffffff';
+    circle(bx + 34, by + 13, 1.8);
+  }
+
+  function drawDino(dark){
+    const body = dark ? '#e8ece4' : '#2b2f36';
+    const eyeW = dark ? '#101510' : '#ffffff';
+    const pupil = dark ? '#f4f4f0' : '#0a0a0a';
+    const x = DINO_X + (st.introX || 0);
+    const bottom = GROUND - st.dy;
+    const phase = Math.floor(st.legT) % 2;
+    ctx.fillStyle = body;
+
+    if (st.duck && st.onGround){
+      const top = bottom - 28;
+      rr(x + 2, top + 8, 40, 14, 6);
+      rr(x + 30, top + 2, 24, 13, 5);
+      rr(x + 44, top + 7, 12, 6, 3);
+      const f = phase ? 2 : 0;
+      rr(x + 12, bottom - 6 + f, 8, 6, 2);
+      rr(x + 26, bottom - 6 + (2 - f), 8, 6, 2);
+      ctx.fillStyle = eyeW; circle(x + 44, top + 5, 2.2);
+      ctx.fillStyle = pupil; circle(x + 45, top + 5, 1.1);
+      return;
+    }
+
+    const top = bottom - 48;
+    rr(x, top + 20, 12, 9, 4);          // ekor
+    rr(x + 4, top + 16, 28, 24, 8);     // badan
+    rr(x + 18, top + 2, 24, 20, 7);     // kepala
+    rr(x + 34, top + 10, 12, 10, 4);    // moncong
+    rr(x + 26, top + 26, 4, 8, 2);      // tangan kecil
+    if (st.onGround){
+      rr(x + 12, bottom - 10 + (phase ? -3 : 0), 7, 10, 2);
+      rr(x + 24, bottom - 10 + (phase ? 0 : -3), 7, 10, 2);
+    } else {
+      rr(x + 12, bottom - 10, 7, 10, 2);
+      rr(x + 24, bottom - 10, 7, 10, 2);
+    }
+    ctx.fillStyle = eyeW; circle(x + 34, top + 8, 2.6);
+    ctx.fillStyle = pupil; circle(x + 35, top + 8, 1.3);
+  }
+
+  function draw(){
+    const dark = isDark();
+    ctx.setTransform(cssScale * dpr, 0, 0, cssScale * dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = dark ? '#101510' : '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+
+    const cloudCol = dark ? '#2a3a2a' : '#e7e9ee';
+    for (const c of st.clouds) drawCloud(c, cloudCol);
+
+    const ink = dark ? '#f4f4f0' : '#0a0a0a';
+    ctx.fillStyle = ink;
+    ctx.fillRect(0, GROUND, W, 2);
+    ctx.fillStyle = dark ? '#5a6b5a' : '#b8bcc4';
+    for (let x = -st.gx; x < W; x += 40){
+      ctx.fillRect(x, GROUND + 8, 14, 2);
+      ctx.fillRect(x + 22, GROUND + 15, 6, 2);
+    }
+
+    for (const o of st.obs){
+      if (o.type === 'bird') drawBird(o, dark);
+      else drawCactus(o, dark);
+    }
+    ctx.fillStyle = dark ? '#e8ece4' : '#2b2f36';
+    drawDino(dark);
+  }
+
+  // ---------- status & overlay ----------
+  function setStatus(msg, err = false){
+    statusEl.textContent = msg;
+    statusEl.classList.toggle('err', err);
+  }
+
+  function showScore(){
+    const s = Math.floor(st.score);
+    if (s !== shownScore){
+      shownScore = s;
+      scoreEl.textContent = s;
+      bestEl.textContent = Math.max(best, s);
+    }
+  }
+
+  // ---------- alur game ----------
+  function startGame(){
+    gameNo++;
+    saved = false; sending = false; pendingScore = 0;
+    st = newWorld();
+    st.mode = 'running';
+    shownScore = -1;
+    startOv.classList.remove('show');
+    overOv.classList.remove('show');
+    btnResend.hidden = true;
+    setStatus('');
+  }
+
+  function gameOver(){
+    st.mode = 'over';
+    overAt = performance.now();
+    const s = Math.floor(st.score);
+    if (s > best){ best = s; lsSet(BEST_KEY, String(best)); }
+    pendingScore = s;
+    ovScoreEl.textContent = s;
+    ovBestEl.textContent = best;
+    overOv.classList.add('show');
+    submitScore(s);
+  }
+
+  function act(){
+    if (st.mode === 'intro' || st.mode === 'ready'){ startGame(); return; }
+    if (st.mode === 'over'){ if (performance.now() - overAt > 500) startGame(); return; }
+    jump(st);
+  }
+
+  function pointerAct(clientY){
+    if (st.mode !== 'running'){ act(); return; }
+    const r = arena.getBoundingClientRect();
+    if (clientY > r.top + r.height * 0.6) st.duck = true;   // bagian bawah = nunduk
+    else jump(st);
+  }
+
+  // ---------- sesi Supabase (token dari localStorage, tanpa library) ----------
+  function readSession(){
+    try {
+      for (let i = 0; i < localStorage.length; i++){
+        const key = localStorage.key(i);
+        if (key && key.startsWith('sb-') && key.endsWith('-auth-token')){
+          const s = JSON.parse(localStorage.getItem(key));
+          if (s && s.access_token && s.user) return { key, s };
+        }
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  async function freshSession(){
+    const found = readSession();
+    if (!found) return null;
+    const { key, s } = found;
+    const expiring = s.expires_at && s.expires_at * 1000 < Date.now() + 30000;
+    if (!expiring) return s;
+    if (!s.refresh_token) return null;
+    try {
+      const res = await fetch(`${SB_URL}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST',
+        headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: s.refresh_token })
+      });
+      if (!res.ok) return null;
+      const n = await res.json();
+      const updated = { ...s, ...n, expires_at: n.expires_at || Math.floor(Date.now() / 1000) + (n.expires_in || 3600) };
+      lsSet(key, JSON.stringify(updated));
+      return updated;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // nama dari Library disimpan di metadata akun sebagai display_name
+  function displayName(s){
+    const m = s.user.user_metadata || {};
+    return String((m.display_name || '').trim() || 'PEMAIN').slice(0, 30);
+  }
+
+  async function submitScore(score){
+    if (sending || saved) return;
+    const id = gameNo;
+    if (score <= 0){ setStatus('SKOR 0 TIDAK DIKIRIM'); return; }
+
+    sending = true;
+    btnResend.hidden = true;
+    setStatus('MENYIMPAN...');
+
+    const s = await freshSession();
+    if (!s){
+      sending = false;
+      setStatus('LOGIN DULU', true);
+      if (id === gameNo) btnResend.hidden = false;
+      return;
+    }
+    try {
+      const res = await fetch(`${SB_URL}/rest/v1/dino_scores`, {
+        method: 'POST',
+        headers: {
+          apikey: SB_KEY,
+          Authorization: `Bearer ${s.access_token}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal'
+        },
+        body: JSON.stringify({ user_id: s.user.id, name: displayName(s), score })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      if (id === gameNo){ saved = true; setStatus('TERSIMPAN'); }
+    } catch (e) {
+      if (id === gameNo){ setStatus('GAGAL KIRIM', true); btnResend.hidden = false; }
+    } finally {
+      sending = false;
+    }
+  }
+
+  // ---------- input ----------
+  document.addEventListener('keydown', e => {
+    const k = e.key;
+    if (k === ' ' || k === 'ArrowUp' || k === 'w' || k === 'W'){
+      e.preventDefault();
+      if (!e.repeat) act();
+    } else if (k === 'ArrowDown' || k === 's' || k === 'S'){
+      e.preventDefault();
+      st.duck = true;
+    } else if ((k === 'r' || k === 'R') && st.mode === 'over'){
+      startGame();
+    }
+  });
+  document.addEventListener('keyup', e => {
+    if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') st.duck = false;
+  });
+
+  arena.addEventListener('touchstart', e => {
+    e.preventDefault();
+    lastTouchAt = Date.now();
+    pointerAct(e.touches[0].clientY);
+  }, { passive: false });
+  const releaseDuck = () => { st.duck = false; };
+  arena.addEventListener('touchend', releaseDuck);
+  arena.addEventListener('touchcancel', releaseDuck);
+
+  arena.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    if (Date.now() - lastTouchAt < 700) return; // abaikan mouse emulasi dari sentuhan
+    pointerAct(e.clientY);
+  });
+  window.addEventListener('mouseup', releaseDuck);
+
+  // kunci halaman: tidak bisa scroll atau zoom
+  document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+  document.addEventListener('gesturestart', e => e.preventDefault());
+  document.addEventListener('dblclick', e => e.preventDefault());
+  document.addEventListener('wheel', e => e.preventDefault(), { passive: false });
+  document.addEventListener('keydown', e => {
+    if (['PageUp', 'PageDown', 'Home', 'End'].includes(e.key)) e.preventDefault();
+  });
+  document.addEventListener('visibilitychange', () => { last = 0; });
+
+  // ---------- tombol panah di layar ----------
+  const btnJump = $('btnJump');
+  const btnDuck = $('btnDuck');
+  const jumpUp = () => btnJump.classList.remove('on');
+  btnJump.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    btnJump.classList.add('on');
+    act();
+  });
+  btnJump.addEventListener('pointerup', jumpUp);
+  btnJump.addEventListener('pointercancel', jumpUp);
+  btnJump.addEventListener('pointerleave', jumpUp);
+
+  const duckUp = () => { btnDuck.classList.remove('on'); st.duck = false; };
+  btnDuck.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    btnDuck.classList.add('on');
+    if (st.mode === 'running') st.duck = true;
+  });
+  btnDuck.addEventListener('pointerup', duckUp);
+  btnDuck.addEventListener('pointercancel', duckUp);
+  btnDuck.addEventListener('pointerleave', duckUp);
+
+  // ---------- tombol ----------
+  btnNew.addEventListener('click', startGame);
+  btnRetry.addEventListener('click', startGame);
+  btnResend.addEventListener('click', () => submitScore(pendingScore));
+
+  // ---------- loop ----------
+  function loop(now){
+    const dt = last ? Math.min(2, (now - last) / 16.67) : 1;
+    last = now;
+    if (st.mode === 'running'){
+      if (update(st, dt)) gameOver();
+    } else if (st.mode === 'intro'){
+      st.introT += dt;
+      const p = Math.min(1, st.introT / 90);          // sekitar 1,5 detik
+      st.introX = -90 * (1 - (1 - Math.pow(1 - p, 3)));  // lari masuk dengan melambat
+      st.legT += dt * 0.25;
+      st.gx = (st.gx + 6 * dt) % 40;
+      if (p >= 1){
+        st.mode = 'ready';
+        startOv.classList.add('show');
+      }
+    } else if (st.mode === 'ready'){
+      st.legT += dt * 0.1;
+    }
+    draw();
+    showScore();
+    requestAnimationFrame(loop);
+  }
+
+  // ---------- mulai ----------
+  fit();
+  bestEl.textContent = best;
+  scoreEl.textContent = 0;
+  requestAnimationFrame(loop);
+})();
+</script>
+<script>
+(function(){
+  var el=document.getElementById('intro');
+  if(!el)return;
+  function done(){ el.classList.add('out'); setTimeout(function(){ el.remove(); },500); }
+  el.addEventListener('click', done);
+  setTimeout(done,1600);
+})();
+</script>
+</body>
+</html>
