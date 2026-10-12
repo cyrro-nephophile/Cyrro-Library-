@@ -1,1 +1,764 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>2048 · Cyrro Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+<script>
+  try {
+    document.documentElement.classList.toggle('embed', /[?&]embed=1/.test(location.search));
+    var t = localStorage.getItem('theme');
+    document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+  } catch (e) {}
+</script>
+<style>
+  :root{
+    --bg:#FCFBF7; --ink:#0A0A0A; --ink-dim:#4B5240; --card:#FFFFFF;
+    --line:#0A0A0A; --shadow:#0A0A0A; --grid:rgba(10,10,10,.12);
+    --board:#0A0A0A; --slot:#1C221C;
+    --lime:#CCFF00; --pink:#FF0055;
+    --gap:10px; --ease:cubic-bezier(.2,.8,.2,1);
+  }
+  :root[data-theme="dark"]{
+    --bg:#0A0A0A; --ink:#F4F4F0; --ink-dim:#B9C0A8; --card:#141414;
+    --line:#F4F4F0; --shadow:#CCFF00; --grid:rgba(244,244,240,.12);
+    --board:#101510; --slot:#1A221A;
+  }
+  *{box-sizing:border-box;margin:0}
+  [hidden]{display:none!important}
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation}
+  html.embed body{padding-bottom:120px} /* ruang buat player bar di Library */
+  body{
+    font-family:Outfit,system-ui,sans-serif;color:var(--ink);background-color:var(--bg);
+    background-image:
+      linear-gradient(var(--grid) 1.5px,transparent 1.5px),
+      linear-gradient(90deg,var(--grid) 1.5px,transparent 1.5px);
+    background-size:40px 40px;
+    position:fixed;inset:0;width:100%;
+    padding:12px 12px 16px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    -webkit-tap-highlight-color:transparent;
+    animation:drift 24s linear infinite;
+  }
+  @keyframes drift{from{background-position:0 0}to{background-position:40px 40px}}
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
+  .wrap{width:min(100%,420px);display:flex;flex-direction:column;align-items:center;gap:12px}
+  .top,.row,.hint{width:100%}
+
+  /* ---------- header ---------- */
+  .top{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap}
+  .brand{display:flex;flex-direction:column;align-items:flex-start;gap:6px;animation:rise .6s var(--ease) both}
+  .title{
+    font-family:Anton,Impact,sans-serif;font-weight:400;font-size:46px;line-height:1;text-transform:uppercase;
+    background:var(--lime);color:#0A0A0A;border:3px solid #0A0A0A;padding:4px 12px 0;
+    box-shadow:4px 4px 0 var(--shadow);
+  }
+  .cap{font:700 10px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.14em;color:var(--ink-dim)}
+  .scores{display:flex;gap:10px}
+  .box{
+    position:relative;background:var(--card);border:3px solid var(--line);box-shadow:4px 4px 0 var(--shadow);
+    padding:4px 12px;min-width:84px;text-align:center;animation:rise .6s var(--ease) .1s both;
+  }
+  .box + .box{animation-delay:.18s}
+  .box.bump{animation:bump .32s var(--ease)}
+  @keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.08)}100%{transform:scale(1)}}
+  .gain{
+    position:absolute;left:50%;top:4px;white-space:nowrap;pointer-events:none;
+    font:700 13px/1 'JetBrains Mono',ui-monospace,monospace;color:var(--pink);
+    animation:gainUp .8s var(--ease) forwards;
+  }
+  @keyframes gainUp{
+    0%{opacity:0;transform:translate(-50%,4px)}
+    15%{opacity:1}
+    100%{opacity:0;transform:translate(-50%,-30px)}
+  }
+  .lbl{display:block;font:700 10px/1.3 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.12em;color:var(--ink-dim)}
+  .val{display:block;font-family:Anton,Impact,sans-serif;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
+  .hint{
+    font:400 11px/1.6 'JetBrains Mono',ui-monospace,monospace;color:var(--ink-dim);
+    text-transform:uppercase;letter-spacing:.04em;animation:rise .6s var(--ease) .2s both;
+  }
+
+  /* ---------- papan ---------- */
+  .stage{position:relative;width:min(100%,420px)}
+  html.embed .stage{width:min(100%,max(200px,calc(100dvh - 300px)))}
+  .board{
+    position:relative;width:100%;aspect-ratio:1/1;padding:10px;
+    background:var(--board);border:3px solid var(--line);box-shadow:8px 8px 0 var(--shadow);
+    touch-action:none;user-select:none;-webkit-user-select:none;
+    animation:rise .7s var(--ease) .15s both;
+  }
+  .slots{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap)}
+  .slot{aspect-ratio:1/1;background:var(--slot)}
+  .layer{position:absolute;inset:10px;pointer-events:none}
+
+  /* ubin bergerak pakai transform: ringan dan mulus */
+  .tile{
+    position:absolute;left:0;top:0;
+    width:calc(25% - var(--gap) * .75);aspect-ratio:1/1;
+    transform:translate(calc(var(--c,0) * (100% + var(--gap))),calc(var(--r,0) * (100% + var(--gap))));
+    transition:transform .16s var(--ease),opacity .2s ease;
+  }
+  .tile.out{opacity:0}
+  .face{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    border:3px solid #0A0A0A;background:#FFFFFF;color:#0A0A0A;
+    font-family:Anton,Impact,sans-serif;font-size:34px;line-height:1;
+  }
+  .s3{font-size:28px}
+  .s4{font-size:22px}
+  .s5{font-size:17px}
+  .t2{background:#FFFFFF}
+  .t4{background:#FFF7C2}
+  .t8{background:#FFE3B3}
+  .t16{background:#E4FF7A}
+  .t32{background:#FFE3EA}
+  .t64{background:#FFB3C9}
+  .t128{background:#00E5FF}
+  .t256{background:#1ED760}
+  .t512{background:#FF0055;color:#FFFFFF}
+  .t1024{background:#0A0A0A;color:#CCFF00;border-color:#CCFF00}
+  .t2048{background:#CCFF00;border-color:#FF0055}
+  .tbig{background:#FFFFFF;color:#FF0055;border-color:#CCFF00}
+  .face.spawn{animation:spawn .22s var(--ease) both}
+  .face.pop{animation:pop .24s var(--ease)}
+  @keyframes spawn{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+  @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.14)}100%{transform:scale(1)}}
+
+  /* ---------- overlay ---------- */
+  .overlay{
+    position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:16px;
+    background:rgba(10,10,10,.72);opacity:0;pointer-events:none;transition:opacity .25s ease;
+  }
+  .overlay.show{opacity:1;pointer-events:auto}
+  .ov{
+    width:100%;max-width:300px;background:var(--card);color:var(--ink);
+    border:3px solid var(--line);box-shadow:6px 6px 0 var(--shadow);padding:18px;
+    display:flex;flex-direction:column;gap:12px;text-align:center;
+    transform:translateY(14px) scale(.94);transition:transform .35s var(--ease);
+  }
+  .overlay.show .ov{transform:none}
+  .ov h2{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:40px;line-height:1;text-transform:uppercase}
+  .ov p{font-size:14px;line-height:1.45;color:var(--ink-dim)}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .stat{border:2px solid var(--line);padding:6px 4px;background:var(--bg);display:flex;flex-direction:column;gap:4px}
+  .stat .val{font-size:20px}
+  .stat .lbl{font-size:9px}
+  .ov-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+  /* ---------- tombol ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    font:700 13px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;
+    color:#0A0A0A;background:#FFFFFF;border:3px solid var(--line);box-shadow:3px 3px 0 var(--shadow);
+    padding:12px 14px;cursor:pointer;
+    transition:transform .08s ease,box-shadow .08s ease,background-color .2s ease,color .2s ease;
+  }
+  .btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--shadow)}
+  .btn:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--shadow)}
+  .btn.lime{background:var(--lime)}
+  .btn.white{background:#FFFFFF}
+  .btn.pink{background:var(--pink);color:#FFFFFF}
+  .btn.big{padding:12px 18px;font-size:14px;min-width:150px}
+  .btn .ico{width:16px;height:16px;flex:none;transition:transform .5s var(--ease)}
+  .btn:hover .ico{transform:rotate(-200deg)}
+  .btn.armed{background:var(--pink);color:#FFFFFF;animation:shake .4s ease}
+  .btn.armed .ico{transform:rotate(-200deg)}
+  .btn:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+
+  .row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .status{
+    font:700 11px/1.3 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--ink-dim);min-height:14px;transition:color .2s ease;
+  }
+  .status.err{color:var(--pink)}
+  .dbg{
+    position:fixed;left:6px;top:6px;z-index:99;max-width:80vw;pointer-events:none;
+    background:#0A0A0A;color:#CCFF00;border:2px solid #CCFF00;padding:4px 6px;
+    font:700 11px/1.3 'JetBrains Mono',ui-monospace,monospace;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="dbg" id="dbg" hidden></div>
+<main class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1 class="title">2048</h1>
+      <span class="cap">MINI GAME · CYRRO</span>
+    </div>
+    <div class="scores">
+      <div class="box" id="scoreBox"><span class="lbl">SKOR</span><span class="val" id="score">0</span></div>
+      <div class="box" id="bestBox"><span class="lbl">TERBAIK</span><span class="val" id="best">0</span></div>
+    </div>
+  </header>
+
+  <p class="hint">Geser atau panah/WASD buat gerakin ubin · R buat ulangi</p>
+
+  <div class="stage">
+    <div class="board" id="board" aria-label="Papan 2048">
+      <div class="slots" id="slots"></div>
+      <div class="layer" id="layer"></div>
+    </div>
+
+    <div class="overlay" id="overlay" aria-hidden="true">
+      <div class="ov" role="dialog" aria-modal="true" aria-labelledby="ovTitle">
+        <h2 id="ovTitle"></h2>
+        <p id="ovText"></p>
+        <div class="stats">
+          <div class="stat"><span class="lbl">SKOR</span><span class="val" id="ovScore">0</span></div>
+          <div class="stat"><span class="lbl">TERBAIK</span><span class="val" id="ovBest">0</span></div>
+          <div class="stat"><span class="lbl">UBIN MAX</span><span class="val" id="ovMax">0</span></div>
+        </div>
+        <div class="ov-btns">
+          <button class="btn lime" id="btnKeep" type="button" hidden>LANJUT</button>
+          <button class="btn white" id="btnRetry" type="button">ULANGI</button>
+          <button class="btn pink" id="btnResend" type="button" hidden>KIRIM SKOR</button>
+        </div>
+        <div class="status" id="ovStatus" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <button class="btn big lime" id="btnNew" type="button">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square">
+        <path d="M3 12a9 9 0 1 0 2.6-6.4"/><path d="M3 4v5h5"/>
+      </svg>
+      <span id="btnNewLabel">ULANGI</span>
+    </button>
+    <div class="status" id="status" aria-live="polite"></div>
+  </div>
+</main>
+
+<script>
+(() => {
+  const SB_URL = 'https://nmfoshrrflgnuubsxuhk.supabase.co';
+  const SB_KEY = 'sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l';
+  const BEST_KEY = '2048_best';
+  const SLIDE_MS = 160;
+
+  // ==== CORE (murni, tanpa DOM) ====
+  const SIZE = 4;
+  let tiles = [];   // ubin hidup: {id, v, r, c, into, merged, fresh}
+  let board = [];   // matriks referensi ke ubin
+  let nextId = 1;
+
+  function buildBoard(){
+    board = Array.from({ length: SIZE }, () => Array(SIZE).fill(null));
+    for (const t of tiles) board[t.r][t.c] = t;
+  }
+
+  function addTile(){
+    buildBoard();
+    const empty = [];
+    for (let r = 0; r < SIZE; r++)
+      for (let c = 0; c < SIZE; c++)
+        if (!board[r][c]) empty.push([r, c]);
+    if (!empty.length) return null;
+    const [r, c] = empty[Math.floor(Math.random() * empty.length)];
+    const t = { id: nextId++, v: Math.random() < 0.9 ? 2 : 4, r, c, into: null, merged: false, fresh: true };
+    tiles.push(t);
+    return t;
+  }
+
+  // dir: L, R, U, D. i = baris/kolom ke-i, k = posisi sepanjang garis
+  function coord(dir, i, k){
+    if (dir === 'L') return [i, k];
+    if (dir === 'R') return [i, SIZE - 1 - k];
+    if (dir === 'U') return [k, i];
+    return [SIZE - 1 - k, i];
+  }
+
+  // Gerakkan semua ubin. Mengembalikan { moved, gained, consumed }
+  function computeMove(dir){
+    buildBoard();
+    let moved = false;
+    let gained = 0;
+    const consumed = [];
+    for (let i = 0; i < SIZE; i++){
+      let dest = 0;
+      let last = null;
+      let lastMerged = false;
+      for (let k = 0; k < SIZE; k++){
+        const [r, c] = coord(dir, i, k);
+        const t = board[r][c];
+        if (!t) continue;
+        if (last && !lastMerged && last.v === t.v){
+          const [lr, lc] = coord(dir, i, dest - 1);
+          t.r = lr; t.c = lc; t.into = last; t.merged = false;
+          last.v *= 2;
+          last.merged = true;
+          gained += last.v;
+          consumed.push(t);
+          lastMerged = true;
+          moved = true;
+        } else {
+          const [nr, nc] = coord(dir, i, dest);
+          if (nr !== t.r || nc !== t.c) moved = true;
+          t.r = nr; t.c = nc; t.into = null; t.merged = false;
+          last = t;
+          lastMerged = false;
+          dest++;
+        }
+      }
+    }
+    if (moved) tiles = tiles.filter(t => !t.into);
+    return { moved, gained, consumed };
+  }
+
+  function canMove(){
+    buildBoard();
+    for (let r = 0; r < SIZE; r++)
+      for (let c = 0; c < SIZE; c++){
+        const t = board[r][c];
+        if (!t) return true;
+        const right = c + 1 < SIZE ? board[r][c + 1] : null;
+        const down = r + 1 < SIZE ? board[r + 1][c] : null;
+        if ((right && right.v === t.v) || (down && down.v === t.v)) return true;
+      }
+    return false;
+  }
+
+  function highest(){
+    let m = 0;
+    for (const t of tiles) if (t.v > m) m = t.v;
+    return m;
+  }
+  // ==== END CORE ====
+
+  // ==== DOM & UI ====
+  const $ = id => document.getElementById(id);
+  const boardEl = $('board');
+  const slotsEl = $('slots');
+  const layerEl = $('layer');
+  const scoreEl = $('score');
+  const bestEl = $('best');
+  const scoreBoxEl = $('scoreBox');
+  const bestBoxEl = $('bestBox');
+  const overlayEl = $('overlay');
+  const ovTitleEl = $('ovTitle');
+  const ovTextEl = $('ovText');
+  const ovScoreEl = $('ovScore');
+  const ovBestEl = $('ovBest');
+  const ovMaxEl = $('ovMax');
+  const btnKeep = $('btnKeep');
+  const btnRetry = $('btnRetry');
+  const btnResend = $('btnResend');
+  const btnNew = $('btnNew');
+  const btnNewLabel = $('btnNewLabel');
+  const ovStatusEl = $('ovStatus');
+  const statusEl = $('status');
+
+  function lsGet(k){ try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v){ try { localStorage.setItem(k, v); } catch (e) {} }
+
+  let best = parseInt(lsGet(BEST_KEY), 10) || 0;
+  let score = 0;
+  let maxTile = 0;
+  let over = false, won = false, keepGoing = false;
+  let sending = false, saved = false;
+  let gameNo = 0;
+  let els = new Map();          // id ubin -> elemen DOM
+  let armed = false, armTimer = null;
+
+  for (let i = 0; i < SIZE * SIZE; i++){
+    const s = document.createElement('div');
+    s.className = 'slot';
+    slotsEl.appendChild(s);
+  }
+
+  // bersihkan class animasi sekali pakai
+  boardEl.addEventListener('animationend', e => {
+    if (e.target.classList) e.target.classList.remove('spawn', 'pop');
+  });
+
+  function render(consumed = []){
+    for (const t of tiles){
+      let el = els.get(t.id);
+      if (!el){
+        el = document.createElement('div');
+        el.className = 'tile';
+        const face = document.createElement('div');
+        face.className = 'face';
+        el.appendChild(face);
+        layerEl.appendChild(el);
+        els.set(t.id, el);
+      }
+      el.style.setProperty('--r', t.r);
+      el.style.setProperty('--c', t.c);
+
+      const face = el.firstChild;
+      const cls = `t${t.v <= 2048 ? t.v : 'big'}`;
+      const len = String(t.v).length;
+      const key = `${cls}-${len}`;
+      if (face.dataset.key !== key){
+        face.className = `face ${cls} s${len}`;
+        face.dataset.key = key;
+      }
+      face.textContent = t.v;
+
+      if (t.fresh){
+        face.classList.add('spawn');
+        t.fresh = false;
+      }
+      if (t.merged){
+        const id = t.id;
+        // pop setelah ubin sampai di tujuan
+        setTimeout(() => {
+          const e = els.get(id);
+          if (e) e.firstChild.classList.add('pop');
+        }, SLIDE_MS - 30);
+      }
+    }
+
+    // ubin yang digabung: geser ke tujuan, lalu hilang
+    for (const t of consumed){
+      const el = els.get(t.id);
+      if (!el) continue;
+      el.style.setProperty('--r', t.r);
+      el.style.setProperty('--c', t.c);
+      setTimeout(() => {
+        el.remove();
+        if (els.get(t.id) === el) els.delete(t.id);
+      }, SLIDE_MS + 20);
+    }
+
+    scoreEl.textContent = score;
+    bestEl.textContent = best;
+  }
+
+  function bump(el){
+    el.classList.remove('bump');
+    void el.offsetWidth; // restart animasi
+    el.classList.add('bump');
+  }
+
+  function showGain(n){
+    const g = document.createElement('span');
+    g.className = 'gain';
+    g.textContent = '+' + n;
+    scoreBoxEl.appendChild(g);
+    g.addEventListener('animationend', () => g.remove());
+    bump(scoreBoxEl);
+  }
+
+  function setStatus(msg, err = false){
+    for (const el of [statusEl, ovStatusEl]){
+      el.textContent = msg;
+      el.classList.toggle('err', err);
+    }
+  }
+
+  function openOverlay(mode){
+    ovScoreEl.textContent = score;
+    ovBestEl.textContent = best;
+    ovMaxEl.textContent = maxTile;
+    if (mode === 'win'){
+      ovTitleEl.textContent = 'KAMU MENANG!';
+      ovTextEl.textContent = 'Udah sampai ubin 2048. Mau lanjut main atau ulangi dari awal?';
+      btnKeep.hidden = false;
+    } else {
+      ovTitleEl.textContent = 'GAME OVER';
+      ovTextEl.textContent = 'Papan udah penuh, nggak ada langkah lagi.';
+      btnKeep.hidden = true;
+    }
+    overlayEl.classList.add('show');
+    overlayEl.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeOverlay(){
+    overlayEl.classList.remove('show');
+    overlayEl.setAttribute('aria-hidden', 'true');
+  }
+
+  function newGame(){
+    gameNo++;
+    for (const el of els.values()){
+      el.classList.add('out');
+      setTimeout(() => el.remove(), 220);
+    }
+    els = new Map();
+    tiles = [];
+    score = 0; maxTile = 0;
+    over = false; won = false; keepGoing = false;
+    saved = false; sending = false;
+    btnResend.hidden = true;
+    addTile();
+    addTile();
+    maxTile = highest();
+    closeOverlay();
+    setStatus('');
+    render();
+  }
+
+  // ---------- gerak ----------
+  function move(dir){
+    if (over || (won && !keepGoing)) return;
+    const { moved, gained, consumed } = computeMove(dir);
+    dlog('geser ' + dir + ' → ' + (moved ? 'jalan' : 'tidak bergerak'));
+    if (!moved) return;
+
+    score += gained;
+    addTile();
+    maxTile = highest();
+
+    if (gained > 0) showGain(gained);
+    if (score > best){
+      best = score;
+      lsSet(BEST_KEY, String(best));
+      bump(bestBoxEl);
+    }
+    render(consumed);
+
+    if (!won && !keepGoing && maxTile >= 2048){
+      won = true;
+      setTimeout(() => openOverlay('win'), 260);
+      return;
+    }
+    if (!canMove()){
+      over = true;
+      submitScore();
+      setTimeout(() => openOverlay('over'), 380);
+    }
+  }
+
+  // ---------- ulangi (pakai konfirmasi kalau lagi main) ----------
+  function disarm(){
+    armed = false;
+    clearTimeout(armTimer);
+    btnNew.classList.remove('armed');
+    btnNewLabel.textContent = 'ULANGI';
+  }
+
+  function requestRestart(){
+    const inProgress = !over && !won && score > 0;
+    if (inProgress && !armed){
+      armed = true;
+      btnNew.classList.add('armed');
+      btnNewLabel.textContent = 'YAKIN?';
+      clearTimeout(armTimer);
+      armTimer = setTimeout(disarm, 2500);
+      return;
+    }
+    disarm();
+    newGame();
+  }
+
+  // ---------- sesi Supabase (token dari localStorage, tanpa library) ----------
+  function readSession(){
+    try {
+      for (let i = 0; i < localStorage.length; i++){
+        const key = localStorage.key(i);
+        if (key && key.startsWith('sb-') && key.endsWith('-auth-token')){
+          const s = JSON.parse(localStorage.getItem(key));
+          if (s && s.access_token && s.user) return { key, s };
+        }
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  async function freshSession(){
+    const found = readSession();
+    if (!found) return null;
+    const { key, s } = found;
+    const expiring = s.expires_at && s.expires_at * 1000 < Date.now() + 30000;
+    if (!expiring) return s;
+    if (!s.refresh_token) return null;
+    try {
+      const res = await fetch(`${SB_URL}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST',
+        headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: s.refresh_token })
+      });
+      if (!res.ok) return null;
+      const n = await res.json();
+      const updated = {
+        ...s,
+        ...n,
+        expires_at: n.expires_at || Math.floor(Date.now() / 1000) + (n.expires_in || 3600)
+      };
+      lsSet(key, JSON.stringify(updated));
+      return updated;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function displayName(s){
+    const m = s.user.user_metadata || {};
+    const n = m.name || m.full_name || m.username || (s.user.email || 'pemain').split('@')[0];
+    return String(n).slice(0, 30);
+  }
+
+  // ---------- kirim skor ----------
+  async function submitScore(){
+    if (sending || saved) return;
+    const id = gameNo;
+    const finalScore = score;
+    const finalMax = maxTile;
+
+    if (finalScore <= 0){
+      setStatus('SKOR 0 TIDAK DIKIRIM');
+      return;
+    }
+
+    sending = true;
+    btnResend.hidden = true;
+    setStatus('MENYIMPAN...');
+
+    const s = await freshSession();
+    if (!s){
+      sending = false;
+      setStatus('LOGIN DULU', true);
+      if (id === gameNo) btnResend.hidden = false;
+      return;
+    }
+
+    try {
+      const res = await fetch(`${SB_URL}/rest/v1/game2048_scores`, {
+        method: 'POST',
+        headers: {
+          apikey: SB_KEY,
+          Authorization: `Bearer ${s.access_token}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal'
+        },
+        body: JSON.stringify({
+          user_id: s.user.id,
+          name: displayName(s),
+          score: finalScore,
+          max_tile: finalMax
+        })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      if (id === gameNo){
+        saved = true;
+        setStatus('TERSIMPAN');
+      }
+    } catch (e) {
+      if (id === gameNo){
+        setStatus('GAGAL KIRIM', true);
+        btnResend.hidden = false;
+      }
+    } finally {
+      sending = false;
+    }
+  }
+
+  // ---------- input ----------
+  const KEYMAP = {
+    ArrowLeft: 'L', a: 'L', A: 'L',
+    ArrowRight: 'R', d: 'R', D: 'R',
+    ArrowUp: 'U', w: 'U', W: 'U',
+    ArrowDown: 'D', s: 'D', S: 'D'
+  };
+  document.addEventListener('keydown', e => {
+    if (e.key === 'r' || e.key === 'R'){
+      requestRestart();
+      return;
+    }
+    const dir = KEYMAP[e.key];
+    if (!dir) return;
+    if (e.key.startsWith('Arrow')) e.preventDefault();
+    move(dir);
+  });
+
+  // geser: sentuh (touch events, paling luas di HP) dan mouse
+  const stageEl = document.querySelector('.stage');
+  let sx = 0, sy = 0, swiping = false, lastTouchAt = 0;
+
+  function startSwipe(x, y){ sx = x; sy = y; swiping = true; }
+  function endSwipe(x, y){
+    if (!swiping) return;
+    swiping = false;
+    const dx = x - sx, dy = y - sy;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
+    if (Math.abs(dx) > Math.abs(dy)) move(dx > 0 ? 'R' : 'L');
+    else move(dy > 0 ? 'D' : 'U');
+  }
+
+  stageEl.addEventListener('touchstart', e => {
+    lastTouchAt = Date.now();
+    const t = e.touches[0];
+    startSwipe(t.clientX, t.clientY);
+  }, { passive: true });
+  stageEl.addEventListener('touchmove', e => {
+    e.preventDefault(); // cegah halaman ikut ke-scroll waktu geser papan
+  }, { passive: false });
+  stageEl.addEventListener('touchend', e => {
+    lastTouchAt = Date.now();
+    const t = e.changedTouches[0];
+    endSwipe(t.clientX, t.clientY);
+  });
+  stageEl.addEventListener('touchcancel', () => { swiping = false; });
+
+  stageEl.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    if (Date.now() - lastTouchAt < 700) return; // abaikan mouse emulasi dari sentuhan
+    startSwipe(e.clientX, e.clientY);
+  });
+  window.addEventListener('mouseup', e => {
+    if (Date.now() - lastTouchAt < 700) return;
+    endSwipe(e.clientX, e.clientY);
+  });
+
+  // fokus ke game tiap kali kamu klik/sentuh, biar keyboard jalan di dalam iframe
+  document.addEventListener('pointerdown', () => { try { window.focus(); } catch (e) {} }, true);
+
+  // ---------- tombol ----------
+  btnNew.addEventListener('click', requestRestart);
+  btnRetry.addEventListener('click', () => { disarm(); newGame(); });
+  btnKeep.addEventListener('click', () => {
+    keepGoing = true;
+    closeOverlay();
+    setStatus('');
+  });
+  btnResend.addEventListener('click', () => submitScore());
+
+  // ---------- kunci halaman: tidak bisa scroll atas-bawah atau zoom ----------
+  document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+  document.addEventListener('gesturestart', e => e.preventDefault());
+  document.addEventListener('dblclick', e => e.preventDefault());
+  document.addEventListener('wheel', e => e.preventDefault(), { passive: false });
+  document.addEventListener('keydown', e => {
+    if (['PageUp', 'PageDown', 'Home', 'End'].includes(e.key)) e.preventDefault();
+  });
+
+  // ---------- mode debug: buka dengan ?debug=1 ----------
+  const DEBUG = /[?&]debug=1/.test(location.search);
+  const dbgEl = $('dbg');
+  function dlog(msg){
+    if (!DEBUG) return;
+    dbgEl.hidden = false;
+    dbgEl.textContent = msg;
+  }
+  if (DEBUG){
+    dlog(`siap · ${innerWidth}x${innerHeight} · ${window.top !== window ? 'dalam iframe' : 'halaman langsung'}`);
+    document.addEventListener('touchstart', e => {
+      const t = e.target;
+      dlog('sentuh: ' + (t.id || t.dataset?.dir || (t.className && String(t.className).split(' ')[0]) || t.tagName));
+    }, { capture: true, passive: true });
+    document.addEventListener('click', e => {
+      const b = e.target.closest('button');
+      dlog('klik: ' + (b?.dataset.dir ? 'panah ' + b.dataset.dir : (b?.id || e.target.tagName)));
+    }, true);
+  }
+
+  // ---------- mulai ----------
+  bestEl.textContent = best;
+  newGame();
+})();
+</script>
+</body>
+</html>
