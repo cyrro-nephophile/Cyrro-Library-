@@ -211,7 +211,9 @@ h1.disp{animation:rise 1s cubic-bezier(.2,.8,.2,1) .05s both}
 .js .items>li{opacity:0}
 .js .items>li.in{opacity:1;animation:rise .8s cubic-bezier(.2,.8,.2,1) both}
 @keyframes sheen{from{background-position:130% 0}to{background-position:-30% 0}}
-.js .items>li.in .card::before{animation:sheen .9s ease .6s 1}
+.js .items>li.in:not([data-done]) .card::before{animation:sheen .9s ease .6s 1}
+.html-lite .items>li .card::before{animation:none!important}
+.html-lite #vsTrack .fxv{will-change:auto!important}
 .card:active::before{background-position:-30% 0}
 .card:active{transform:scale(.98)}
 .items>li:nth-child(1){animation-delay:.35s}.items>li:nth-child(2){animation-delay:.45s}
@@ -506,13 +508,21 @@ body{padding-bottom:0!important;touch-action:none}
 .hero h1.disp{animation:none}
 .hero .ch{display:inline-block;animation:popin .7s cubic-bezier(.3,1.4,.5,1) both}
 .hero:not(.go) .ch{opacity:0}
-@media (max-width:799px){#vsTrack .card,#vsTrack .sh,#vsTrack #lbList li,#vsTrack .tags .tag,#vsTrack .hero .ch,#vsTrack .hero .hl{will-change:transform}}
+#vsTrack .fxv{will-change:transform}
 .ticker{animation:none!important;position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 63px);z-index:15;height:24px;transition:top .5s cubic-bezier(.2,.8,.2,1)}
 .ticker.up{top:env(safe-area-inset-top,0px)}
 .top{transition:translate .5s cubic-bezier(.2,.8,.2,1)}
 .top.hide{translate:0 -100%}
 #vsTrack{position:absolute;left:0;top:0;width:100%;padding-top:calc(env(safe-area-inset-top,0px) + 100px);padding-bottom:calc(120px + env(safe-area-inset-bottom,0px));will-change:transform}
 #cyAuthPanel input,#cyAuthPanel textarea,.pl-drawer input{touch-action:auto}
+
+/* ===== mode gelap: lebih tenang ===== */
+:root[data-theme="dark"]{--line:#cdd2c2;--sh:rgba(204,255,0,.5);--card:#121612}
+:root[data-theme="dark"] .top .mode{background:#1b221b;border-color:#cdd2c2;box-shadow:3px 3px 0 rgba(204,255,0,.5)}
+:root[data-theme="dark"] .top .mode path,:root[data-theme="dark"] .top .mode line{fill:#f4f4f0;stroke:#f4f4f0}
+.top .mode[aria-pressed="true"]{background:var(--lime)}
+:root[data-theme="dark"] .top .mode[aria-pressed="true"]{background:var(--lime)}
+:root[data-theme="dark"] .top .mode[aria-pressed="true"] path{fill:none;stroke:#0a0a0a}
 </style>
 </head>
 <body>
@@ -521,11 +531,12 @@ body{padding-bottom:0!important;touch-action:none}
   <div class="in-scan"></div>
   <div class="in-noise"></div>
   <div class="in-top"><span class="dot"></span>CYRRO // LIBRARY</div>
-  <div class="in-tr">V1.8.1</div>
+  <div class="in-tr">VERSI TEST DRIVE</div>
   <div class="in-word" id="inWord"></div>
 </div></div>
 <header class="top">
   <a class="wm disp glitch" href="/">CYR<i>RO</i></a>
+  <button class="mode" id="fxBtn" type="button" aria-label="Efek gerak" aria-pressed="false" title="Efek gerak: penuh"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 8h11M6 12h15M3 16h9" fill="none" stroke="#0a0a0a" stroke-width="2.6" stroke-linecap="square"/></svg></button>
   <button class="mode" id="modeBtn" type="button" aria-label="Ganti tema"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="#0a0a0a"/></svg></button>
   <button class="mode" id="cyAuthBtn" type="button" aria-label="Akun" aria-expanded="false"></button>
 </header>
@@ -1390,6 +1401,9 @@ body{padding-bottom:0!important;touch-action:none}
   // elemen yang ikut berefek kedalaman saat digeser
   var FX_SEL='#vsTrack .card, #vsTrack .sh, #vsTrack #lbList li, #vsTrack .lb-tabs, #vsTrack .tags .tag, #vsTrack .sub, #vsTrack .hero .ch, #vsTrack .hero .hl';
   var fx=[];
+  document.addEventListener('animationend',function(e){
+    if(e.animationName==='sheen'&&e.target.closest){ var li=e.target.closest('.items>li'); if(li) li.dataset.done='1'; }
+  });
   var tape=document.querySelector('.ticker');
   var hdrKids=Array.prototype.slice.call(document.querySelectorAll('.top > *'));
   var tapeX=0, prevTapeY=0;
@@ -1481,6 +1495,23 @@ body{padding-bottom:0!important;touch-action:none}
   // wadah tidak boleh ikut ke-scroll walau ada elemen di luar layar yang difokus
   stage.addEventListener('scroll',function(){ stage.scrollTop=0; stage.scrollLeft=0; });
 
+  // mode efek ringan: dinyalakan/dimatikan lewat tombol di header (default: efek penuh)
+  var lite=false, fxBtn=document.getElementById('fxBtn');
+  var savedFx=null; try{ savedFx=localStorage.getItem('fx'); }catch(e){}
+  function clearFx(){
+    for(var i=0;i<fx.length;i++){ var s=fx[i].el.style; s.scale=''; s.rotate=''; s.translate=''; fx[i].ls=fx[i].lr=fx[i].lt=''; }
+    for(var k=0;k<hdrKids.length;k++){ hdrKids[k].style.translate=''; hdrKids[k].style.rotate=''; }
+  }
+  function applyLite(on){
+    lite=on;
+    document.documentElement.classList.toggle('html-lite',on);
+    if(on) clearFx();
+    if(fxBtn){ fxBtn.setAttribute('aria-pressed',on?'true':'false'); fxBtn.title=on?'Efek gerak: ringan':'Efek gerak: penuh'; }
+    try{ localStorage.setItem('fx',on?'lite':'full'); }catch(e){}
+  }
+  applyLite(/[?&]lite=1/.test(location.search)||savedFx==='lite');
+  if(fxBtn) fxBtn.addEventListener('click',function(){ applyLite(!lite); });
+
   function frame(){
     if(!dragging&&Math.abs(vel)>0.1){
       target+=vel; vel*=0.94; clamp();
@@ -1507,21 +1538,24 @@ body{padding-bottom:0!important;touch-action:none}
       tape.style.backgroundPosition=tapeX.toFixed(1)+'px 0';
     }
 
-    if(!reduce&&fx.length){
+    if(!reduce&&!lite&&fx.length){
       // tertinggal sedikit saat digeser (elastis), lalu kembali pelan
       var v=y-prevY; prevY=y;
       lag+=(Math.max(-LAG_MAX,Math.min(LAG_MAX,-v*0.9*FX_LAG))-lag)*0.22;
       for(var k=0;k<hdrKids.length;k++){
         var kid=hdrKids[k], dir=(k%2?-1:1);
-        kid.style.translate='0 '+(lag*0.3*dir).toFixed(2)+'px';
-        kid.style.rotate=(lag*0.12*dir).toFixed(2)+'deg';
+        var kt='0 '+(lag*0.3*dir).toFixed(2)+'px', kr=(lag*0.12*dir).toFixed(2)+'deg';
+        if(kid._t!==kt){ kid.style.translate=kt; kid._t=kt; }
+        if(kid._r!==kr){ kid.style.rotate=kr; kid._r=kr; }
       }
       var half=stage.clientHeight/2;
       for(var i=0;i<fx.length;i++){
         var f=fx[i];
         var cy=f.base-y;             // posisi tengah elemen di layar
         var d=(cy-half)/half;        // -1 di atas, 1 di bawah
-        if(d<-1.7||d>1.7) continue;
+        var near=d>-1.25&&d<1.25;    // hanya yang dekat layar yang dihitung & punya layer sendiri
+        if(near!==f.near){ f.near=near; f.el.classList.toggle('fxv',near); }
+        if(!near) continue;
         var s=1-FX_SCALE*DESK_K*d*d;        // mengecil di tepi layar
         var rot=(d*FX_ROT*DESK_K+lag*0.2*f.boost*DESK_K)*f.dir;
         var ty=(lag*f.depth+d*FX_SHIFT*f.depth)*f.boost*DESK_K;
