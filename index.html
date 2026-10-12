@@ -211,7 +211,7 @@ h1.disp{animation:rise 1s cubic-bezier(.2,.8,.2,1) .05s both}
 .js .items>li{opacity:0}
 .js .items>li.in{opacity:1;animation:rise .8s cubic-bezier(.2,.8,.2,1) both}
 @keyframes sheen{from{background-position:130% 0}to{background-position:-30% 0}}
-.js .items>li.in:not([data-done]) .card::before{animation:sheen .9s ease .6s 1}
+.js .items>li.in:not([data-done]) .card::before{animation:none}
 .html-lite .items>li .card::before{animation:none!important}
 .html-lite #vsTrack .fxv{will-change:auto!important}
 .card:active::before{background-position:-30% 0}
@@ -509,6 +509,7 @@ body{padding-bottom:0!important;touch-action:none}
 .hero .ch{display:inline-block;animation:popin .7s cubic-bezier(.3,1.4,.5,1) both}
 .hero:not(.go) .ch{opacity:0}
 #vsTrack .fxv{will-change:transform}
+html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card.tl .tile,html.scrolling .top .wm,html.scrolling .pl-cover.spin svg,html.scrolling #plStatus.live::before,html.scrolling #plTitle.marq,html.scrolling .lb-hint span,html.scrolling .tk,html.scrolling body::before,html.scrolling .pl-dock,html.scrolling .in-top .dot{animation-play-state:paused!important}
 .ticker{animation:none!important;position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 63px);z-index:15;height:24px;transition:top .5s cubic-bezier(.2,.8,.2,1)}
 .ticker.up{top:env(safe-area-inset-top,0px)}
 .top{transition:translate .5s cubic-bezier(.2,.8,.2,1)}
@@ -523,6 +524,23 @@ body{padding-bottom:0!important;touch-action:none}
 .top .mode[aria-pressed="true"]{background:var(--lime)}
 :root[data-theme="dark"] .top .mode[aria-pressed="true"]{background:var(--lime)}
 :root[data-theme="dark"] .top .mode[aria-pressed="true"] path{fill:none;stroke:#0a0a0a}
+
+/* efek icon melayang dimatikan (hemat FPS) */
+.card .tile{animation:none!important}
+
+/* garis hazard: stripes digeser pakai transform (lapisan sendiri, tanpa gambar ulang) */
+.ticker{background-image:none!important;background-color:#0a0a0a}
+.ticker .tp{position:absolute;top:0;bottom:0;left:-28px;right:-28px;pointer-events:none;
+  background-image:linear-gradient(45deg,#ccff00 25%,#0a0a0a 25%,#0a0a0a 50%,#ccff00 50%,#ccff00 75%,#0a0a0a 75%,#0a0a0a);
+  background-size:28px 28px;will-change:transform}
+/* header dipisah ke lapisan sendiri supaya gerakan kecilnya tidak menggambar ulang */
+.top > *{will-change:transform}
+
+/* foto profil: panel akun & leaderboard */
+.upl{display:flex;align-items:center;gap:10px}
+#cyPreview{width:52px;height:52px;object-fit:cover;border:3px solid var(--line);box-shadow:3px 3px 0 var(--sh);flex:none}
+#cyFile{font-family:'JetBrains Mono',monospace;font-size:12px;max-width:100%}
+#lbList .av{width:38px;height:38px;object-fit:cover;border:2px solid var(--line);flex:none;margin-left:6px}
 </style>
 </head>
 <body>
@@ -549,7 +567,9 @@ body{padding-bottom:0!important;touch-action:none}
   <div id="cyMember" hidden>
     <label for="cyName">NAMA</label>
     <input id="cyName" type="text" maxlength="24" placeholder="Nama kamu">
-    <label for="cyAvatar">LINK AVATAR (https)</label>
+    <label for="cyFile">FOTO PROFIL</label>
+    <div class="upl"><img id="cyPreview" alt="" hidden><input id="cyFile" type="file" accept="image/*"></div>
+    <label for="cyAvatar">ATAU LINK AVATAR (https)</label>
     <input id="cyAvatar" type="url" placeholder="https://...">
     <div class="btns">
       <button class="pri" id="cySave" type="button">Simpan</button>
@@ -559,7 +579,7 @@ body{padding-bottom:0!important;touch-action:none}
   <div class="msg" id="cyMsg"></div>
 </div>
 
-<div class="ticker" aria-hidden="true"></div>
+<div class="ticker" aria-hidden="true"><i class="tp"></i></div>
 <div id="vsStage"><div id="vsTrack">
 
 <main>
@@ -1113,31 +1133,17 @@ body{padding-bottom:0!important;touch-action:none}
   }
   document.body.style.overflow='hidden';
 
-  var WORDS=[['ライブラリ','#ccff00'],['라이브러리','#ccff00'],['библиотека','#ffffff'],['पुस्तकालय','#ccff00'],['βιβλιοθήκη','#ffffff']];
-  at(550,function(){
-    intro.classList.add('dark');
-  });
-
-  var t=620,n=0;
-  while(t<3850){
-    (function(item){
-      at(t,function(){
-        word.className='in-word swap';
-        setTimeout(function(){word.textContent=item[0];word.style.color=item[1];word.className='in-word glitch'},120);
-      });
-    })(WORDS[n%WORDS.length]);
-    n++;t+=430;
-  }
-
-  at(3850,function(){word.className='in-word glitch';word.style.color='#fff';word.innerHTML='cYrRo<br>lIbRaRy'});
-  at(4330,function(){
+  // judul utama saja: sebentar glitch, lalu tampil "CYRRO LIBRARY" dan intro selesai
+  at(550,function(){ intro.classList.add('dark'); });
+  at(650,function(){ word.className='in-word glitch'; word.style.color='#fff'; word.innerHTML='cYrRo<br>lIbRaRy'; });
+  at(1050,function(){
     word.className='in-word swap';
     setTimeout(function(){
-      word.className='in-word';word.style.color='';
+      word.className='in-word'; word.style.color='';
       word.innerHTML='<span class="a">CYRRO</span><br><span class="b">LIBRARY</span>';
     },120);
   });
-  at(5450,finish);
+  at(1700,finish);
 })();
 </script>
 <script>
@@ -1215,6 +1221,7 @@ body{padding-bottom:0!important;touch-action:none}
     member.hidden = !user;
     nameIn.value = m.display_name || '';
     avIn.value = m.avatar_url || '';
+    var pvEl=document.getElementById('cyPreview'); if(pvEl){ pvEl.src=m.avatar_url||''; pvEl.hidden=!m.avatar_url; }
     btn.textContent = '';
     if(user && m.avatar_url){
       const img = document.createElement('img');
@@ -1232,6 +1239,39 @@ body{padding-bottom:0!important;touch-action:none}
     if(open && !panel.contains(e.target) && !btn.contains(e.target)) setOpen(false);
   });
   document.addEventListener('keydown', e => { if(e.key === 'Escape') setOpen(false); });
+
+  const CY_SB_URL='https://nmfoshrrflgnuubsxuhk.supabase.co';
+  const CY_SB_KEY='sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l';
+  const fileIn=document.getElementById('cyFile'), prevEl=document.getElementById('cyPreview');
+  fileIn.addEventListener('change', async () => {
+    const f=fileIn.files && fileIn.files[0];
+    if(!f) return;
+    if(!f.type.startsWith('image/')){ msg.textContent='File harus berupa gambar.'; return; }
+    if(f.size>8*1024*1024){ msg.textContent='Ukuran foto maksimal 8 MB.'; return; }
+    msg.textContent='Menyiapkan foto...';
+    let bmp;
+    try{ bmp=await createImageBitmap(f); }catch(e){ msg.textContent='Gagal membaca gambar.'; return; }
+    const S=256, cv=document.createElement('canvas'); cv.width=S; cv.height=S;
+    const side=Math.min(bmp.width,bmp.height), sx=(bmp.width-side)/2, sy=(bmp.height-side)/2;
+    cv.getContext('2d').drawImage(bmp,sx,sy,side,side,0,0,S,S);
+    const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.85));
+    const { data:{ session } } = await sb.auth.getSession();
+    if(!session){ msg.textContent='Login dulu untuk ganti foto.'; return; }
+    msg.textContent='Mengunggah...';
+    const path=session.user.id+'/avatar.jpg';
+    const up=await fetch(CY_SB_URL+'/storage/v1/object/avatars/'+path,{
+      method:'POST',
+      headers:{ apikey:CY_SB_KEY, Authorization:'Bearer '+session.access_token, 'Content-Type':'image/jpeg', 'x-upsert':'true' },
+      body:blob
+    });
+    if(!up.ok){ msg.textContent='Gagal unggah foto ('+up.status+').'; return; }
+    const url=CY_SB_URL+'/storage/v1/object/public/avatars/'+path+'?v='+Date.now();
+    const { error } = await sb.auth.updateUser({ data:{ avatar_url:url } });
+    if(error){ msg.textContent='Gagal menyimpan: '+error.message; return; }
+    avIn.value=url; prevEl.src=url; prevEl.hidden=false;
+    fileIn.value='';
+    msg.textContent='Foto profil tersimpan.';
+  });
 
   document.getElementById('cySave').addEventListener('click', async () => {
     const av = avIn.value.trim();
@@ -1262,13 +1302,13 @@ body{padding-bottom:0!important;touch-action:none}
   var data = {}, failed = {};
 
   var queries = {
-    catur: function(){ return sbLb.from('chess_leaderboard').select('name,level,moves').order('level',{ascending:false}).order('moves',{ascending:true}).limit(10); },
-    pacman: function(){ return sbLb.from('pacman_leaderboard').select('name,score,level').order('score',{ascending:false}).limit(10); },
-    tetris: function(){ return sbLb.from('tetris_leaderboard').select('name,score,level,lines').order('score',{ascending:false}).limit(10); },
-    blockblast: function(){ return sbLb.from('blockblast_leaderboard').select('name,score').order('score',{ascending:false}).limit(10); },
-    minesweeper: function(){ return sbLb.from('minesweeper_leaderboard').select('name,level,secs,level_rank').order('level_rank',{ascending:false}).order('secs',{ascending:true}).limit(10); },
-    game2048: function(){ return sbLb.from('game2048_leaderboard').select('name,score,max_tile').order('score',{ascending:false}).limit(10); },
-    dino: function(){ return sbLb.from('dino_leaderboard').select('name,score').order('score',{ascending:false}).limit(10); }
+    catur: function(){ return sbLb.from('chess_leaderboard').select('name,level,moves,avatar_url').order('level',{ascending:false}).order('moves',{ascending:true}).limit(10); },
+    pacman: function(){ return sbLb.from('pacman_leaderboard').select('name,score,level,avatar_url').order('score',{ascending:false}).limit(10); },
+    tetris: function(){ return sbLb.from('tetris_leaderboard').select('name,score,level,lines,avatar_url').order('score',{ascending:false}).limit(10); },
+    blockblast: function(){ return sbLb.from('blockblast_leaderboard').select('name,score,avatar_url').order('score',{ascending:false}).limit(10); },
+    minesweeper: function(){ return sbLb.from('minesweeper_leaderboard').select('name,level,secs,level_rank,avatar_url').order('level_rank',{ascending:false}).order('secs',{ascending:true}).limit(10); },
+    game2048: function(){ return sbLb.from('game2048_leaderboard').select('name,score,max_tile,avatar_url').order('score',{ascending:false}).limit(10); },
+    dino: function(){ return sbLb.from('dino_leaderboard').select('name,score,avatar_url').order('score',{ascending:false}).limit(10); }
   };
 
   var fmt = function(n){ return Number(n).toLocaleString('id-ID'); };
@@ -1311,7 +1351,12 @@ body{padding-bottom:0!important;touch-action:none}
       var sc = document.createElement('b'); sc.className = 'sc'; sc.textContent = pv[0];
       var sx = document.createElement('small'); sx.className = 'sx'; sx.textContent = pv[1];
       mt.append(sc, sx);
-      li.append(rk, nm, mt);
+      li.append(rk);
+      if(row.avatar_url){
+        var av=document.createElement('img'); av.className='av'; av.alt=''; av.loading='lazy'; av.src=row.avatar_url;
+        li.append(av);
+      }
+      li.append(nm, mt);
       list.appendChild(li);
     });
   }
@@ -1405,8 +1450,10 @@ body{padding-bottom:0!important;touch-action:none}
     if(e.animationName==='sheen'&&e.target.closest){ var li=e.target.closest('.items>li'); if(li) li.dataset.done='1'; }
   });
   var tape=document.querySelector('.ticker');
+  var tapeEl=document.querySelector('.ticker .tp');
   var hdrKids=Array.prototype.slice.call(document.querySelectorAll('.top > *'));
   var tapeX=0, prevTapeY=0;
+  var scrollOn=false, scrollLastT=0;
   var hdr=document.querySelector('.top');
   var hdrHidden=false, hdrPrevY=0, hdrLastMove=performance.now();
   function setHdr(hide){
@@ -1521,6 +1568,12 @@ body{padding-bottom:0!important;touch-action:none}
     if(Math.abs(target-y)<0.05) y=target;
     track.style.transform='translate3d(0,'+(-y).toFixed(2)+'px,0)';
 
+    // tandai "sedang digeser" supaya animasi berulang diam sementara (hemat FPS)
+    var movingNow=dragging||Math.abs(vel)>0.1||Math.abs(target-y)>0.5||Math.abs(lag)>0.3;
+    var nowS=performance.now();
+    if(movingNow){ scrollLastT=nowS; if(!scrollOn){ scrollOn=true; document.documentElement.classList.add('scrolling'); } }
+    else if(scrollOn&&nowS-scrollLastT>250){ scrollOn=false; document.documentElement.classList.remove('scrolling'); }
+
     // header: naik saat scroll ke bawah, muncul lagi saat ke atas atau saat berhenti
     var hdy=y-hdrPrevY; hdrPrevY=y;
     if(Math.abs(hdy)>0.3){
@@ -1535,7 +1588,7 @@ body{padding-bottom:0!important;touch-action:none}
     // garis polisi: jalan terus pelan, dan ikut melesat saat digeser
     if(tape&&!reduce){
       tapeX+=0.6+(y-prevTapeY)*1.1; prevTapeY=y;
-      tape.style.backgroundPosition=tapeX.toFixed(1)+'px 0';
+      tapeEl.style.transform='translate3d('+(-(((tapeX%28)+28)%28)).toFixed(2)+'px,0,0)';
     }
 
     if(!reduce&&!lite&&fx.length){
