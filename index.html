@@ -413,8 +413,10 @@ body.gm-open{overflow:hidden}
 #lbList{list-style:none;display:grid;gap:12px;margin-top:4px}
 #lbList li{display:flex;align-items:center;gap:12px;background:var(--card);border:3px solid var(--line);box-shadow:5px 5px 0 var(--sh);padding:10px 12px}
 #lbList .rk{font-family:'Anton',Impact,sans-serif;font-size:26px;width:44px;flex:none;color:var(--fg)}
-#lbList .nm{flex:1;min-width:0;font-family:'Anton',Impact,sans-serif;text-transform:uppercase;font-size:20px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#lbList .mt{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mut);text-align:right;white-space:nowrap}
+#lbList .nm{flex:1;min-width:0;font-family:'Anton',Impact,sans-serif;text-transform:uppercase;font-size:14px;letter-spacing:.04em;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--mut)}
+#lbList .mt{display:flex;flex-direction:column;align-items:flex-end;flex:none;white-space:nowrap}
+#lbList .sc{font-family:'Anton',Impact,sans-serif;font-weight:400;font-size:30px;line-height:1;color:var(--fg);font-variant-numeric:tabular-nums}
+#lbList .sx{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin-top:3px}
 #lbList .empty{display:block;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--mut);border:3px dashed var(--line);padding:12px;box-shadow:none}
 </style>
 <style>
@@ -1222,6 +1224,16 @@ body.gm-open{overflow:hidden}
   };
 
   var fmt = function(n){ return Number(n).toLocaleString('id-ID'); };
+  // nilai utama ditampilkan besar, keterangan kecil di bawahnya
+  var parts = {
+    catur:      function(r){ return ['LVL ' + r.level, r.moves + ' LANGKAH']; },
+    pacman:     function(r){ return [fmt(r.score), 'POIN']; },
+    tetris:     function(r){ return [fmt(r.score), 'POIN · LVL ' + r.level]; },
+    blockblast: function(r){ return [fmt(r.score), 'POIN']; },
+    minesweeper:function(r){ return [String(r.secs), 'DETIK · ' + String(r.level).toUpperCase()]; },
+    game2048:   function(r){ return [fmt(r.score), 'POIN · UBIN ' + r.max_tile]; },
+    dino:       function(r){ return [fmt(r.score), 'POIN']; }
+  };
   var meta = {
     catur: function(r){ return 'LVL ' + r.level + ' · ' + r.moves + ' LANGKAH'; },
     pacman: function(r){ return fmt(r.score) + ' POIN'; },
@@ -1246,7 +1258,11 @@ body.gm-open{overflow:hidden}
       var li = document.createElement('li');
       var rk = document.createElement('span'); rk.className = 'rk'; rk.textContent = String(i + 1).padStart(2, '0');
       var nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = row.name;
-      var mt = document.createElement('span'); mt.className = 'mt'; mt.textContent = meta[g](row);
+      var mt = document.createElement('span'); mt.className = 'mt';
+      var pv = parts[g](row);
+      var sc = document.createElement('b'); sc.className = 'sc'; sc.textContent = pv[0];
+      var sx = document.createElement('small'); sx.className = 'sx'; sx.textContent = pv[1];
+      mt.append(sc, sx);
       li.append(rk, nm, mt);
       list.appendChild(li);
     });
