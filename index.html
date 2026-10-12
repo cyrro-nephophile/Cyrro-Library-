@@ -42,7 +42,7 @@ a{color:inherit}
 
 /* ───────── header ───────── */
 .top{
-  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;
+  position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;gap:12px;
   height:calc(env(safe-area-inset-top,0px) + 64px);padding:env(safe-area-inset-top,0px) 16px 0;
   background:#101510;border-bottom:4px solid #0a0a0a;
 }
@@ -478,6 +478,32 @@ body.gm-open{overflow:hidden}
 /* ikon SVG kartu mini game */
 .card.mg .tile svg{width:124px;height:124px;display:block;overflow:visible}
 @media (max-width:639px){.card.mg .tile svg{width:54px;height:54px}}
+
+/* ===== animasi scroll untuk elemen lain (sama seperti kartu) ===== */
+.js .rv{opacity:0;transform:translateY(24px);transition:opacity .55s ease var(--d,0ms),transform .7s cubic-bezier(.2,.8,.2,1) var(--d,0ms)}
+.js .rv.in{opacity:1;transform:none}
+.js .rv.sh{transform:translateX(-22px)}
+.js .rv.sh.in{transform:none}
+.js .rv.lb-tabs{transform:translateY(18px) scale(.985)}
+.js .rv.lb-tabs.in{transform:none}
+@media (prefers-reduced-motion:reduce){.js .rv{opacity:1!important;transform:none!important;transition:none!important}}
+
+/* ===== halaman terkunci: isi digeser dengan transform (virtual scroll) ===== */
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+html{scroll-behavior:auto}
+body{padding-bottom:0!important;touch-action:none}
+#vsStage{position:fixed;inset:0;overflow:hidden;overflow:clip}
+/* hero: animasi baru jalan setelah intro selesai */
+.hero:not(.go) h1.disp,.hero:not(.go) .hl,.hero:not(.go) .sub,.hero:not(.go) .tags .tag,.hero:not(.go) .ch{animation-play-state:paused!important}
+.hero h1.disp{animation:none}
+.hero .ch{display:inline-block;animation:popin .7s cubic-bezier(.3,1.4,.5,1) both}
+.hero:not(.go) .ch{opacity:0}
+.ticker{animation:none!important;position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 63px);z-index:15;height:24px;transition:top .5s cubic-bezier(.2,.8,.2,1)}
+.ticker.up{top:env(safe-area-inset-top,0px)}
+.top{transition:translate .5s cubic-bezier(.2,.8,.2,1)}
+.top.hide{translate:0 -100%}
+#vsTrack{position:absolute;left:0;top:0;width:100%;padding-top:calc(env(safe-area-inset-top,0px) + 100px);padding-bottom:calc(120px + env(safe-area-inset-bottom,0px));will-change:transform}
+#cyAuthPanel input,#cyAuthPanel textarea,.pl-drawer input{touch-action:auto}
 </style>
 </head>
 <body>
@@ -514,6 +540,7 @@ body.gm-open{overflow:hidden}
 </div>
 
 <div class="ticker" aria-hidden="true"></div>
+<div id="vsStage"><div id="vsTrack">
 
 <main>
   <section class="hero">
@@ -806,6 +833,7 @@ body.gm-open{overflow:hidden}
   </details>
 </section>
 </main>
+</div></div>
 <div class="gm" id="gmOverlay" hidden>
   <div class="gm-bar"><button class="gm-back" id="gmBack" type="button">← BALIK</button><span class="gm-title" id="gmTitle"></span></div>
   <iframe class="gm-frame" id="gmFrame" title="Mini game"></iframe>
@@ -1297,5 +1325,220 @@ body.gm-open{overflow:hidden}
 })();
 </script>
 
+<script>
+(function(){
+  /* elemen yang dianimasikan saat masuk layar: header section, tab & baris leaderboard */
+  if(!('IntersectionObserver' in window)) return;
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      var el=en.target;
+      if(en.isIntersecting){
+        el.style.setProperty('--d',(el.dataset.d||'0')+'ms');
+        el.classList.add('in');
+      }else{
+        el.style.setProperty('--d','0ms');
+        el.classList.remove('in');
+      }
+    });
+  },{threshold:.12,rootMargin:'0px 0px -6% 0px'});
+
+  function watch(el){
+    if(el.dataset.rvw) return;
+    el.dataset.rvw='1';
+    el.classList.add('rv');
+    io.observe(el);
+  }
+  function scan(){
+    document.querySelectorAll('.sec .sh, .lb-box > .sh, .lainnya-inner > .sh').forEach(watch);
+    document.querySelectorAll('.lb-tabs').forEach(watch);
+    document.querySelectorAll('#lbList').forEach(function(list){
+      Array.prototype.forEach.call(list.children,function(li,i){
+        li.dataset.d=String(Math.min(i,8)*70);
+        watch(li);
+      });
+    });
+  }
+  scan();
+  new MutationObserver(scan).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+<script>
+(function(){
+  var stage=document.getElementById('vsStage'), track=document.getElementById('vsTrack');
+  if(!stage||!track) return;
+  var SPEED=1.2, EASE=0.22;
+  var y=0, target=0, vel=0, max=0, dragging=false, ignoring=false, lastY=0, lastT=0, prevY=0, lag=0;
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // area yang punya scroll/kontrol sendiri: jangan dibajak
+  var SKIP='#gmOverlay,#plWrap,#cyAuthPanel,#intro,input,textarea,select,[contenteditable="true"]';
+  // elemen yang ikut berefek kedalaman saat digeser
+  var FX_SEL='#vsTrack .card, #vsTrack .sh, #vsTrack #lbList li, #vsTrack .lb-tabs, #vsTrack .tags .tag, #vsTrack .sub, #vsTrack .hero .ch, #vsTrack .hero .hl';
+  var fx=[];
+  var tape=document.querySelector('.ticker');
+  var hdrKids=Array.prototype.slice.call(document.querySelectorAll('.top > *'));
+  var tapeX=0, prevTapeY=0;
+  var hdr=document.querySelector('.top');
+  var hdrHidden=false, hdrPrevY=0, hdrLastMove=performance.now();
+  function setHdr(hide){
+    if(hide===hdrHidden) return;
+    hdrHidden=hide;
+    if(hdr) hdr.classList.toggle('hide',hide);
+    if(tape) tape.classList.toggle('up',hide);
+  }
+  // ===== atur kekuatan efek di sini =====
+  var FX_SCALE=0.16;   // seberapa kecil elemen di tepi layar (makin besar = makin kecil)
+  var FX_ROT=3.2;      // kemiringan (derajat) di tepi layar
+  var FX_SHIFT=14;     // geser vertikal di tepi layar (px)
+  var FX_LAG=1.0;      // seberapa jauh elemen tertinggal saat digeser
+  var LAG_MAX=24;      // batas maksimal tertinggal (px)
+
+  function skip(t){ return !!(t && t.closest && t.closest(SKIP)); }
+  function clamp(){ target=Math.min(max,Math.max(0,target)); }
+
+  // catat posisi tiap elemen di dalam isi (tanpa efek), supaya tidak perlu membaca layout tiap frame
+  function collect(){
+    var keep=track.style.transform;
+    track.style.transform='none';
+    var base=track.getBoundingClientRect().top;
+    var els=document.querySelectorAll(FX_SEL);
+    fx=[];
+    for(var i=0;i<els.length;i++){
+      var r=els[i].getBoundingClientRect();
+      if(r.height===0) continue;
+      var el=els[i], boost=1;
+      if(el.classList.contains('ch')) boost=2.2;
+      else if(el.classList.contains('hl')) boost=1.6;
+      else if(el.classList.contains('tag')) boost=1.3;
+      fx.push({el:el, base:(r.top-base)+r.height/2, dir:(i%2?1:-1), depth:0.8+((i*37)%11)/25, boost:boost});
+    }
+    track.style.transform=keep;
+  }
+  function measure(){
+    max=Math.max(0,track.offsetHeight-stage.clientHeight);
+    clamp();
+    collect();
+  }
+  if('ResizeObserver' in window) new ResizeObserver(measure).observe(track);
+  window.addEventListener('resize',measure);
+  window.addEventListener('load',measure);
+  measure();
+
+  window.addEventListener('wheel',function(e){
+    if(skip(e.target)) return;
+    e.preventDefault();
+    var d=(e.deltaMode===1?e.deltaY*32:e.deltaMode===2?e.deltaY*stage.clientHeight:e.deltaY)*SPEED;
+    vel=0; target+=d; clamp();
+  },{passive:false});
+
+  window.addEventListener('touchstart',function(e){
+    ignoring=skip(e.target);
+    if(ignoring) return;
+    dragging=true; vel=0;
+    lastY=e.touches[0].clientY; lastT=performance.now();
+  },{passive:true});
+  window.addEventListener('touchmove',function(e){
+    if(ignoring||!dragging) return;
+    e.preventDefault();
+    var cy=e.touches[0].clientY;
+    var dy=(lastY-cy)*SPEED;
+    lastY=cy; target+=dy; clamp();
+    var now=performance.now(), dt=Math.max(1,now-lastT);
+    vel=(dy/dt)*16; lastT=now;
+  },{passive:false});
+  window.addEventListener('touchend',function(){ dragging=false; ignoring=false; },{passive:true});
+
+  window.addEventListener('keydown',function(e){
+    var a=document.activeElement;
+    if(a&&a.matches&&a.matches('input,textarea,select,[contenteditable="true"]')) return;
+    var step={ArrowDown:80,ArrowUp:-80,PageDown:stage.clientHeight*.8,PageUp:-stage.clientHeight*.8,' ':stage.clientHeight*.8}[e.key];
+    if(step===undefined) return;
+    if(e.key===' '&&e.target&&e.target.closest&&e.target.closest('button,a')) return;
+    if(skip(e.target)) return;
+    e.preventDefault();
+    vel=0; target+=step; clamp();
+  });
+
+  // wadah tidak boleh ikut ke-scroll walau ada elemen di luar layar yang difokus
+  stage.addEventListener('scroll',function(){ stage.scrollTop=0; stage.scrollLeft=0; });
+
+  function frame(){
+    if(!dragging&&Math.abs(vel)>0.1){
+      target+=vel; vel*=0.94; clamp();
+      if(target<=0||target>=max) vel=0;
+    }
+    y+=(target-y)*(reduce?1:EASE);
+    if(Math.abs(target-y)<0.05) y=target;
+    track.style.transform='translate3d(0,'+(-y).toFixed(2)+'px,0)';
+
+    // header: naik saat scroll ke bawah, muncul lagi saat ke atas atau saat berhenti
+    var hdy=y-hdrPrevY; hdrPrevY=y;
+    if(Math.abs(hdy)>0.3){
+      hdrLastMove=performance.now();
+      if(hdy>0&&y>40) setHdr(true);
+      else if(hdy<0) setHdr(false);
+    } else if(performance.now()-hdrLastMove>260){
+      setHdr(false);
+    }
+    if(y<30) setHdr(false);
+
+    // garis polisi: jalan terus pelan, dan ikut melesat saat digeser
+    if(tape&&!reduce){
+      tapeX+=0.6+(y-prevTapeY)*1.1; prevTapeY=y;
+      tape.style.backgroundPosition=tapeX.toFixed(1)+'px 0';
+    }
+
+    if(!reduce&&fx.length){
+      // tertinggal sedikit saat digeser (elastis), lalu kembali pelan
+      var v=y-prevY; prevY=y;
+      lag+=(Math.max(-LAG_MAX,Math.min(LAG_MAX,-v*0.9*FX_LAG))-lag)*0.22;
+      for(var k=0;k<hdrKids.length;k++){
+        var kid=hdrKids[k], dir=(k%2?-1:1);
+        kid.style.translate='0 '+(lag*0.3*dir).toFixed(2)+'px';
+        kid.style.rotate=(lag*0.12*dir).toFixed(2)+'deg';
+      }
+      var half=stage.clientHeight/2;
+      for(var i=0;i<fx.length;i++){
+        var f=fx[i];
+        var cy=f.base-y;             // posisi tengah elemen di layar
+        var d=(cy-half)/half;        // -1 di atas, 1 di bawah
+        if(d<-1.7||d>1.7) continue;
+        var s=1-FX_SCALE*d*d;        // mengecil di tepi layar
+        var rot=(d*FX_ROT+lag*0.2*f.boost)*f.dir;
+        var ty=(lag*f.depth+d*FX_SHIFT*f.depth)*f.boost;
+        f.el.style.scale=s.toFixed(3);
+        f.el.style.rotate=rot.toFixed(2)+'deg';
+        f.el.style.translate='0 '+ty.toFixed(2)+'px';
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+<script>
+(function(){
+  var hero=document.querySelector('.hero'), root=document.documentElement;
+  var title=document.querySelector('.hero h1.disp');
+  if(!hero) return;
+  // judul "Library": tiap huruf muncul satu-satu
+  if(title&&title.firstChild&&title.firstChild.nodeType===3&&!title.dataset.split){
+    var word=title.firstChild.textContent, frag=document.createDocumentFragment();
+    title.dataset.split='1';
+    Array.prototype.forEach.call(word,function(c,i){
+      var s=document.createElement('span'); s.className='ch'; s.textContent=c;
+      s.style.animationDelay=(0.15+i*0.08)+'s';
+      frag.appendChild(s);
+    });
+    title.replaceChild(frag,title.firstChild);
+  }
+  function go(){ hero.classList.add('go'); }
+  if(!root.classList.contains('intro-on')){ go(); return; }
+  var mo=new MutationObserver(function(){
+    if(!root.classList.contains('intro-on')){ mo.disconnect(); go(); }
+  });
+  mo.observe(root,{attributes:true,attributeFilter:['class']});
+  setTimeout(go,6000);   // pengaman kalau intro tidak pernah selesai
+})();
+</script>
 </body>
 </html>
