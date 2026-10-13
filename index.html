@@ -609,6 +609,10 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
       <button type="button" data-m="weekly" aria-pressed="false">MINGGUAN</button>
       <button type="button" data-m="all" aria-pressed="true">SEPANJANG MASA</button>
     </div>
+    <div class="lb-mode lb-scope" role="group" aria-label="Pemain">
+      <button type="button" data-s="all" aria-pressed="true">SEMUA</button>
+      <button type="button" data-s="friends" aria-pressed="false">TEMAN</button>
+    </div>
     <div class="lb-tabs-wrap" id="lbTabsWrap">
     <div class="lb-tabs" role="tablist">
       <button type="button" role="tab" data-g="catur" aria-selected="true">CATUR</button>
@@ -1312,6 +1316,7 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
   var sbLb = window.supabase.createClient('https://nmfoshrrflgnuubsxuhk.supabase.co', 'sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l');
   var list = document.getElementById('lbList');
   var lbMode = 'all';
+  var lbScope = 'all', friendIds = [];
   function lbSfx(){ return lbMode === 'weekly' ? '_weekly' : '_leaderboard'; }
   var tabs = Array.prototype.slice.call(document.querySelectorAll('.lb-tabs button'));
   var data = {}, failed = {};
@@ -1408,12 +1413,31 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
     });
   });
 
+  function scopeQ(q){ return lbScope === 'friends' ? q.in('user_id', friendIds) : q; }
+
+  async function loadFriends(){
+    var r = await sbLb.rpc('my_friend_ids');
+    friendIds = r.data || [];
+  }
+
+  var scopeBtns = Array.prototype.slice.call(document.querySelectorAll('.lb-scope button'));
+  scopeBtns.forEach(function(b){
+    b.addEventListener('click', function(){
+      if(b.dataset.s === lbScope) return;
+      lbScope = b.dataset.s;
+      scopeBtns.forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
+      loadAll();
+    });
+  });
+
   async function loadAll(){
     document.getElementById('lbList').innerHTML = '<li class="empty">Memuat skor...</li>';
     Object.keys(data).forEach(function(k){ delete data[k]; });
     Object.keys(failed).forEach(function(k){ delete failed[k]; });
+    if(lbScope === 'friends') await loadFriends();
     await Promise.all(Object.keys(queries).map(function(k){
-      return queries[k]().then(function(r){
+      if(lbScope === 'friends' && !friendIds.length){ data[k] = []; return Promise.resolve(); }
+      return scopeQ(queries[k]()).then(function(r){
         if(r.error) failed[k] = true; else data[k] = r.data;
       }).catch(function(){ failed[k] = true; });
     }));

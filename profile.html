@@ -75,6 +75,21 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
 .more{display:block;margin:20px auto 0;padding:10px 18px;background:#fff;color:#0a0a0a;border:3px solid #0a0a0a;box-shadow:4px 4px 0 #0a0a0a;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;cursor:pointer}
 .more:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 #0a0a0a}
 .more:active{transform:translate(2px,2px);box-shadow:none}
+.fbox{display:grid;gap:12px;padding:16px;background:var(--card);border:3px solid var(--line);box-shadow:6px 6px 0 var(--sh)}
+.frow{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.fkey{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--mut)}
+.fcode{font-family:'Anton',Impact,sans-serif;font-weight:400;font-size:28px;letter-spacing:.12em;background:var(--lime);color:#0a0a0a;padding:0 8px;border:3px solid #0a0a0a}
+.fin{flex:1;min-width:160px;padding:8px;border:3px solid var(--line);background:var(--bg);color:var(--fg);font-family:'JetBrains Mono',monospace;font-size:14px;letter-spacing:.12em;text-transform:uppercase}
+.pb{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;padding:8px 12px;background:#fff;color:#0a0a0a;border:3px solid #0a0a0a;box-shadow:3px 3px 0 #0a0a0a;cursor:pointer}
+.pb.pri{background:var(--lime)}
+.fmsg{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--mut);min-height:1em}
+.flist{list-style:none;display:grid;gap:10px;margin-top:16px}
+.fi{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--card);border:3px solid var(--line);box-shadow:4px 4px 0 var(--sh)}
+.fav{width:38px;height:38px;flex:none;display:grid;place-items:center;overflow:hidden;background:var(--lime);color:#0a0a0a;border:2px solid #0a0a0a;font-family:'Anton',Impact,sans-serif;font-size:18px}
+.fav img{width:100%;height:100%;object-fit:cover;display:block}
+.fname{flex:1;min-width:0;font-family:'Anton',Impact,sans-serif;text-transform:uppercase;font-size:18px;text-decoration:none;color:inherit;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.facts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.fwait,.fnone{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--mut)}
 @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 @keyframes pop{from{opacity:0;transform:scale(.6) rotate(-6deg)}to{opacity:1;transform:none}}
 #view .hero,#view .sh,#view .gc,#view .hi{animation:rise .5s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:var(--d,0ms)}
@@ -114,6 +129,23 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
 
     <div class="sh"><h2>Skor tertinggi</h2><i></i><span>7 GAME</span></div>
     <ol class="gg" id="best"></ol>
+
+    <section id="friends" hidden>
+      <div class="sh"><h2>Teman</h2><i></i><span id="frCount">0 TEMAN</span></div>
+      <div class="fbox">
+        <div class="frow">
+          <span class="fkey">KODE KAMU</span>
+          <strong class="fcode" id="myCode">------</strong>
+          <button type="button" class="pb" id="copyCode">SALIN</button>
+        </div>
+        <div class="frow">
+          <input id="codeIn" class="fin" maxlength="6" placeholder="Kode teman" autocomplete="off" autocapitalize="characters">
+          <button type="button" class="pb pri" id="addBtn">TAMBAH</button>
+        </div>
+        <p class="fmsg" id="fmsg" aria-live="polite"></p>
+      </div>
+      <ol class="flist" id="flist"></ol>
+    </section>
 
     <div class="sh"><h2>Riwayat</h2><i></i><span id="histCount">0 SKOR</span></div>
     <ol class="hist" id="hist"></ol>
@@ -320,6 +352,70 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
   }
   window.sbClient=window.supabase.createClient(SB_URL,SB_KEY);
 
+  // ===== teman =====
+  var FM={sent:'Permintaan terkirim. Tunggu dia menerima ya.',not_found:'Kode itu nggak ketemu.',self:'Itu kode kamu sendiri.',already:'Kalian udah berteman.',pending:'Permintaan udah ada, cek daftar di bawah.',login:'Login dulu ya.'};
+  function fmsg(t){ $('fmsg').textContent=t||''; }
+
+  function frow(f){
+    var li=el('li','fi'), av=el('span','fav'), ini=(f.name||'?').charAt(0).toUpperCase();
+    if(f.avatar_url){
+      var im=el('img'); im.alt='';
+      im.onerror=function(){ av.replaceChildren(el('span',null,ini)); };
+      im.src=f.avatar_url; av.replaceChildren(im);
+    }else av.textContent=ini;
+    var nm=el('a','fname',f.name); nm.href='profile.html?u='+encodeURIComponent(f.friend_id);
+    var acts=el('span','facts');
+    function btn(label,cls,fn){ var b=el('button',cls,label); b.type='button'; b.onclick=fn; acts.appendChild(b); }
+    if(f.status==='accepted'){
+      btn('HAPUS','pb',function(){ act('remove_friend',{p_other:f.friend_id}); });
+    }else if(f.incoming){
+      btn('TERIMA','pb pri',function(){ act('respond_friend_request',{p_from:f.friend_id,p_accept:true}); });
+      btn('TOLAK','pb',function(){ act('respond_friend_request',{p_from:f.friend_id,p_accept:false}); });
+    }else{
+      acts.appendChild(el('span','fwait','MENUNGGU'));
+      btn('BATAL','pb',function(){ act('remove_friend',{p_other:f.friend_id}); });
+    }
+    li.append(av,nm,acts);
+    return li;
+  }
+
+  async function loadList(){
+    var r=await window.sbClient.rpc('my_friends');
+    var list=r.data||[], ol=$('flist');
+    ol.replaceChildren();
+    list.forEach(function(f){ ol.appendChild(frow(f)); });
+    $('frCount').textContent=list.filter(function(f){return f.status==='accepted';}).length+' TEMAN';
+    if(!list.length) ol.appendChild(el('li','fnone','Belum ada teman. Bagiin kode kamu ya.'));
+  }
+
+  async function act(fn,args){
+    var r=await window.sbClient.rpc(fn,args);
+    if(r.error) fmsg('Gagal: '+r.error.message);
+    loadList();
+  }
+
+  async function initFriends(){
+    $('friends').hidden=false;
+    var c=await window.sbClient.rpc('my_friend_code');
+    $('myCode').textContent=c.data||'------';
+    $('copyCode').onclick=function(){
+      if(!c.data) return;
+      navigator.clipboard.writeText(c.data)
+        .then(function(){ fmsg('Kode udah disalin.'); })
+        .catch(function(){ fmsg('Gagal menyalin.'); });
+    };
+    $('addBtn').onclick=async function(){
+      var code=$('codeIn').value.trim();
+      if(code.length!==6){ fmsg('Kodenya 6 karakter.'); return; }
+      var r=await window.sbClient.rpc('send_friend_request',{p_code:code});
+      if(r.error){ fmsg('Gagal: '+r.error.message); return; }
+      fmsg(FM[r.data]||'Gagal menambah teman.');
+      $('codeIn').value='';
+      loadList();
+    };
+    loadList();
+  }
+
   // profil publik: profile.html?u=<id>, tidak perlu login
   var uidParam=new URLSearchParams(location.search).get('u');
   if(uidParam){
@@ -340,6 +436,7 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
     var s=res.data&&res.data.session;
     if(!s){ show('guest'); return; }
     var m=s.user.user_metadata||{};
+    initFriends();
     return load({name:m.display_name,avatar_url:m.avatar_url,bio:m.bio,created_at:s.user.created_at},s.user.id);
   }).catch(function(){
     $('state').textContent='Gagal memuat profil. Coba refresh ya.';
