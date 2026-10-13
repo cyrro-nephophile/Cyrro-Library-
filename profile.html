@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <script>try{var _t=localStorage.getItem('theme');if(_t==='dark'||_t==='light')document.documentElement.setAttribute('data-theme',_t);else if(matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}</script>
 <meta name="theme-color" content="#ccff00"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="C-Library"/>
 <meta name="robots" content="noindex"/>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%91%A4%3C/text%3E%3C/svg%3E"/>
 <title>Profil — C-Library</title>
@@ -90,6 +94,8 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
 .fname{flex:1;min-width:0;font-family:'Anton',Impact,sans-serif;text-transform:uppercase;font-size:18px;text-decoration:none;color:inherit;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .facts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .fwait,.fnone{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--mut)}
+#pubWrap{margin-top:14px}
+.pb:disabled{opacity:.55;cursor:default}
 @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 @keyframes pop{from{opacity:0;transform:scale(.6) rotate(-6deg)}to{opacity:1;transform:none}}
 #view .hero,#view .sh,#view .gc,#view .hi{animation:rise .5s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:var(--d,0ms)}
@@ -119,6 +125,7 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
         <h1 class="disp who" id="who">PEMAIN</h1>
         <p class="meta" id="meta"></p>
         <p class="bio" id="bio"></p>
+        <div id="pubWrap" hidden><button class="pb pri" id="pubFriend" type="button">TAMBAH TEMAN</button></div>
         <div class="stats">
           <span class="stat">TOTAL SKOR<strong id="stTotal">0</strong></span>
           <span class="stat">GAME DIMAINKAN<strong id="stGames">0/7</strong></span>
@@ -352,6 +359,35 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
   }
   window.sbClient=window.supabase.createClient(SB_URL,SB_KEY);
 
+  // ===== tambah teman dari profil publik =====
+  var PUB_LABEL={accepted:'SUDAH TEMAN',outgoing:'MENUNGGU',incoming:'TERIMA',none:'TAMBAH TEMAN',guest:'LOGIN DULU'};
+  var PUB_SENT={sent:'MENUNGGU',already:'SUDAH TEMAN',pending:'MENUNGGU',login:'LOGIN DULU'};
+  async function initAddFriend(uid){
+    var st=await window.sbClient.rpc('friend_state',{p_user:uid});
+    var state=st.data||'guest';
+    if(state==='self') return;
+    var b=$('pubFriend');
+    $('pubWrap').hidden=false;
+    b.textContent=PUB_LABEL[state]||'TAMBAH TEMAN';
+    b.disabled=(state==='accepted'||state==='outgoing');
+    if(state==='guest'){ b.onclick=function(){ location.href='login.html'; }; }
+    else if(state==='none'){
+      b.onclick=async function(){
+        b.disabled=true; b.textContent='MENGIRIM...';
+        var r=await window.sbClient.rpc('send_friend_request_to',{p_user:uid});
+        b.textContent=r.error?'GAGAL':(PUB_SENT[r.data]||'TAMBAH TEMAN');
+        b.disabled=!r.error;
+      };
+    }
+    else if(state==='incoming'){
+      b.onclick=async function(){
+        b.disabled=true;
+        await window.sbClient.rpc('respond_friend_request',{p_from:uid,p_accept:true});
+        b.textContent='SUDAH TEMAN';
+      };
+    }
+  }
+
   // ===== teman =====
   var FM={sent:'Permintaan terkirim. Tunggu dia menerima ya.',not_found:'Kode itu nggak ketemu.',self:'Itu kode kamu sendiri.',already:'Kalian udah berteman.',pending:'Permintaan udah ada, cek daftar di bawah.',login:'Login dulu ya.'};
   function fmsg(t){ $('fmsg').textContent=t||''; }
@@ -367,7 +403,7 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
     var acts=el('span','facts');
     function btn(label,cls,fn){ var b=el('button',cls,label); b.type='button'; b.onclick=fn; acts.appendChild(b); }
     if(f.status==='accepted'){
-      btn('HAPUS','pb',function(){ act('remove_friend',{p_other:f.friend_id}); });
+      btn('HAPUS','pb',function(){ if(confirm('Hapus '+f.name+' dari daftar teman?')) act('remove_friend',{p_other:f.friend_id}); });
     }else if(f.incoming){
       btn('TERIMA','pb pri',function(){ act('respond_friend_request',{p_from:f.friend_id,p_accept:true}); });
       btn('TOLAK','pb',function(){ act('respond_friend_request',{p_from:f.friend_id,p_accept:false}); });
@@ -424,6 +460,7 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
       if(res.error) throw res.error;
       var row=(res.data||[])[0];
       if(!row){ $('state').textContent='Profil tidak ditemukan.'; return; }
+      initAddFriend(uidParam.toLowerCase());
       return load({name:row.display_name,avatar_url:row.avatar_url,bio:row.bio,created_at:row.created_at,pub:true},uidParam.toLowerCase());
     }).catch(function(){
       $('state').textContent='Gagal memuat profil. Coba refresh ya.';
@@ -444,5 +481,6 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
   });
 })();
 </script>
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');</script>
 </body>
 </html>

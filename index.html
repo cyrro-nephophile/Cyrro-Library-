@@ -6,6 +6,10 @@
 <script>document.documentElement.classList.add('js');if(!matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.classList.add('intro-on');try{var _t=localStorage.getItem('theme');if(_t==='dark'||_t==='light')document.documentElement.setAttribute('data-theme',_t);else if(matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}</script>
 <meta name="description" content="Library — koleksi favorit Cyrro: mini game, playlist, dan tool."/>
 <meta name="theme-color" content="#ccff00"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="C-Library"/>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E"/>
 <title>Library — Cyrro</title>
 <script defer src="/_vercel/insights/script.js"></script>
@@ -403,6 +407,33 @@ body.gm-open{overflow:hidden}
 <style>
 #cyAuthBtn{cursor:pointer;padding:0;overflow:hidden;font-family:'Anton',Impact,sans-serif;font-size:18px;color:#0a0a0a;background:var(--lime)}
 #cyAuthBtn img{width:100%;height:100%;object-fit:cover;display:block}
+.hwrap{position:relative;flex:none}
+.nbadge{position:absolute;top:-8px;right:-8px;min-width:22px;height:22px;padding:0 5px;display:grid;place-items:center;background:var(--pink);color:#fff;border:2px solid #0a0a0a;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700}
+.nbadge[hidden]{display:none}
+.hmenu{position:absolute;top:calc(100% + 12px);right:0;z-index:40;min-width:230px;max-width:calc(100vw - 32px);display:grid;gap:8px;padding:10px;background:var(--card);color:var(--fg);border:3px solid #0a0a0a;box-shadow:6px 6px 0 var(--sh)}
+.hmenu[hidden]{display:none}
+.mi{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:10px 12px;cursor:pointer;background:#fff;color:#0a0a0a;border:3px solid #0a0a0a;box-shadow:3px 3px 0 #0a0a0a;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;text-align:left}
+.mi:hover{background:var(--lime)}
+.mi svg{width:20px;height:20px;flex:none}
+.nlist{display:grid;gap:8px;max-height:60vh;overflow-y:auto}
+.nitem{display:grid;gap:8px;padding:10px;background:#fff;color:#0a0a0a;border:3px solid #0a0a0a;font-size:14px}
+.nact{display:flex;gap:6px}
+.nact button{flex:1;padding:6px;cursor:pointer;background:#fff;color:#0a0a0a;border:2px solid #0a0a0a;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:11px}
+.nact button.pri{background:var(--lime)}
+.nempty{padding:8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--mut)}
+#notifMenu{width:min(300px,calc(100vw - 32px))}
+.nitem small{font-family:'JetBrains Mono',monospace;font-size:11px;color:#4b5240}
+.nitem.nread{opacity:.55}
+.nsep{border:0;border-top:1px solid var(--line);margin:4px 0}
+.clog-title{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--mut)}
+.clog{list-style:none;display:grid;gap:6px;font-size:13px;line-height:1.4}
+.clog[hidden]{display:none}
+.clog-btn{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;cursor:pointer;background:#fff;color:#0a0a0a;border:2px solid #0a0a0a;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;letter-spacing:.06em}
+.clog-btn:hover{background:var(--lime)}
+.clog-btn svg{flex:none}
+.clog-btn .chev{margin-left:auto;font-size:16px;line-height:1}
+.clog-btn[aria-expanded="true"] .chev{transform:rotate(45deg)}
+.clog li::before{content:'- ';color:var(--mut)}
 #cyAuthPanel{position:fixed;top:calc(env(safe-area-inset-top,0px) + 72px);right:16px;z-index:30;width:min(300px,calc(100vw - 32px));
   background:var(--card);color:var(--fg);border:3px solid #0a0a0a;box-shadow:6px 6px 0 var(--sh);padding:14px;
   font-family:'Outfit',system-ui,sans-serif;transform:translateY(-16px);opacity:0;pointer-events:none;
@@ -560,9 +591,18 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
 </div></div>
 <header class="top">
   <a class="wm disp glitch" href="/">C-<i>LIBRARY</i></a>
-  <button class="mode" id="fxBtn" type="button" aria-label="Efek gerak" aria-pressed="false" title="Efek gerak: penuh"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 8h11M6 12h15M3 16h9" fill="none" stroke="#0a0a0a" stroke-width="2.6" stroke-linecap="square"/></svg></button>
-  <button class="mode" id="modeBtn" type="button" aria-label="Ganti tema"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="#0a0a0a"/></svg></button>
-  <button class="mode" id="cyAuthBtn" type="button" aria-label="Akun" aria-expanded="false"></button>
+  <div class="hwrap" id="notifWrap">
+    <button class="mode" id="notifBtn" type="button" aria-label="Notifikasi" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6zM10 19a2 2 0 0 0 4 0" fill="none" stroke="#0a0a0a" stroke-width="2.4" stroke-linejoin="round"/></svg><span class="nbadge" id="notifCount" hidden>0</span></button>
+    <div class="hmenu" id="notifMenu" hidden><div class="nlist" id="notifList"></div><hr class="nsep"/><button class="clog-btn" id="clogBtn" type="button" aria-expanded="false" aria-controls="clogList"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.4" fill="currentColor"/></svg><span>CHANGE LOG</span><span class="chev" aria-hidden="true">+</span></button><ul class="clog" id="clogList" hidden><li>Bisa dipasang ke layar utama HP, dibuka tanpa browser</li><li>Tambah teman langsung dari profil publik</li><li>Notifikasi saat teman nyalip skor kamu</li><li>Menu foto profil di header, notifikasi permintaan teman, konfirmasi sebelum hapus teman</li><li>Teman lewat kode 6 karakter, plus leaderboard TEMAN</li><li>Peringkat sepanjang masa dan mingguan (reset tiap Jumat)</li><li>Bio di panel akun</li><li>Profil publik: klik nama di leaderboard</li><li>Halaman profil dengan skor tertinggi per game dan riwayat</li></ul></div>
+  </div>
+  <div class="hwrap" id="menuWrap">
+    <button class="mode" id="cyAuthBtn" type="button" aria-label="Menu" aria-expanded="false"></button>
+    <div class="hmenu" id="hdrMenu" hidden>
+      <button class="mi" id="fxBtn" type="button" aria-pressed="false" title="Efek gerak: penuh"><span>EFEK GERAK</span><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 8h11M6 12h15M3 16h9" fill="none" stroke="#0a0a0a" stroke-width="2.6" stroke-linecap="square"/></svg></button>
+      <button class="mi" id="modeBtn" type="button"><span>GANTI TEMA</span><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="#0a0a0a"/></svg></button>
+      <button class="mi" id="menuAccount" type="button"><span>AKUN</span></button>
+    </div>
+  </div>
 </header>
 <div id="cyAuthPanel" role="dialog" aria-label="Akun">
   <div class="who" id="cyWho">Tamu</div>
@@ -1251,7 +1291,7 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
     }
   }
 
-  btn.addEventListener('click', () => setOpen(!open));
+  document.getElementById('menuAccount').addEventListener('click', e => { e.stopPropagation(); document.getElementById('hdrMenu').hidden = true; setOpen(true); });
   document.addEventListener('click', e => {
     if(open && !panel.contains(e.target) && !btn.contains(e.target)) setOpen(false);
   });
@@ -1714,5 +1754,71 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
   setTimeout(go,6000);   // pengaman kalau intro tidak pernah selesai
 })();
 </script>
+<script>
+(function(){
+  var avBtn=document.getElementById('cyAuthBtn'), menu=document.getElementById('hdrMenu');
+  var nBtn=document.getElementById('notifBtn'), nMenu=document.getElementById('notifMenu');
+  var nCount=document.getElementById('notifCount'), nList=document.getElementById('notifList');
+  var nsb=window.supabase.createClient('https://nmfoshrrflgnuubsxuhk.supabase.co','sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l');
+  function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
+  function setExp(){ avBtn.setAttribute('aria-expanded',String(!menu.hidden)); nBtn.setAttribute('aria-expanded',String(!nMenu.hidden)); }
+
+  avBtn.addEventListener('click',function(e){ e.stopPropagation(); nMenu.hidden=true; menu.hidden=!menu.hidden; setExp(); });
+  nBtn.addEventListener('click',function(e){ e.stopPropagation(); menu.hidden=true; nMenu.hidden=!nMenu.hidden; setExp(); if(!nMenu.hidden) loadNotif(true); });
+  document.addEventListener('click',function(e){
+    if(!menu.contains(e.target)&&!avBtn.contains(e.target)) menu.hidden=true;
+    if(!nMenu.contains(e.target)&&!nBtn.contains(e.target)) nMenu.hidden=true;
+    setExp();
+  });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ menu.hidden=true; nMenu.hidden=true; setExp(); } });
+
+  function nitem(f){
+    var d=el('div','nitem'), a=el('div','nact'), ok=el('button','pri','TERIMA'), no=el('button',null,'TOLAK');
+    ok.type='button'; no.type='button';
+    d.appendChild(el('strong',null,f.name+' mau berteman sama kamu'));
+    ok.onclick=function(){ respond(f.friend_id,true); };
+    no.onclick=function(){ respond(f.friend_id,false); };
+    a.append(ok,no); d.appendChild(a);
+    return d;
+  }
+  async function respond(uid,accept){
+    await nsb.rpc('respond_friend_request',{p_from:uid,p_accept:accept});
+    loadNotif();
+  }
+  function nscoreItem(x){
+    var d=el('div', x.read ? 'nitem nread' : 'nitem');
+    d.appendChild(el('strong',null,x.message));
+    d.appendChild(el('small',null,new Date(x.created_at).toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})));
+    return d;
+  }
+  async function loadNotif(markRead){
+    var r=await nsb.rpc('my_friends');
+    var n=await nsb.rpc('my_notifications');
+    nList.replaceChildren();
+    if(r.error && n.error){ nCount.hidden=true; nList.appendChild(el('div','nempty','Login dulu buat lihat notifikasi.')); return; }
+    var inc=(r.data||[]).filter(function(f){return f.status==='pending'&&f.incoming;});
+    var scores=n.data||[];
+    var unread=scores.filter(function(x){return !x.read;});
+    inc.forEach(function(f){ nList.appendChild(nitem(f)); });
+    scores.forEach(function(x){ nList.appendChild(nscoreItem(x)); });
+    if(!inc.length && !scores.length) nList.appendChild(el('div','nempty','Belum ada notifikasi.'));
+    var total=inc.length+unread.length;
+    nCount.hidden=!total; nCount.textContent=total;
+    if(markRead && unread.length){
+      await nsb.rpc('mark_notifications_read');
+      nCount.hidden=!inc.length; nCount.textContent=inc.length;
+      scores.forEach(function(x){ x.read=true; });
+    }
+  }
+  loadNotif();
+
+  var clogBtn=document.getElementById('clogBtn'), clogList=document.getElementById('clogList');
+  clogBtn.addEventListener('click',function(){
+    clogList.hidden=!clogList.hidden;
+    clogBtn.setAttribute('aria-expanded',String(!clogList.hidden));
+  });
+})();
+</script>
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');</script>
 </body>
 </html>
