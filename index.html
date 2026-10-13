@@ -585,6 +585,11 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
 .pushhint{margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mut)}
 .lbreset{margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--mut)}
 .lbreset[hidden]{display:none}
+.lbref{margin-top:14px;padding:8px 12px;cursor:pointer;background:var(--card);color:var(--fg);border:3px solid var(--line);box-shadow:3px 3px 0 var(--sh);font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px}
+.lbref:hover{background:var(--lime);color:#0a0a0a}
+.lbref:disabled{opacity:.6;cursor:default}
+.lb-mode .lbref{margin:0 0 0 auto;width:44px;height:44px;padding:0;display:grid;place-items:center;color:#ff0055;background:#fff}
+.lb-mode .lbref:hover{background:var(--lime);color:#ff0055}
 </style>
 <style>
 #cyAuthPanel .pview{display:flex;gap:12px;align-items:center}
@@ -640,7 +645,7 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
   <a class="wm disp glitch" href="/">C-<i>LIBRARY</i></a>
   <div class="hwrap" id="notifWrap">
     <button class="mode" id="notifBtn" type="button" aria-label="Notifikasi" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6zM10 19a2 2 0 0 0 4 0" fill="none" stroke="#0a0a0a" stroke-width="2.4" stroke-linejoin="round"/></svg><span class="nbadge" id="notifCount" hidden>0</span></button>
-    <div class="hmenu" id="notifMenu" hidden><div class="nlist" id="notifList"></div><hr class="nsep"/><button class="clog-btn" id="clogBtn" type="button" aria-expanded="false" aria-controls="clogList"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.4" fill="currentColor"/></svg><span>CHANGE LOG</span><span class="chev" aria-hidden="true">+</span></button><ul class="clog" id="clogList" hidden><li>Change log bisa digulir kalau sudah banyak catatan</li><li>Perbaikan keamanan database (tanpa perubahan tampilan)</li><li>Perbaikan struktur halaman dan batas ukuran foto profil (maks 2 MB, JPG/PNG/WebP)</li><li>Mode edit profil di panel akun lebih ringkas, menu disembunyikan saat edit</li><li>Panel akun lebih ringkas: EDIT PROFIL membuka form, dan tawaran pasang ke layar utama</li><li>Profil dibuka sebagai layar penuh di dalam Library, tanpa pindah halaman</li><li>Bagikan profil lewat link, dan undo saat menghapus teman</li><li>Baris kamu di leaderboard ditandai KAMU, plus hitung mundur reset mingguan</li><li>Notifikasi push: teman nyalip skor dan permintaan teman langsung masuk ke HP, walau app ditutup</li><li>Bisa dipasang ke layar utama HP, dibuka tanpa browser</li><li>Tambah teman langsung dari profil publik</li><li>Notifikasi saat teman nyalip skor kamu</li><li>Menu foto profil di header, notifikasi permintaan teman, konfirmasi sebelum hapus teman</li><li>Teman lewat kode 6 karakter, plus leaderboard TEMAN</li><li>Peringkat sepanjang masa dan mingguan (reset tiap Jumat)</li><li>Bio di panel akun</li><li>Profil publik: klik nama di leaderboard</li><li>Halaman profil dengan skor tertinggi per game dan riwayat</li></ul></div>
+    <div class="hmenu" id="notifMenu" hidden><div class="nlist" id="notifList"></div></div>
   </div>
   <div class="hwrap" id="menuWrap">
     <button class="mode" id="cyAuthBtn" type="button" aria-label="Menu" aria-expanded="false"></button>
@@ -648,6 +653,7 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
       <button class="mi" id="fxBtn" type="button" aria-pressed="false" title="Efek gerak: penuh"><span>EFEK GERAK</span><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 8h11M6 12h15M3 16h9" fill="none" stroke="#0a0a0a" stroke-width="2.6" stroke-linecap="square"/></svg></button>
       <button class="mi" id="modeBtn" type="button"><span>GANTI TEMA</span><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="#0a0a0a"/></svg></button>
       <button class="mi" id="menuAccount" type="button"><span>AKUN</span></button>
+      <hr class="nsep"/><button class="clog-btn" id="clogBtn" type="button" aria-expanded="false" aria-controls="clogList"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.4" fill="currentColor"/></svg><span>CHANGE LOG</span><span class="chev" aria-hidden="true">+</span></button><ul class="clog" id="clogList" hidden><li>Tombol muat ulang di leaderboard (ikon panah melingkar, di kanan)</li><li>Change log pindah ke menu foto profil, lonceng khusus notifikasi</li><li>Change log bisa digulir kalau sudah banyak catatan</li><li>Perbaikan keamanan database (tanpa perubahan tampilan)</li><li>Perbaikan struktur halaman dan batas ukuran foto profil (maks 2 MB, JPG/PNG/WebP)</li><li>Mode edit profil di panel akun lebih ringkas, menu disembunyikan saat edit</li><li>Panel akun lebih ringkas: EDIT PROFIL membuka form, dan tawaran pasang ke layar utama</li><li>Profil dibuka sebagai layar penuh di dalam Library, tanpa pindah halaman</li><li>Bagikan profil lewat link, dan undo saat menghapus teman</li><li>Baris kamu di leaderboard ditandai KAMU, plus hitung mundur reset mingguan</li><li>Notifikasi push: teman nyalip skor dan permintaan teman langsung masuk ke HP, walau app ditutup</li><li>Bisa dipasang ke layar utama HP, dibuka tanpa browser</li><li>Tambah teman langsung dari profil publik</li><li>Notifikasi saat teman nyalip skor kamu</li><li>Menu foto profil di header, notifikasi permintaan teman, konfirmasi sebelum hapus teman</li><li>Teman lewat kode 6 karakter, plus leaderboard TEMAN</li><li>Peringkat sepanjang masa dan mingguan (reset tiap Jumat)</li><li>Bio di panel akun</li><li>Profil publik: klik nama di leaderboard</li><li>Halaman profil dengan skor tertinggi per game dan riwayat</li></ul>
     </div>
   </div>
 </header>
@@ -708,6 +714,7 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
     <div class="lb-mode" role="group" aria-label="Periode leaderboard">
       <button type="button" data-m="weekly" aria-pressed="false">MINGGUAN</button>
       <button type="button" data-m="all" aria-pressed="true">SEPANJANG MASA</button>
+      <button class="lbref" id="lbRefresh" type="button" aria-label="Muat ulang skor"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="square"/><path d="M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="square"/></svg></button>
     </div>
     <p class="lbreset" id="lbReset" hidden></p>
     <div class="lb-mode lb-scope" role="group" aria-label="Pemain">
@@ -1536,6 +1543,13 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
     });
   });
 
+  var refBtn = document.getElementById('lbRefresh');
+  refBtn.addEventListener('click', async function(){
+    refBtn.disabled = true;
+    await loadAll();
+    refBtn.disabled = false;
+  });
+
   function scopeQ(q){ return lbScope === 'friends' ? q.in('user_id', friendIds) : q; }
 
   async function loadFriends(){
@@ -1643,7 +1657,7 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
     document.body.appendChild(fpsBox);
   }
   // area yang punya scroll/kontrol sendiri: jangan dibajak
-  var SKIP='#gmOverlay,#plWrap,#cyAuthPanel,#intro,input,textarea,select,[contenteditable="true"]';
+  var SKIP='#gmOverlay,#plWrap,#hdrMenu,#notifMenu,#cyAuthPanel,#intro,input,textarea,select,[contenteditable="true"]';
   // elemen yang ikut berefek kedalaman saat digeser
   var FX_SEL='#vsTrack .card, #vsTrack .sh, #vsTrack #lbList li, #vsTrack .lb-tabs, #vsTrack .tags .tag, #vsTrack .sub, #vsTrack .hero .ch, #vsTrack .hero .hl';
   var fx=[];
