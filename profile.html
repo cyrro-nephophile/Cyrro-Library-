@@ -60,6 +60,8 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
 .gc h3{font-family:'Anton',Impact,sans-serif;text-transform:uppercase;font-weight:400;font-size:20px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gc .big{margin-top:10px;font-family:'Anton',Impact,sans-serif;font-size:42px;line-height:1;word-break:break-all}
 .gc.empty .big{color:var(--mut)}
+.gc .rank{margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;line-height:1.5}
+.gc .rank.gold{background:var(--lime);color:#0a0a0a;padding:0 4px;justify-self:start}
 .gc .sub,.gc .cnt{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 .hist{list-style:none;display:grid;gap:12px}
@@ -134,31 +136,31 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
 
   // teks dan aturan skor sama dengan leaderboard di index.html
   var GAMES=[
-    {id:'catur',name:'CATUR',table:'chess_scores',cols:'level,moves,created_at',
+    {id:'catur',name:'CATUR',table:'chess_scores',lb:'chess_leaderboard',wk:'chess_weekly',cols:'level,moves,created_at',
      main:function(r){return 'LVL '+r.level;},
      sub:function(r){return r.moves+' LANGKAH';},
      cmp:function(a,b){return (b.level-a.level)||(a.moves-b.moves);}},
-    {id:'pacman',name:'PAC-MAN',table:'pacman_scores',cols:'score,created_at',
+    {id:'pacman',name:'PAC-MAN',table:'pacman_scores',lb:'pacman_leaderboard',wk:'pacman_weekly',cols:'score,created_at',
      main:function(r){return fmt(r.score);},
      sub:function(){return 'POIN';},
      cmp:function(a,b){return b.score-a.score;}},
-    {id:'tetris',name:'TETRIS',table:'tetris_scores',cols:'score,level,created_at',
+    {id:'tetris',name:'TETRIS',table:'tetris_scores',lb:'tetris_leaderboard',wk:'tetris_weekly',cols:'score,level,created_at',
      main:function(r){return fmt(r.score);},
      sub:function(r){return 'POIN · LVL '+r.level;},
      cmp:function(a,b){return b.score-a.score;}},
-    {id:'blockblast',name:'BLOCK BLAST',table:'blockblast_scores',cols:'score,created_at',
+    {id:'blockblast',name:'BLOCK BLAST',table:'blockblast_scores',lb:'blockblast_leaderboard',wk:'blockblast_weekly',cols:'score,created_at',
      main:function(r){return fmt(r.score);},
      sub:function(){return 'POIN';},
      cmp:function(a,b){return b.score-a.score;}},
-    {id:'minesweeper',name:'MINESWEEPER',table:'minesweeper_scores',cols:'level,secs,created_at',
+    {id:'minesweeper',name:'MINESWEEPER',table:'minesweeper_scores',lb:'minesweeper_leaderboard',wk:'minesweeper_weekly',cols:'level,secs,created_at',
      main:function(r){return String(r.secs);},
      sub:function(r){return 'DETIK · '+String(r.level).toUpperCase();},
      cmp:function(a,b){return ((RANK[b.level]||1)-(RANK[a.level]||1))||(a.secs-b.secs);}},
-    {id:'2048',name:'2048',table:'game2048_scores',cols:'score,max_tile,created_at',
+    {id:'2048',name:'2048',table:'game2048_scores',lb:'game2048_leaderboard',wk:'game2048_weekly',cols:'score,max_tile,created_at',
      main:function(r){return fmt(r.score);},
      sub:function(r){return 'POIN · UBIN '+r.max_tile;},
      cmp:function(a,b){return b.score-a.score;}},
-    {id:'dino',name:'DINO',table:'dino_scores',cols:'score,created_at',
+    {id:'dino',name:'DINO',table:'dino_scores',lb:'dino_leaderboard',wk:'dino_weekly',cols:'score,created_at',
      main:function(r){return fmt(r.score);},
      sub:function(){return 'POIN';},
      cmp:function(a,b){return b.score-a.score;}}
@@ -187,7 +189,7 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
     return li;
   }
 
-  function render(p,rows,all){
+  function render(p,rows,all,ranks){
     var name=p.name||'PEMAIN', ini=name.charAt(0).toUpperCase(), avatar=p.avatar_url;
 
     var av=$('av');
@@ -219,6 +221,9 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
         li.appendChild(el('div','big',g.main(top)));
         li.appendChild(el('div','sub',g.sub(top)));
         li.appendChild(el('div','cnt',fmt(list.length)+' SKOR'));
+        var rk=ranks[g.id], rkEl=el('div','rank',(rk.all?'#'+rk.all:'–')+' SEPANJANG MASA · '+(rk.week?'#'+rk.week:'–')+' MINGGU INI');
+        if(rk.all===1||rk.week===1) rkEl.classList.add('gold');
+        li.appendChild(rkEl);
       }else{
         li.appendChild(el('div','big','—'));
         li.appendChild(el('div','cnt','BELUM MAIN'));
@@ -259,19 +264,47 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
     return next();
   }
 
+  // ambil semua baris view leaderboard per halaman
+  function pageAll(table,cols){
+    var out=[], from=0, step=1000;
+    function next(){
+      return window.sbClient.from(table).select(cols).order('user_id',{ascending:true}).range(from,from+step-1)
+        .then(function(res){
+          if(res.error) throw res.error;
+          var d=res.data||[];
+          out=out.concat(d);
+          if(d.length<step) return out;
+          from+=step;
+          return next();
+        });
+    }
+    return next();
+  }
+
+  // posisi uid: 1 + jumlah pemain yang skornya lebih baik (null kalau belum masuk daftar)
+  function rankOf(rows,g,uid){
+    var me=rows.find(function(r){return r.user_id===uid;});
+    if(!me) return null;
+    var pos=1;
+    rows.forEach(function(r){ if(g.cmp(r,me)<0) pos++; });
+    return pos;
+  }
+
   function load(p,uid){
     show('state');
     $('state').textContent='Memuat profil...';
-    return Promise.all(GAMES.map(function(g){
-      return fetchAll(g,uid);
-    })).then(function(res){
-      var rows={}, all=[];
+    var ranksP=Promise.all(GAMES.map(function(g){
+      return Promise.all([pageAll(g.lb,g.cols+',user_id'),pageAll(g.wk,g.cols+',user_id')]);
+    }));
+    return Promise.all([Promise.all(GAMES.map(function(g){return fetchAll(g,uid);})),ranksP]).then(function(out){
+      var res=out[0], rk=out[1], ranks={}, rows={}, all=[];
       GAMES.forEach(function(g,i){
         rows[g.id]=res[i];
+        ranks[g.id]={all:rankOf(rk[i][0],g,uid), week:rankOf(rk[i][1],g,uid)};
         rows[g.id].forEach(function(r){all.push({g:g,r:r});});
       });
       all.sort(function(a,b){return new Date(b.r.created_at)-new Date(a.r.created_at);});
-      render(p,rows,all);
+      render(p,rows,all,ranks);
     });
   }
 
@@ -295,7 +328,7 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
       if(res.error) throw res.error;
       var row=(res.data||[])[0];
       if(!row){ $('state').textContent='Profil tidak ditemukan.'; return; }
-      return load({name:row.display_name,avatar_url:row.avatar_url,bio:row.bio,created_at:row.created_at,pub:true},uidParam);
+      return load({name:row.display_name,avatar_url:row.avatar_url,bio:row.bio,created_at:row.created_at,pub:true},uidParam.toLowerCase());
     }).catch(function(){
       $('state').textContent='Gagal memuat profil. Coba refresh ya.';
     });
