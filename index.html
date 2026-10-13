@@ -593,7 +593,7 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
   <a class="wm disp glitch" href="/">C-<i>LIBRARY</i></a>
   <div class="hwrap" id="notifWrap">
     <button class="mode" id="notifBtn" type="button" aria-label="Notifikasi" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6zM10 19a2 2 0 0 0 4 0" fill="none" stroke="#0a0a0a" stroke-width="2.4" stroke-linejoin="round"/></svg><span class="nbadge" id="notifCount" hidden>0</span></button>
-    <div class="hmenu" id="notifMenu" hidden><div class="nlist" id="notifList"></div><hr class="nsep"/><button class="clog-btn" id="clogBtn" type="button" aria-expanded="false" aria-controls="clogList"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.4" fill="currentColor"/></svg><span>CHANGE LOG</span><span class="chev" aria-hidden="true">+</span></button><ul class="clog" id="clogList" hidden><li>Bisa dipasang ke layar utama HP, dibuka tanpa browser</li><li>Tambah teman langsung dari profil publik</li><li>Notifikasi saat teman nyalip skor kamu</li><li>Menu foto profil di header, notifikasi permintaan teman, konfirmasi sebelum hapus teman</li><li>Teman lewat kode 6 karakter, plus leaderboard TEMAN</li><li>Peringkat sepanjang masa dan mingguan (reset tiap Jumat)</li><li>Bio di panel akun</li><li>Profil publik: klik nama di leaderboard</li><li>Halaman profil dengan skor tertinggi per game dan riwayat</li></ul></div>
+    <div class="hmenu" id="notifMenu" hidden><div class="nlist" id="notifList"></div><hr class="nsep"/><button class="clog-btn" id="clogBtn" type="button" aria-expanded="false" aria-controls="clogList"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.4" fill="currentColor"/></svg><span>CHANGE LOG</span><span class="chev" aria-hidden="true">+</span></button><ul class="clog" id="clogList" hidden><li>Notifikasi push: teman nyalip skor dan permintaan teman langsung masuk ke HP, walau app ditutup</li><li>Bisa dipasang ke layar utama HP, dibuka tanpa browser</li><li>Tambah teman langsung dari profil publik</li><li>Notifikasi saat teman nyalip skor kamu</li><li>Menu foto profil di header, notifikasi permintaan teman, konfirmasi sebelum hapus teman</li><li>Teman lewat kode 6 karakter, plus leaderboard TEMAN</li><li>Peringkat sepanjang masa dan mingguan (reset tiap Jumat)</li><li>Bio di panel akun</li><li>Profil publik: klik nama di leaderboard</li><li>Halaman profil dengan skor tertinggi per game dan riwayat</li></ul></div>
   </div>
   <div class="hwrap" id="menuWrap">
     <button class="mode" id="cyAuthBtn" type="button" aria-label="Menu" aria-expanded="false"></button>
@@ -618,7 +618,7 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
     <label for="cyFile">FOTO PROFIL</label>
     <div class="upl"><img id="cyPreview" alt="" hidden><input id="cyFile" type="file" accept="image/*"></div>
     <label for="cyAvatar">ATAU LINK AVATAR (https)</label>
-    <input id="cyAvatar" type="url" placeholder="https://..."><div class="btns"><button type="button" onclick="location.href='profile.html'">Lihat profil</button></div>
+    <input id="cyAvatar" type="url" placeholder="https://..."><div class="btns"><button type="button" onclick="location.href='profile.html'">Lihat profil</button><button type="button" id="pushBtn">Aktifkan notifikasi</button></div>
     <div class="btns">
       <button class="pri" id="cySave" type="button">Simpan</button>
       <button class="dng" id="cyLogout" type="button">Logout</button>
@@ -1797,7 +1797,7 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
     nList.replaceChildren();
     if(r.error && n.error){ nCount.hidden=true; nList.appendChild(el('div','nempty','Login dulu buat lihat notifikasi.')); return; }
     var inc=(r.data||[]).filter(function(f){return f.status==='pending'&&f.incoming;});
-    var scores=n.data||[];
+    var scores=(n.data||[]).filter(function(x){return x.kind==='overtake';});
     var unread=scores.filter(function(x){return !x.read;});
     inc.forEach(function(f){ nList.appendChild(nitem(f)); });
     scores.forEach(function(x){ nList.appendChild(nscoreItem(x)); });
@@ -1811,6 +1811,39 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
     }
   }
   loadNotif();
+
+  // ===== notifikasi push =====
+  var VAPID_PUBLIC='BDsqHtgNYd7ElKy-xcl1-XSbA5zzTeF9JriLCm9gZg7eG3AGRuQdOp4EmsSeXXlFJl39fOvc6LtheUIoCkEq4pg';
+  var pushBtn=document.getElementById('pushBtn');
+  function b64ToU8(s){
+    var p='='.repeat((4-s.length%4)%4), b=atob((s+p).replace(/-/g,'+').replace(/_/g,'/')), u=new Uint8Array(b.length);
+    for(var i=0;i<b.length;i++) u[i]=b.charCodeAt(i);
+    return u;
+  }
+  async function pushState(){
+    if(!('serviceWorker' in navigator) || !('PushManager' in window)){ pushBtn.textContent='Tidak didukung'; pushBtn.disabled=true; return; }
+    var reg=await navigator.serviceWorker.ready;
+    var sub=await reg.pushManager.getSubscription();
+    if(sub){ pushBtn.textContent='Notifikasi aktif'; pushBtn.disabled=true; }
+  }
+  pushBtn.addEventListener('click', async function(){
+    pushBtn.disabled=true; pushBtn.textContent='Memproses...';
+    try{
+      var sess=await nsb.auth.getSession();
+      if(!sess.data.session){ pushBtn.textContent='Login dulu'; pushBtn.disabled=false; return; }
+      var perm=await Notification.requestPermission();
+      if(perm!=='granted'){ pushBtn.textContent='Izin ditolak'; pushBtn.disabled=false; return; }
+      var reg=await navigator.serviceWorker.ready;
+      var sub=await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64ToU8(VAPID_PUBLIC)});
+      var j=sub.toJSON();
+      var r=await nsb.rpc('save_push_subscription',{p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth});
+      if(r.error) throw r.error;
+      pushBtn.textContent='Notifikasi aktif';
+    }catch(err){
+      pushBtn.textContent='Gagal, coba lagi'; pushBtn.disabled=false;
+    }
+  });
+  pushState();
 
   var clogBtn=document.getElementById('clogBtn'), clogList=document.getElementById('clogList');
   clogBtn.addEventListener('click',function(){
