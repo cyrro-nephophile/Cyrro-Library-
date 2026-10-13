@@ -96,6 +96,8 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
 .fwait,.fnone{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--mut)}
 #pubWrap,#shareWrap{margin-top:14px}
 .pb:disabled{opacity:.55;cursor:default}
+.embed .top{display:none}
+.embed main{padding-top:calc(20px + env(safe-area-inset-top,0px))}
 @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 @keyframes pop{from{opacity:0;transform:scale(.6) rotate(-6deg)}to{opacity:1;transform:none}}
 #view .hero,#view .sh,#view .gc,#view .hi{animation:rise .5s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:var(--d,0ms)}
@@ -166,6 +168,7 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
 (function(){
   var SB_URL='https://nmfoshrrflgnuubsxuhk.supabase.co';
   var SB_KEY='sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l';
+  if(new URLSearchParams(location.search).get('embed')==='1') document.documentElement.classList.add('embed');
   var PAGE=20, RANK={sulit:3,sedang:2};
 
   var $=function(id){return document.getElementById(id);};

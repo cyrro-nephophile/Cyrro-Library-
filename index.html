@@ -584,6 +584,34 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
 .lbreset{margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--mut)}
 .lbreset[hidden]{display:none}
 </style>
+<style>
+#cyAuthPanel .pview{display:flex;gap:12px;align-items:center}
+#cyAuthPanel .pav{width:64px;height:64px;flex:none;object-fit:cover;border:3px solid var(--line);box-shadow:3px 3px 0 var(--sh)}
+#cyAuthPanel .pinfo{min-width:0}
+#cyAuthPanel .pbio{margin-top:6px;font-size:13px;color:var(--mut);white-space:pre-line;word-break:break-word}
+#cyAuthPanel .pmenu{display:grid;gap:8px;margin-top:14px}
+#cyAuthPanel .pm{width:100%;text-align:left;padding:10px 12px;background:#fff;color:#0a0a0a;border:3px solid #0a0a0a;box-shadow:3px 3px 0 #0a0a0a;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;cursor:pointer}
+#cyAuthPanel .pm:hover{background:var(--lime)}
+#cyAuthPanel .pm.dng{background:var(--pink);color:#fff}
+#cyAuthPanel .pm:disabled{opacity:.6;cursor:default}
+#cyAuthPanel .pm[hidden]{display:none}
+#cyAuthPanel .pushhint{margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mut)}
+#cyAuthPanel .pedit{margin-top:12px;border-top:3px solid var(--line);padding-top:4px}
+#cyAuthPanel .pedit .btns button{flex:1}
+#cyAuthPanel .fpick{position:relative;display:flex;align-items:center;gap:10px;margin-top:4px}
+#cyAuthPanel .fbtn{margin:0;padding:8px 12px;cursor:pointer;background:#fff;color:#0a0a0a;border:3px solid #0a0a0a;box-shadow:3px 3px 0 #0a0a0a;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px}
+#cyAuthPanel #cyFile{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+#cyAuthPanel #cyPreview{width:44px;height:44px;object-fit:cover;border:3px solid var(--line)}
+#cyAuthPanel .flink{margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mut)}
+#cyAuthPanel .flink summary{cursor:pointer;margin-bottom:6px}
+#cyAuthPanel .flink input{width:100%;padding:8px;border:3px solid var(--line);background:var(--bg);color:var(--fg);font:inherit;font-size:14px}
+.pf-ov{position:fixed;inset:0;z-index:45;background:var(--bg);display:flex;flex-direction:column}
+.pf-ov[hidden]{display:none}
+.pf-bar{display:flex;align-items:center;gap:12px;flex:none;height:calc(env(safe-area-inset-top,0px) + 64px);padding:env(safe-area-inset-top,0px) 16px 0;background:#101510;border-bottom:4px solid #0a0a0a}
+.pf-bar .back{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:#0a0a0a;background:var(--lime);border:3px solid #0a0a0a;padding:8px 12px;box-shadow:3px 3px 0 #0a0a0a;cursor:pointer}
+.pf-title{font-family:'Anton',Impact,sans-serif;text-transform:uppercase;color:#fff;font-size:24px}
+.pf-frame{flex:1;width:100%;border:0;background:var(--bg)}
+</style>
 </head>
 <body>
 <div id="intro" class="pre" aria-hidden="true">
@@ -598,7 +626,7 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
   <a class="wm disp glitch" href="/">C-<i>LIBRARY</i></a>
   <div class="hwrap" id="notifWrap">
     <button class="mode" id="notifBtn" type="button" aria-label="Notifikasi" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6zM10 19a2 2 0 0 0 4 0" fill="none" stroke="#0a0a0a" stroke-width="2.4" stroke-linejoin="round"/></svg><span class="nbadge" id="notifCount" hidden>0</span></button>
-    <div class="hmenu" id="notifMenu" hidden><div class="nlist" id="notifList"></div><hr class="nsep"/><button class="clog-btn" id="clogBtn" type="button" aria-expanded="false" aria-controls="clogList"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.4" fill="currentColor"/></svg><span>CHANGE LOG</span><span class="chev" aria-hidden="true">+</span></button><ul class="clog" id="clogList" hidden><li>Bagikan profil lewat link, dan undo saat menghapus teman</li><li>Baris kamu di leaderboard ditandai KAMU, plus hitung mundur reset mingguan</li><li>Notifikasi push: teman nyalip skor dan permintaan teman langsung masuk ke HP, walau app ditutup</li><li>Bisa dipasang ke layar utama HP, dibuka tanpa browser</li><li>Tambah teman langsung dari profil publik</li><li>Notifikasi saat teman nyalip skor kamu</li><li>Menu foto profil di header, notifikasi permintaan teman, konfirmasi sebelum hapus teman</li><li>Teman lewat kode 6 karakter, plus leaderboard TEMAN</li><li>Peringkat sepanjang masa dan mingguan (reset tiap Jumat)</li><li>Bio di panel akun</li><li>Profil publik: klik nama di leaderboard</li><li>Halaman profil dengan skor tertinggi per game dan riwayat</li></ul></div>
+    <div class="hmenu" id="notifMenu" hidden><div class="nlist" id="notifList"></div><hr class="nsep"/><button class="clog-btn" id="clogBtn" type="button" aria-expanded="false" aria-controls="clogList"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.4" fill="currentColor"/></svg><span>CHANGE LOG</span><span class="chev" aria-hidden="true">+</span></button><ul class="clog" id="clogList" hidden><li>Panel akun lebih ringkas: EDIT PROFIL membuka form, dan tawaran pasang ke layar utama</li><li>Profil dibuka sebagai layar penuh di dalam Library, tanpa pindah halaman</li><li>Bagikan profil lewat link, dan undo saat menghapus teman</li><li>Baris kamu di leaderboard ditandai KAMU, plus hitung mundur reset mingguan</li><li>Notifikasi push: teman nyalip skor dan permintaan teman langsung masuk ke HP, walau app ditutup</li><li>Bisa dipasang ke layar utama HP, dibuka tanpa browser</li><li>Tambah teman langsung dari profil publik</li><li>Notifikasi saat teman nyalip skor kamu</li><li>Menu foto profil di header, notifikasi permintaan teman, konfirmasi sebelum hapus teman</li><li>Teman lewat kode 6 karakter, plus leaderboard TEMAN</li><li>Peringkat sepanjang masa dan mingguan (reset tiap Jumat)</li><li>Bio di panel akun</li><li>Profil publik: klik nama di leaderboard</li><li>Halaman profil dengan skor tertinggi per game dan riwayat</li></ul></div>
   </div>
   <div class="hwrap" id="menuWrap">
     <button class="mode" id="cyAuthBtn" type="button" aria-label="Menu" aria-expanded="false"></button>
@@ -610,26 +638,39 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
   </div>
 </header>
 <div id="cyAuthPanel" role="dialog" aria-label="Akun">
-  <div class="who" id="cyWho">Tamu</div>
   <div id="cyGuest">
     <p class="msg">Belum login.</p>
     <div class="btns"><button class="pri" type="button" onclick="location.href='login.html'">Login</button></div>
   </div>
   <div id="cyMember" hidden>
-    <label for="cyName">NAMA</label>
-    <input id="cyName" type="text" maxlength="24" placeholder="Nama kamu">
-    <label for="cyBio">BIO</label>
-    <textarea id="cyBio" maxlength="120" rows="3" placeholder="Ceritain dikit tentang kamu"></textarea>
-    <label for="cyFile">FOTO PROFIL</label>
-    <div class="upl"><img id="cyPreview" alt="" hidden><input id="cyFile" type="file" accept="image/*"></div>
-    <label for="cyAvatar">ATAU LINK AVATAR (https)</label>
-    <input id="cyAvatar" type="url" placeholder="https://..."><p class="pushhint">Dapat kabar kalau teman nyalip skormu atau ngirim permintaan teman.</p><div class="btns"><button type="button" onclick="location.href='profile.html'">Lihat profil</button><button type="button" id="pushBtn">Aktifkan notifikasi</button></div>
-    <div class="btns">
-      <button class="pri" id="cySave" type="button">Simpan</button>
-      <button class="dng" id="cyLogout" type="button">Logout</button>
+    <div class="pview">
+      <img id="cyViewAv" class="pav" alt="" hidden>
+      <div class="pinfo"><div class="who" id="cyWho">Tamu</div><div class="pbio" id="cyBioView"></div></div>
+    </div>
+    <div class="pmenu">
+      <button type="button" id="cyEditBtn" class="pm">EDIT PROFIL</button>
+      <button type="button" id="menuProfileOpen" class="pm">LIHAT PROFIL</button>
+      <button type="button" id="pushBtn" class="pm">AKTIFKAN NOTIFIKASI</button>
+      <button type="button" id="installBtn" class="pm" hidden>PASANG KE LAYAR UTAMA</button>
+      <button type="button" id="cyLogout" class="pm dng">LOGOUT</button>
+    </div>
+    <p class="pushhint">Dapat kabar kalau teman nyalip skormu atau ngirim permintaan teman.</p>
+    <div id="cyEdit" class="pedit" hidden>
+      <label for="cyName">NAMA</label>
+      <input id="cyName" type="text" maxlength="24" placeholder="Nama kamu">
+      <label for="cyBio">BIO</label>
+      <textarea id="cyBio" maxlength="120" rows="3" placeholder="Ceritain dikit tentang kamu"></textarea>
+      <label>FOTO</label>
+      <div class="fpick"><img id="cyPreview" alt="" hidden><label class="fbtn" for="cyFile">PILIH FOTO</label><input id="cyFile" type="file" accept="image/*"></div>
+      <details class="flink"><summary>Pakai link gambar</summary><input id="cyAvatar" type="url" placeholder="https://..."></details>
+      <div class="btns"><button class="pri" id="cySave" type="button">Simpan</button><button id="cyCancel" type="button">Batal</button></div>
     </div>
   </div>
   <div class="msg" id="cyMsg"></div>
+</div>
+<div class="pf-ov" id="pfOv" hidden>
+  <div class="pf-bar"><button class="back" id="pfBack" type="button">← TUTUP</button><span class="pf-title">Profil</span></div>
+  <iframe class="pf-frame" id="pfFrame" title="Profil"></iframe>
 </div>
 
 <div class="ticker" aria-hidden="true"><i class="tp"></i></div>
@@ -1257,104 +1298,121 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-(async function(){
-  const sb = window.supabase.createClient('https://nmfoshrrflgnuubsxuhk.supabase.co', 'sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l');
-  const btn = document.getElementById('cyAuthBtn');
-  const panel = document.getElementById('cyAuthPanel');
-  const who = document.getElementById('cyWho');
-  const guest = document.getElementById('cyGuest');
-  const member = document.getElementById('cyMember');
-  const nameIn = document.getElementById('cyName');
-  const avIn = document.getElementById('cyAvatar');
-  const msg = document.getElementById('cyMsg');
-  let open = false;
+(function(){
+  var SB_URL='https://nmfoshrrflgnuubsxuhk.supabase.co', SB_KEY='sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l';
+  var sb=window.supabase.createClient(SB_URL,SB_KEY);
+  var btn=document.getElementById('cyAuthBtn'), panel=document.getElementById('cyAuthPanel');
+  var guest=document.getElementById('cyGuest'), member=document.getElementById('cyMember');
+  var who=document.getElementById('cyWho'), bioView=document.getElementById('cyBioView'), viewAv=document.getElementById('cyViewAv');
+  var editBox=document.getElementById('cyEdit'), editBtn=document.getElementById('cyEditBtn');
+  var nameIn=document.getElementById('cyName'), bioIn=document.getElementById('cyBio'), avIn=document.getElementById('cyAvatar');
+  var fileIn=document.getElementById('cyFile'), prevEl=document.getElementById('cyPreview'), msg=document.getElementById('cyMsg');
+  var ov=document.getElementById('pfOv'), frame=document.getElementById('pfFrame');
+  var installBtn=document.getElementById('installBtn');
+  var open=false, current=null;
 
-  function setOpen(v){
-    open = v;
-    panel.classList.toggle('open', v);
-    btn.setAttribute('aria-expanded', String(v));
-  }
+  function setOpen(v){ open=v; panel.classList.toggle('open',v); if(!v){ editBox.hidden=true; editBtn.hidden=false; } }
 
   function paint(user){
-    const m = (user && user.user_metadata) || {};
-    const name = m.display_name || (user ? user.email.split('@')[0] : 'Tamu');
-    who.textContent = name;
-    guest.hidden = !!user;
-    member.hidden = !user;
-    nameIn.value = m.display_name || '';
-    avIn.value = m.avatar_url || '';
-    document.getElementById('cyBio').value = m.bio || '';
-    var pvEl=document.getElementById('cyPreview'); if(pvEl){ pvEl.src=m.avatar_url||''; pvEl.hidden=!m.avatar_url; }
-    btn.textContent = '';
-    if(user && m.avatar_url){
-      const img = document.createElement('img');
-      img.src = m.avatar_url;
-      img.alt = '';
-      img.onerror = () => { btn.textContent = name[0].toUpperCase(); img.remove(); };
+    current=user;
+    var m=(user&&user.user_metadata)||{};
+    var name=m.display_name||(user?user.email.split('@')[0]:'Tamu');
+    who.textContent=name;
+    guest.hidden=!!user; member.hidden=!user;
+    bioView.textContent=m.bio||'';
+    nameIn.value=m.display_name||''; bioIn.value=m.bio||''; avIn.value=m.avatar_url||'';
+    prevEl.src=m.avatar_url||''; prevEl.hidden=!m.avatar_url;
+    viewAv.src=m.avatar_url||''; viewAv.hidden=!m.avatar_url;
+    btn.textContent='';
+    if(user&&m.avatar_url){
+      var img=document.createElement('img'); img.alt=''; img.src=m.avatar_url;
+      img.onerror=function(){ btn.textContent=(name[0]||'?').toUpperCase(); };
       btn.appendChild(img);
-    } else {
-      btn.textContent = (name[0] || '?').toUpperCase();
+    }else{
+      btn.textContent=(name[0]||'?').toUpperCase();
     }
   }
 
-  document.getElementById('menuAccount').addEventListener('click', e => { e.stopPropagation(); document.getElementById('hdrMenu').hidden = true; setOpen(true); });
-  document.addEventListener('click', e => {
-    if(open && !panel.contains(e.target) && !btn.contains(e.target)) setOpen(false);
-  });
-  document.addEventListener('keydown', e => { if(e.key === 'Escape') setOpen(false); });
+  editBtn.addEventListener('click',function(){ editBox.hidden=false; editBtn.hidden=true; });
+  document.getElementById('cyCancel').addEventListener('click',function(){ editBox.hidden=true; editBtn.hidden=false; paint(current); });
 
-  const CY_SB_URL='https://nmfoshrrflgnuubsxuhk.supabase.co';
-  const CY_SB_KEY='sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l';
-  const fileIn=document.getElementById('cyFile'), prevEl=document.getElementById('cyPreview');
-  fileIn.addEventListener('change', async () => {
-    const f=fileIn.files && fileIn.files[0];
-    if(!f) return;
+  fileIn.addEventListener('change',async function(){
+    var f=fileIn.files&&fileIn.files[0]; if(!f) return;
     if(!f.type.startsWith('image/')){ msg.textContent='File harus berupa gambar.'; return; }
     if(f.size>8*1024*1024){ msg.textContent='Ukuran foto maksimal 8 MB.'; return; }
     msg.textContent='Menyiapkan foto...';
-    let bmp;
-    try{ bmp=await createImageBitmap(f); }catch(e){ msg.textContent='Gagal membaca gambar.'; return; }
-    const S=256, cv=document.createElement('canvas'); cv.width=S; cv.height=S;
-    const side=Math.min(bmp.width,bmp.height), sx=(bmp.width-side)/2, sy=(bmp.height-side)/2;
+    var bmp; try{ bmp=await createImageBitmap(f); }catch(e){ msg.textContent='Gagal membaca gambar.'; return; }
+    var S=256, cv=document.createElement('canvas'); cv.width=S; cv.height=S;
+    var side=Math.min(bmp.width,bmp.height), sx=(bmp.width-side)/2, sy=(bmp.height-side)/2;
     cv.getContext('2d').drawImage(bmp,sx,sy,side,side,0,0,S,S);
-    const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.85));
-    const { data:{ session } } = await sb.auth.getSession();
-    if(!session){ msg.textContent='Login dulu untuk ganti foto.'; return; }
+    var blob=await new Promise(function(r){ cv.toBlob(r,'image/jpeg',0.85); });
+    var s=(await sb.auth.getSession()).data.session;
+    if(!s){ msg.textContent='Login dulu untuk ganti foto.'; return; }
     msg.textContent='Mengunggah...';
-    const path=session.user.id+'/avatar.jpg';
-    const up=await fetch(CY_SB_URL+'/storage/v1/object/avatars/'+path,{
-      method:'POST',
-      headers:{ apikey:CY_SB_KEY, Authorization:'Bearer '+session.access_token, 'Content-Type':'image/jpeg', 'x-upsert':'true' },
-      body:blob
-    });
+    var path=s.user.id+'/avatar.jpg';
+    var up=await fetch(SB_URL+'/storage/v1/object/avatars/'+path,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+s.access_token,'Content-Type':'image/jpeg','x-upsert':'true'},body:blob});
     if(!up.ok){ msg.textContent='Gagal unggah foto ('+up.status+').'; return; }
-    const url=CY_SB_URL+'/storage/v1/object/public/avatars/'+path+'?v='+Date.now();
-    const { error } = await sb.auth.updateUser({ data:{ avatar_url:url } });
-    if(error){ msg.textContent='Gagal menyimpan: '+error.message; return; }
-    avIn.value=url; prevEl.src=url; prevEl.hidden=false;
-    fileIn.value='';
-    msg.textContent='Foto profil tersimpan.';
+    var url=SB_URL+'/storage/v1/object/public/avatars/'+path+'?v='+Date.now();
+    var r=await sb.auth.updateUser({data:{avatar_url:url}});
+    if(r.error){ msg.textContent='Gagal menyimpan: '+r.error.message; return; }
+    fileIn.value=''; msg.textContent='Foto profil tersimpan.';
+    if(r.data&&r.data.user) paint(r.data.user);
   });
 
-  document.getElementById('cySave').addEventListener('click', async () => {
-    const av = avIn.value.trim();
-    if(av && !av.startsWith('https://')){ msg.textContent = 'Link avatar harus diawali https://'; return; }
-    msg.textContent = 'Menyimpan...';
-    const { error } = await sb.auth.updateUser({
-      data: { display_name: nameIn.value.trim(), avatar_url: av, bio: document.getElementById('cyBio').value.trim() }
-    });
-    msg.textContent = error ? 'Gagal: ' + error.message : 'Tersimpan.';
+  document.getElementById('cySave').addEventListener('click',async function(){
+    var av=avIn.value.trim();
+    if(av&&!av.startsWith('https://')){ msg.textContent='Link avatar harus diawali https://'; return; }
+    msg.textContent='Menyimpan...';
+    var r=await sb.auth.updateUser({data:{display_name:nameIn.value.trim(),avatar_url:av,bio:bioIn.value.trim()}});
+    if(r.error){ msg.textContent='Gagal: '+r.error.message; return; }
+    msg.textContent='Tersimpan.';
+    if(r.data&&r.data.user) paint(r.data.user);
+    editBox.hidden=true; editBtn.hidden=false;
   });
 
-  document.getElementById('cyLogout').addEventListener('click', async () => {
-    await sb.auth.signOut();
-    setOpen(false);
-    paint(null);
+  document.getElementById('cyLogout').addEventListener('click',async function(){
+    await sb.auth.signOut(); setOpen(false); paint(null);
   });
 
-  const { data } = await sb.auth.getSession();
-  paint(data.session ? data.session.user : null);
-  sb.auth.onAuthStateChange((_e, session) => paint(session ? session.user : null));
+  // menu header: AKUN membuka panel
+  document.getElementById('menuAccount').addEventListener('click',function(e){
+    e.stopPropagation(); document.getElementById('hdrMenu').hidden=true; setOpen(true);
+  });
+  document.addEventListener('click',function(e){
+    if(open && !panel.contains(e.target) && e.target!==btn && !btn.contains(e.target)) setOpen(false);
+  });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ setOpen(false); closeProfile(); } });
+
+  // profil dibuka sebagai layar penuh (iframe)
+  function openProfile(href){ frame.src=href; ov.hidden=false; setOpen(false); }
+  function closeProfile(){ if(ov.hidden) return; ov.hidden=true; frame.src='about:blank'; }
+  document.getElementById('pfBack').addEventListener('click',closeProfile);
+  document.getElementById('menuProfileOpen').addEventListener('click',function(){ openProfile('profile.html?embed=1'); });
+  document.addEventListener('click',function(e){
+    var a=e.target.closest&&e.target.closest('a[href^="profile.html"]');
+    if(!a) return;
+    e.preventDefault();
+    var h=a.getAttribute('href');
+    openProfile(h+(h.indexOf('?')>=0?'&':'?')+'embed=1');
+  });
+
+  // pasang ke layar utama (Android/Chrome)
+  var deferred=null;
+  var standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  window.addEventListener('beforeinstallprompt',function(e){
+    e.preventDefault(); deferred=e;
+    if(!standalone) installBtn.hidden=false;
+  });
+  installBtn.addEventListener('click',async function(){
+    if(!deferred) return;
+    deferred.prompt();
+    await deferred.userChoice;
+    deferred=null; installBtn.hidden=true;
+  });
+  window.addEventListener('appinstalled',function(){ installBtn.hidden=true; });
+
+  sb.auth.getSession().then(function(res){ paint(res.data.session?res.data.session.user:null); });
+  sb.auth.onAuthStateChange(function(_e,session){ paint(session?session.user:null); });
 })();
 </script>
 <script>
