@@ -94,7 +94,7 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
 .fname{flex:1;min-width:0;font-family:'Anton',Impact,sans-serif;text-transform:uppercase;font-size:18px;text-decoration:none;color:inherit;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .facts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .fwait,.fnone{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--mut)}
-#pubWrap{margin-top:14px}
+#pubWrap,#shareWrap{margin-top:14px}
 .pb:disabled{opacity:.55;cursor:default}
 @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 @keyframes pop{from{opacity:0;transform:scale(.6) rotate(-6deg)}to{opacity:1;transform:none}}
@@ -125,6 +125,7 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
         <h1 class="disp who" id="who">PEMAIN</h1>
         <p class="meta" id="meta"></p>
         <p class="bio" id="bio"></p>
+        <div id="shareWrap" hidden><button class="pb" id="shareBtn" type="button">BAGIKAN PROFIL</button></div>
         <div id="pubWrap" hidden><button class="pb pri" id="pubFriend" type="button">TAMBAH TEMAN</button></div>
         <div class="stats">
           <span class="stat">TOTAL SKOR<strong id="stTotal">0</strong></span>
@@ -359,6 +360,21 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
   }
   window.sbClient=window.supabase.createClient(SB_URL,SB_KEY);
 
+  // ===== bagikan profil =====
+  function initShare(uid){
+    var url = location.href.split('?')[0].replace(/[^\/]*$/, '') + 'profile.html?u=' + uid;
+    $('shareWrap').hidden = false;
+    $('shareBtn').onclick = function(){
+      if(navigator.share){
+        navigator.share({ title: 'Profil C-Library', url: url }).catch(function(){});
+      }else{
+        navigator.clipboard.writeText(url)
+          .then(function(){ $('shareBtn').textContent = 'LINK DISALIN'; })
+          .catch(function(){});
+      }
+    };
+  }
+
   // ===== tambah teman dari profil publik =====
   var PUB_LABEL={accepted:'SUDAH TEMAN',outgoing:'MENUNGGU',incoming:'TERIMA',none:'TAMBAH TEMAN',guest:'LOGIN DULU'};
   var PUB_SENT={sent:'MENUNGGU',already:'SUDAH TEMAN',pending:'MENUNGGU',login:'LOGIN DULU'};
@@ -392,6 +408,17 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
   var FM={sent:'Permintaan terkirim. Tunggu dia menerima ya.',not_found:'Kode itu nggak ketemu.',self:'Itu kode kamu sendiri.',already:'Kalian udah berteman.',pending:'Permintaan udah ada, cek daftar di bawah.',login:'Login dulu ya.'};
   function fmsg(t){ $('fmsg').textContent=t||''; }
 
+  function undoBar(name,onUndo,onCommit){
+    var bar=$('fmsg');
+    bar.replaceChildren();
+    bar.appendChild(document.createTextNode(name+' dihapus dari teman. '));
+    var u=el('button','pb','BATALKAN');
+    u.type='button';
+    var t=setTimeout(function(){ bar.replaceChildren(); onCommit(); }, 5000);
+    u.onclick=function(){ clearTimeout(t); bar.replaceChildren(); onUndo(); };
+    bar.appendChild(u);
+  }
+
   function frow(f){
     var li=el('li','fi'), av=el('span','fav'), ini=(f.name||'?').charAt(0).toUpperCase();
     if(f.avatar_url){
@@ -403,7 +430,13 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
     var acts=el('span','facts');
     function btn(label,cls,fn){ var b=el('button',cls,label); b.type='button'; b.onclick=fn; acts.appendChild(b); }
     if(f.status==='accepted'){
-      btn('HAPUS','pb',function(){ if(confirm('Hapus '+f.name+' dari daftar teman?')) act('remove_friend',{p_other:f.friend_id}); });
+      btn('HAPUS','pb',function(){
+        if(!confirm('Hapus '+f.name+' dari daftar teman?')) return;
+        li.style.display='none';
+        undoBar(f.name,
+          function(){ li.style.display=''; },
+          function(){ act('remove_friend',{p_other:f.friend_id}); });
+      });
     }else if(f.incoming){
       btn('TERIMA','pb pri',function(){ act('respond_friend_request',{p_from:f.friend_id,p_accept:true}); });
       btn('TOLAK','pb',function(){ act('respond_friend_request',{p_from:f.friend_id,p_accept:false}); });
@@ -474,6 +507,7 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
     if(!s){ show('guest'); return; }
     var m=s.user.user_metadata||{};
     initFriends();
+    initShare(s.user.id);
     return load({name:m.display_name,avatar_url:m.avatar_url,bio:m.bio,created_at:s.user.created_at},s.user.id);
   }).catch(function(){
     $('state').textContent='Gagal memuat profil. Coba refresh ya.';

@@ -578,6 +578,11 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
 #cyFile{font-family:'JetBrains Mono',monospace;font-size:12px;max-width:100%}
 #lbList .av{width:38px;height:38px;object-fit:cover;border:2px solid var(--line);flex:none;margin-left:6px}
 #lbList a.nm{color:inherit;text-decoration:none}
+#lbList li.me{outline:3px solid var(--pink);outline-offset:-3px}
+.metag{display:inline-block;margin-left:6px;padding:0 5px;background:#0a0a0a;color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;vertical-align:middle}
+.pushhint{margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mut)}
+.lbreset{margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--mut)}
+.lbreset[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -593,7 +598,7 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
   <a class="wm disp glitch" href="/">C-<i>LIBRARY</i></a>
   <div class="hwrap" id="notifWrap">
     <button class="mode" id="notifBtn" type="button" aria-label="Notifikasi" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6zM10 19a2 2 0 0 0 4 0" fill="none" stroke="#0a0a0a" stroke-width="2.4" stroke-linejoin="round"/></svg><span class="nbadge" id="notifCount" hidden>0</span></button>
-    <div class="hmenu" id="notifMenu" hidden><div class="nlist" id="notifList"></div><hr class="nsep"/><button class="clog-btn" id="clogBtn" type="button" aria-expanded="false" aria-controls="clogList"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.4" fill="currentColor"/></svg><span>CHANGE LOG</span><span class="chev" aria-hidden="true">+</span></button><ul class="clog" id="clogList" hidden><li>Notifikasi push: teman nyalip skor dan permintaan teman langsung masuk ke HP, walau app ditutup</li><li>Bisa dipasang ke layar utama HP, dibuka tanpa browser</li><li>Tambah teman langsung dari profil publik</li><li>Notifikasi saat teman nyalip skor kamu</li><li>Menu foto profil di header, notifikasi permintaan teman, konfirmasi sebelum hapus teman</li><li>Teman lewat kode 6 karakter, plus leaderboard TEMAN</li><li>Peringkat sepanjang masa dan mingguan (reset tiap Jumat)</li><li>Bio di panel akun</li><li>Profil publik: klik nama di leaderboard</li><li>Halaman profil dengan skor tertinggi per game dan riwayat</li></ul></div>
+    <div class="hmenu" id="notifMenu" hidden><div class="nlist" id="notifList"></div><hr class="nsep"/><button class="clog-btn" id="clogBtn" type="button" aria-expanded="false" aria-controls="clogList"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.4" fill="currentColor"/></svg><span>CHANGE LOG</span><span class="chev" aria-hidden="true">+</span></button><ul class="clog" id="clogList" hidden><li>Bagikan profil lewat link, dan undo saat menghapus teman</li><li>Baris kamu di leaderboard ditandai KAMU, plus hitung mundur reset mingguan</li><li>Notifikasi push: teman nyalip skor dan permintaan teman langsung masuk ke HP, walau app ditutup</li><li>Bisa dipasang ke layar utama HP, dibuka tanpa browser</li><li>Tambah teman langsung dari profil publik</li><li>Notifikasi saat teman nyalip skor kamu</li><li>Menu foto profil di header, notifikasi permintaan teman, konfirmasi sebelum hapus teman</li><li>Teman lewat kode 6 karakter, plus leaderboard TEMAN</li><li>Peringkat sepanjang masa dan mingguan (reset tiap Jumat)</li><li>Bio di panel akun</li><li>Profil publik: klik nama di leaderboard</li><li>Halaman profil dengan skor tertinggi per game dan riwayat</li></ul></div>
   </div>
   <div class="hwrap" id="menuWrap">
     <button class="mode" id="cyAuthBtn" type="button" aria-label="Menu" aria-expanded="false"></button>
@@ -618,7 +623,7 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
     <label for="cyFile">FOTO PROFIL</label>
     <div class="upl"><img id="cyPreview" alt="" hidden><input id="cyFile" type="file" accept="image/*"></div>
     <label for="cyAvatar">ATAU LINK AVATAR (https)</label>
-    <input id="cyAvatar" type="url" placeholder="https://..."><div class="btns"><button type="button" onclick="location.href='profile.html'">Lihat profil</button><button type="button" id="pushBtn">Aktifkan notifikasi</button></div>
+    <input id="cyAvatar" type="url" placeholder="https://..."><p class="pushhint">Dapat kabar kalau teman nyalip skormu atau ngirim permintaan teman.</p><div class="btns"><button type="button" onclick="location.href='profile.html'">Lihat profil</button><button type="button" id="pushBtn">Aktifkan notifikasi</button></div>
     <div class="btns">
       <button class="pri" id="cySave" type="button">Simpan</button>
       <button class="dng" id="cyLogout" type="button">Logout</button>
@@ -649,6 +654,7 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
       <button type="button" data-m="weekly" aria-pressed="false">MINGGUAN</button>
       <button type="button" data-m="all" aria-pressed="true">SEPANJANG MASA</button>
     </div>
+    <p class="lbreset" id="lbReset" hidden></p>
     <div class="lb-mode lb-scope" role="group" aria-label="Pemain">
       <button type="button" data-s="all" aria-pressed="true">SEMUA</button>
       <button type="button" data-s="friends" aria-pressed="false">TEMAN</button>
@@ -1417,6 +1423,11 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
         var av=document.createElement('img'); av.className='av'; av.alt=''; av.loading='lazy'; av.src=row.avatar_url;
         li.append(av);
       }
+      if(myUid && row.user_id === myUid){
+        li.classList.add('me');
+        var tag = document.createElement('span'); tag.className = 'metag'; tag.textContent = 'KAMU';
+        nm.appendChild(tag);
+      }
       li.append(nm, mt);
       list.appendChild(li);
     });
@@ -1470,8 +1481,27 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
     });
   });
 
+  var myUid = null;
+  function nextReset(){
+    var wib = new Date(Date.now() + 7*3600000);
+    var add = (5 - wib.getUTCDay() + 7) % 7;
+    if(add === 0 && (wib.getUTCHours() || wib.getUTCMinutes() || wib.getUTCSeconds() || wib.getUTCMilliseconds())) add = 7;
+    return Date.UTC(wib.getUTCFullYear(), wib.getUTCMonth(), wib.getUTCDate() + add) - 7*3600000;
+  }
+  function tickReset(){
+    var t = document.getElementById('lbReset');
+    t.hidden = lbMode !== 'weekly';
+    if(t.hidden) return;
+    var ms = nextReset() - Date.now();
+    var d = Math.floor(ms / 86400000), h = Math.floor(ms % 86400000 / 3600000), m = Math.floor(ms % 3600000 / 60000);
+    t.textContent = d > 0 ? 'RESET DALAM ' + d + ' HARI ' + h + ' JAM' : 'RESET DALAM ' + h + ' JAM ' + m + ' MENIT';
+  }
+  setInterval(tickReset, 30000);
+
   async function loadAll(){
     document.getElementById('lbList').innerHTML = '<li class="empty">Memuat skor...</li>';
+    var sess = await sbLb.auth.getSession();
+    myUid = sess.data.session ? sess.data.session.user.id : null;
     Object.keys(data).forEach(function(k){ delete data[k]; });
     Object.keys(failed).forEach(function(k){ delete failed[k]; });
     if(lbScope === 'friends') await loadFriends();
@@ -1482,6 +1512,7 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
       }).catch(function(){ failed[k] = true; });
     }));
     select(cur);
+    tickReset();
   }
 
   loadAll();
