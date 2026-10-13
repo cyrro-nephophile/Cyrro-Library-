@@ -41,6 +41,7 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
 .av img{width:100%;height:100%;object-fit:cover;display:block}
 .who{font-size:clamp(44px,9vw,92px);word-break:break-word}
 .meta{margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--mut)}
+.bio{margin-top:12px;max-width:52ch;white-space:pre-line;word-break:break-word}
 .stats{display:flex;flex-wrap:wrap;gap:10px 12px;margin-top:16px}
 .stat{padding:3px 10px;background:var(--bg);border:3px solid var(--line);box-shadow:3px 3px 0 var(--sh);font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700}
 .stat strong{margin-left:6px;padding:0 5px;background:var(--lime);color:#0a0a0a}
@@ -100,6 +101,7 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
       <div>
         <h1 class="disp who" id="who">PEMAIN</h1>
         <p class="meta" id="meta"></p>
+        <p class="bio" id="bio"></p>
         <div class="stats">
           <span class="stat">TOTAL SKOR<strong id="stTotal">0</strong></span>
           <span class="stat">GAME DIMAINKAN<strong id="stGames">0/7</strong></span>
@@ -185,21 +187,22 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
     return li;
   }
 
-  function render(user,rows,all){
-    var m=user.user_metadata||{}, name=m.display_name||'PEMAIN', ini=name.charAt(0).toUpperCase();
+  function render(p,rows,all){
+    var name=p.name||'PEMAIN', ini=name.charAt(0).toUpperCase(), avatar=p.avatar_url;
 
     var av=$('av');
     av.replaceChildren(el('span',null,ini));
-    if(m.avatar_url){
+    if(avatar){
       var img=el('img');
       img.alt='';
       img.onerror=function(){av.replaceChildren(el('span',null,ini));};
-      img.src=m.avatar_url;
+      img.src=avatar;
       av.replaceChildren(img);
     }
 
     $('who').textContent=name;
-    $('meta').textContent='Member sejak '+when(user.created_at);
+    $('meta').textContent=(p.pub?'Profil publik · ':'')+'Member sejak '+when(p.created_at);
+    $('bio').textContent=p.bio||'';
     var played=GAMES.filter(function(g){return rows[g.id].length;}).length;
     count($('stTotal'),all.length);
     $('stGames').textContent=played+'/'+GAMES.length;
@@ -256,11 +259,11 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
     return next();
   }
 
-  function load(user){
+  function load(p,uid){
     show('state');
     $('state').textContent='Memuat profil...';
     return Promise.all(GAMES.map(function(g){
-      return fetchAll(g,user.id);
+      return fetchAll(g,uid);
     })).then(function(res){
       var rows={}, all=[];
       GAMES.forEach(function(g,i){
@@ -268,7 +271,7 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
         rows[g.id].forEach(function(r){all.push({g:g,r:r});});
       });
       all.sort(function(a,b){return new Date(b.r.created_at)-new Date(a.r.created_at);});
-      render(user,rows,all);
+      render(p,rows,all);
     });
   }
 
@@ -283,10 +286,28 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
     return;
   }
   window.sbClient=window.supabase.createClient(SB_URL,SB_KEY);
+
+  // profil publik: profile.html?u=<id>, tidak perlu login
+  var uidParam=new URLSearchParams(location.search).get('u');
+  if(uidParam){
+    if(!/^[0-9a-f-]{36}$/i.test(uidParam)){ $('state').textContent='Profil tidak ditemukan.'; return; }
+    window.sbClient.rpc('get_public_profile',{uid:uidParam}).then(function(res){
+      if(res.error) throw res.error;
+      var row=(res.data||[])[0];
+      if(!row){ $('state').textContent='Profil tidak ditemukan.'; return; }
+      return load({name:row.display_name,avatar_url:row.avatar_url,bio:row.bio,created_at:row.created_at,pub:true},uidParam);
+    }).catch(function(){
+      $('state').textContent='Gagal memuat profil. Coba refresh ya.';
+    });
+    return;
+  }
+
+  // profil sendiri: wajib login
   window.sbClient.auth.getSession().then(function(res){
     var s=res.data&&res.data.session;
     if(!s){ show('guest'); return; }
-    return load(s.user);
+    var m=s.user.user_metadata||{};
+    return load({name:m.display_name,avatar_url:m.avatar_url,bio:m.bio,created_at:s.user.created_at},s.user.id);
   }).catch(function(){
     $('state').textContent='Gagal memuat profil. Coba refresh ya.';
     show('state');
