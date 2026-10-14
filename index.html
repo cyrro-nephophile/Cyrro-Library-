@@ -505,14 +505,18 @@ body.gm-open{overflow:hidden}
 
 /* ===== leaderboard: semua tab kelihatan, tanpa geser ===== */
 .lb-tabs-wrap{position:relative;margin-top:14px}
-.lb-mode{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
-.lb-mode button{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;letter-spacing:.06em;padding:8px 12px;cursor:pointer;background:var(--card);color:var(--fg);border:3px solid var(--line);box-shadow:3px 3px 0 var(--sh)}
-.lb-mode button[aria-pressed="true"]{background:var(--lime);color:#0a0a0a}
-.lb-mode button:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+.lb-filters{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;margin-top:16px;align-items:stretch;max-width:560px}
+.lb-seg{display:grid;grid-template-columns:1fr 1fr;background:var(--card);border:3px solid var(--line);box-shadow:3px 3px 0 var(--sh)}
+.lb-seg button{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;letter-spacing:.04em;white-space:nowrap;min-height:40px;padding:8px 6px;cursor:pointer;background:transparent;color:var(--fg);border:0}
+.lb-seg button+button{border-left:3px solid var(--line)}
+.lb-seg button[aria-pressed="true"]{background:var(--lime);color:#0a0a0a}
+.lb-seg button:hover{background:var(--lime);color:#0a0a0a}
+.lb-seg button[aria-pressed="true"]:hover{background:var(--lime)}
+.lb-seg button:focus-visible{outline:3px solid var(--pink);outline-offset:-6px}
 .lb-tabs-wrap::after{display:none}
 .lb-hint{display:none!important}
-.lb-tabs{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));overflow:visible;border:3px solid var(--line);box-shadow:4px 4px 0 var(--sh);margin-top:0}
-.lb-tabs button{flex:none;white-space:normal;text-align:center;line-height:1.2;min-height:46px;padding:8px 6px;font-size:12px;border:0;box-shadow:inset -3px -3px 0 var(--line)}
+.lb-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));overflow:visible;border:3px solid var(--line);box-shadow:4px 4px 0 var(--sh);margin-top:0}
+.lb-tabs button{flex:none;white-space:normal;text-align:center;line-height:1.2;min-height:46px;padding:8px 2px;font-size:11px;letter-spacing:.02em;border:0;box-shadow:inset -3px -3px 0 var(--line)}
 .lb-tabs button+button{border-left:0}
 .lb-tabs button{overflow:visible;text-overflow:clip;max-width:none}
 </style>
@@ -588,13 +592,15 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
 #lbList li.me{outline:3px solid var(--pink);outline-offset:-3px}
 .metag{display:inline-block;margin-left:6px;padding:0 5px;background:#0a0a0a;color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;vertical-align:middle}
 .pushhint{margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mut)}
-.lbreset{margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--mut)}
+.lbreset{margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--mut)}
 .lbreset[hidden]{display:none}
 .lbref{margin-top:14px;padding:8px 12px;cursor:pointer;background:var(--card);color:var(--fg);border:3px solid var(--line);box-shadow:3px 3px 0 var(--sh);font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px}
 .lbref:hover{background:var(--lime);color:#0a0a0a}
 .lbref:disabled{opacity:.6;cursor:default}
-.lb-mode .lbref{margin:0 0 0 auto;width:44px;height:44px;padding:0;display:grid;place-items:center;color:#ff0055;background:#fff}
-.lb-mode .lbref:hover{background:var(--lime);color:#ff0055}
+.lb-period{grid-column:1;grid-row:1}
+.lb-scope{grid-column:1;grid-row:2}
+.lb-filters .lbref{grid-column:2;grid-row:1 / span 2;margin:0;width:52px;padding:0;display:grid;place-items:center;color:#ff0055;background:#fff;border:3px solid var(--line);box-shadow:3px 3px 0 var(--sh)}
+.lb-filters .lbref:hover{background:var(--lime);color:#ff0055}
 </style>
 <style>
 #cyAuthPanel .pview{display:flex;gap:12px;align-items:center}
@@ -658,7 +664,7 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
       <button class="mi" id="fxBtn" type="button" aria-pressed="false" title="Efek gerak: penuh"><span>EFEK GERAK</span><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 8h11M6 12h15M3 16h9" fill="none" stroke="#0a0a0a" stroke-width="2.6" stroke-linecap="square"/></svg></button>
       <button class="mi" id="modeBtn" type="button"><span>GANTI TEMA</span><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="#0a0a0a"/></svg></button>
       <button class="mi" id="menuAccount" type="button"><span>AKUN</span></button>
-      <hr class="nsep"/><button class="clog-btn" id="clogBtn" type="button" aria-expanded="false" aria-controls="clogList"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.4" fill="currentColor"/></svg><span>CHANGE LOG</span><span class="chev" aria-hidden="true">+</span></button><ul class="clog" id="clogList" hidden><li>Perbaikan baris leaderboard yang melebar ke kanan di HP</li><li>Tombol muat ulang di leaderboard (ikon panah melingkar, di kanan)</li><li>Change log pindah ke menu foto profil, lonceng khusus notifikasi</li><li>Change log bisa digulir kalau sudah banyak catatan</li><li>Perbaikan keamanan database (tanpa perubahan tampilan)</li><li>Perbaikan struktur halaman dan batas ukuran foto profil (maks 2 MB, JPG/PNG/WebP)</li><li>Mode edit profil di panel akun lebih ringkas, menu disembunyikan saat edit</li><li>Panel akun lebih ringkas: EDIT PROFIL membuka form, dan tawaran pasang ke layar utama</li><li>Profil dibuka sebagai layar penuh di dalam Library, tanpa pindah halaman</li><li>Bagikan profil lewat link, dan undo saat menghapus teman</li><li>Baris kamu di leaderboard ditandai KAMU, plus hitung mundur reset mingguan</li><li>Notifikasi push: teman nyalip skor dan permintaan teman langsung masuk ke HP, walau app ditutup</li><li>Bisa dipasang ke layar utama HP, dibuka tanpa browser</li><li>Tambah teman langsung dari profil publik</li><li>Notifikasi saat teman nyalip skor kamu</li><li>Menu foto profil di header, notifikasi permintaan teman, konfirmasi sebelum hapus teman</li><li>Teman lewat kode 6 karakter, plus leaderboard TEMAN</li><li>Peringkat sepanjang masa dan mingguan (reset tiap Jumat)</li><li>Bio di panel akun</li><li>Profil publik: klik nama di leaderboard</li><li>Halaman profil dengan skor tertinggi per game dan riwayat</li></ul>
+      <hr class="nsep"/><button class="clog-btn" id="clogBtn" type="button" aria-expanded="false" aria-controls="clogList"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.4" fill="currentColor"/></svg><span>CHANGE LOG</span><span class="chev" aria-hidden="true">+</span></button><ul class="clog" id="clogList" hidden><li>Mini game baru: Flappy Bee (kepak terbang, lewati celah pilar), ada di leaderboard FLAPPY BEE</li><li>Perbaikan baris leaderboard yang melebar ke kanan di HP</li><li>Tombol muat ulang di leaderboard (ikon panah melingkar, di kanan)</li><li>Change log pindah ke menu foto profil, lonceng khusus notifikasi</li><li>Change log bisa digulir kalau sudah banyak catatan</li><li>Perbaikan keamanan database (tanpa perubahan tampilan)</li><li>Perbaikan struktur halaman dan batas ukuran foto profil (maks 2 MB, JPG/PNG/WebP)</li><li>Mode edit profil di panel akun lebih ringkas, menu disembunyikan saat edit</li><li>Panel akun lebih ringkas: EDIT PROFIL membuka form, dan tawaran pasang ke layar utama</li><li>Profil dibuka sebagai layar penuh di dalam Library, tanpa pindah halaman</li><li>Bagikan profil lewat link, dan undo saat menghapus teman</li><li>Baris kamu di leaderboard ditandai KAMU, plus hitung mundur reset mingguan</li><li>Notifikasi push: teman nyalip skor dan permintaan teman langsung masuk ke HP, walau app ditutup</li><li>Bisa dipasang ke layar utama HP, dibuka tanpa browser</li><li>Tambah teman langsung dari profil publik</li><li>Notifikasi saat teman nyalip skor kamu</li><li>Menu foto profil di header, notifikasi permintaan teman, konfirmasi sebelum hapus teman</li><li>Teman lewat kode 6 karakter, plus leaderboard TEMAN</li><li>Peringkat sepanjang masa dan mingguan (reset tiap Jumat)</li><li>Bio di panel akun</li><li>Profil publik: klik nama di leaderboard</li><li>Halaman profil dengan skor tertinggi per game dan riwayat</li></ul>
     </div>
   </div>
 </header>
@@ -716,16 +722,18 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
   <details class="lb-box" open>
     <summary class="sh"><h2 id="h-lb">Leaderboard</h2><em class="lb-beta">BETA</em><i></i><span>TOP 10</span></summary>
     <p class="lb-hint" id="lbHint">GESER TAB UNTUK GAME LAIN <span aria-hidden="true">→</span></p>
-    <div class="lb-mode" role="group" aria-label="Periode leaderboard">
-      <button type="button" data-m="weekly" aria-pressed="false">MINGGUAN</button>
-      <button type="button" data-m="all" aria-pressed="true">SEPANJANG MASA</button>
+    <div class="lb-filters" role="toolbar" aria-label="Filter leaderboard">
+      <div class="lb-seg lb-period" role="group" aria-label="Periode">
+        <button type="button" data-m="weekly" aria-pressed="false">MINGGUAN</button>
+        <button type="button" data-m="all" aria-pressed="true">SEPANJANG MASA</button>
+      </div>
       <button class="lbref" id="lbRefresh" type="button" aria-label="Muat ulang skor"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="square"/><path d="M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="square"/></svg></button>
+      <div class="lb-seg lb-scope" role="group" aria-label="Pemain">
+        <button type="button" data-s="all" aria-pressed="true">SEMUA</button>
+        <button type="button" data-s="friends" aria-pressed="false">TEMAN</button>
+      </div>
     </div>
     <p class="lbreset" id="lbReset" hidden></p>
-    <div class="lb-mode lb-scope" role="group" aria-label="Pemain">
-      <button type="button" data-s="all" aria-pressed="true">SEMUA</button>
-      <button type="button" data-s="friends" aria-pressed="false">TEMAN</button>
-    </div>
     <div class="lb-tabs-wrap" id="lbTabsWrap">
     <div class="lb-tabs" role="tablist">
       <button type="button" role="tab" data-g="catur" aria-selected="true">CATUR</button>
@@ -735,6 +743,7 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
       <button type="button" role="tab" data-g="minesweeper" aria-selected="false">MINESWEEPER</button>
       <button type="button" role="tab" data-g="game2048" aria-selected="false">2048</button>
       <button type="button" role="tab" data-g="dino" aria-selected="false">DINO</button>
+      <button type="button" role="tab" data-g="flappy" aria-selected="false">FLAPPY BEE</button>
     </div>
     </div>
     <ol id="lbList"><li class="empty">Memuat skor...</li></ol>
@@ -935,6 +944,45 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
   <circle cx="57" cy="11" r=".8" fill="#163d1e"/>
 </svg></span>
         <span class="tx"><b>DINO RUNNER</b><small>LOMPAT DAN NUNDUK, JANGAN NABRAK</small></span>
+      </a></li>
+      <li><a class="card mg p2" href="/minigame/flappy/?embed=1">
+        <span class="n">08</span>
+        <span class="tile" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="ic-flappy-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe866"/>
+      <stop offset="1" stop-color="#e0a800"/>
+    </linearGradient>
+    <linearGradient id="ic-flappy-wing" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/>
+      <stop offset="1" stop-color="#cfe8ff" stop-opacity=".7"/>
+    </linearGradient>
+    <clipPath id="ic-flappy-clip"><ellipse cx="32" cy="36" rx="20" ry="14"/></clipPath>
+  </defs>
+  <ellipse cx="32" cy="58" rx="18" ry="2.4" fill="#000" opacity=".2"/>
+  <!-- sengat -->
+  <path d="M12 34 L4 31 L12 39 Z" fill="#2a2a2a"/>
+  <!-- sayap -->
+  <ellipse cx="28" cy="22" rx="11" ry="8" fill="url(#ic-flappy-wing)" stroke="#2a2a2a" stroke-width="1.2" transform="rotate(-18 28 22)"/>
+  <ellipse cx="36" cy="20" rx="7" ry="5" fill="url(#ic-flappy-wing)" stroke="#2a2a2a" stroke-width="1" opacity=".8" transform="rotate(12 36 20)"/>
+  <!-- badan -->
+  <ellipse cx="32" cy="36" rx="20" ry="14" fill="url(#ic-flappy-body)" stroke="#0a0a0a" stroke-width="2"/>
+  <g clip-path="url(#ic-flappy-clip)" fill="#1a1a1a">
+    <rect x="18" y="20" width="5" height="34"/>
+    <rect x="28" y="20" width="5" height="34"/>
+    <rect x="38" y="20" width="5" height="34"/>
+  </g>
+  <!-- kilau -->
+  <ellipse cx="26" cy="30" rx="6" ry="2.5" fill="#fff" opacity=".45"/>
+  <!-- mata -->
+  <circle cx="46" cy="33" r="4" fill="#fff" stroke="#0a0a0a" stroke-width="1.5"/>
+  <circle cx="47" cy="33" r="1.9" fill="#0a0a0a"/>
+  <circle cx="47.6" cy="32.3" r=".6" fill="#fff"/>
+  <!-- antena -->
+  <path d="M44 22 Q46 14 52 12" fill="none" stroke="#0a0a0a" stroke-width="1.6" stroke-linecap="round"/>
+  <circle cx="52" cy="12" r="1.8" fill="#0a0a0a"/>
+</svg></span>
+        <span class="tx"><b>FLAPPY BEE</b><small>KEPAK TERBANG, LEWATI CELAH PILAR</small></span>
       </a></li>
     </ol>
   </section>
@@ -1458,7 +1506,8 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
     blockblast: function(){ return sbLb.from('blockblast'+lbSfx()).select('name,score,avatar_url,user_id').order('score',{ascending:false}).limit(10); },
     minesweeper: function(){ return sbLb.from('minesweeper'+lbSfx()).select('name,level,secs,level_rank,avatar_url,user_id').order('level_rank',{ascending:false}).order('secs',{ascending:true}).limit(10); },
     game2048: function(){ return sbLb.from('game2048'+lbSfx()).select('name,score,max_tile,avatar_url,user_id').order('score',{ascending:false}).limit(10); },
-    dino: function(){ return sbLb.from('dino'+lbSfx()).select('name,score,avatar_url,user_id').order('score',{ascending:false}).limit(10); }
+    dino: function(){ return sbLb.from('dino'+lbSfx()).select('name,score,avatar_url,user_id').order('score',{ascending:false}).limit(10); },
+    flappy: function(){ return sbLb.from('flappy'+lbSfx()).select('name,score,avatar_url,user_id').order('score',{ascending:false}).limit(10); }
   };
 
   var fmt = function(n){ return Number(n).toLocaleString('id-ID'); };
@@ -1470,7 +1519,8 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
     blockblast: function(r){ return [fmt(r.score), 'POIN']; },
     minesweeper:function(r){ return [String(r.secs), 'DETIK · ' + String(r.level).toUpperCase()]; },
     game2048:   function(r){ return [fmt(r.score), 'POIN · UBIN ' + r.max_tile]; },
-    dino:       function(r){ return [fmt(r.score), 'POIN']; }
+    dino:       function(r){ return [fmt(r.score), 'POIN']; },
+    flappy:     function(r){ return [fmt(r.score), 'PILAR']; }
   };
   var meta = {
     catur: function(r){ return 'LVL ' + r.level + ' · ' + r.moves + ' LANGKAH'; },
@@ -1479,7 +1529,8 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
     blockblast: function(r){ return fmt(r.score) + ' POIN'; },
     minesweeper: function(r){ return String(r.level).toUpperCase() + ' · ' + r.secs + ' DETIK'; },
     game2048: function(r){ return fmt(r.score) + ' POIN · UBIN ' + r.max_tile; },
-    dino: function(r){ return fmt(r.score) + ' POIN'; }
+    dino: function(r){ return fmt(r.score) + ' POIN'; },
+    flappy: function(r){ return fmt(r.score) + ' PILAR'; }
   };
 
   function empty(text){
@@ -1538,7 +1589,7 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
   edge();
 
   var cur = 'catur';
-  var modeBtns = Array.prototype.slice.call(document.querySelectorAll('.lb-mode button'));
+  var modeBtns = Array.prototype.slice.call(document.querySelectorAll('.lb-period button'));
   modeBtns.forEach(function(b){
     b.addEventListener('click', function(){
       if(b.dataset.m === lbMode) return;

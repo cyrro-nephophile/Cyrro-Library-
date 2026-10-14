@@ -206,6 +206,10 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
     {id:'dino',name:'DINO',table:'dino_scores',lb:'dino_leaderboard',wk:'dino_weekly',cols:'score,created_at',
      main:function(r){return fmt(r.score);},
      sub:function(){return 'POIN';},
+     cmp:function(a,b){return b.score-a.score;}},
+    {id:'flappy',name:'FLAPPY BEE',table:'flappy_scores',lb:'flappy_leaderboard',wk:'flappy_weekly',cols:'score,created_at',
+     main:function(r){return fmt(r.score);},
+     sub:function(){return 'PILAR';},
      cmp:function(a,b){return b.score-a.score;}}
   ];
 
