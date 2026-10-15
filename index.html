@@ -403,6 +403,18 @@ html.intro-on :is(body,main,.top,.ticker,.pl-dock,main *,.top *,.ticker *,.pl-do
 body.gm-open{overflow:hidden}
 /* mobile: player bar lebih ramping */
 @media (max-width:639px){.pl-top{min-height:34px}.pl-key{min-height:34px}.pl-screen{padding:2px 8px;gap:0}.pl-row2{font-size:11px}}
+/* ===== kontak (lapor bug / request) ===== */
+.kt-intro{font-family:Outfit,system-ui,sans-serif;font-size:14px;line-height:1.5;color:var(--mut);margin-top:14px;max-width:46ch}
+.kt-grid{display:grid;grid-template-columns:1fr;gap:18px;margin-top:16px}
+@media (min-width:640px){.kt-grid{grid-template-columns:1fr 1fr}}
+.kt-card{background:var(--card);color:var(--fg);border:3px solid var(--line);box-shadow:5px 5px 0 var(--sh);padding:16px 14px 18px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.kt-card img{width:min(100%,200px);height:auto;display:block;border:3px solid var(--line);background:#fff}
+.kt-card b{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:26px;line-height:1;text-transform:uppercase;letter-spacing:.02em}
+.kt-card small{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:11px;letter-spacing:.06em;color:var(--mut)}
+.kt-btn{margin-top:4px;display:inline-flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#0a0a0a;background:var(--lime);text-decoration:none;border:3px solid var(--line);box-shadow:3px 3px 0 var(--sh);padding:10px 14px;transition:transform .08s ease,box-shadow .08s ease}
+.kt-btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--sh)}
+.kt-btn:active{transform:translate(2px,2px);box-shadow:none}
+.kt-btn:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
 </style>
 <style>
 #cyAuthBtn{cursor:pointer;padding:0;overflow:hidden;font-family:'Anton',Impact,sans-serif;font-size:18px;color:#0a0a0a;background:var(--lime)}
@@ -1047,6 +1059,26 @@ html.scrolling .card.mg .tile,html.scrolling .card.pl .tile,html.scrolling .card
       </a></li>
     </ol>
   </section>
+  </details>
+</section>
+<section class="sec lb" id="kontakSec" aria-labelledby="h-kt">
+  <details class="lb-box">
+  <summary class="sh"><h2 id="h-kt">Kontak</h2><i></i><span>LAPOR BUG · REQUEST</span></summary>
+  <p class="kt-intro">Nemu bug atau punya request? Bisa hubungi lewat salah satu ini.</p>
+  <div class="kt-grid">
+    <article class="kt-card">
+      <img src="/kontak-signal.jpg" alt="QR code Signal, username Cyrro.01" loading="lazy" decoding="async"/>
+      <b>Signal</b>
+      <small>CYRRO.01</small>
+      <a class="kt-btn" href="https://signal.me/#eu/27P9xd0eVPSMLfVLf405jDfYDsxrb9s-tMAqFac4QugCuOVPsa1MRYRB2Crmo1Ze" target="_blank" rel="noopener">BUKA DI SIGNAL</a>
+    </article>
+    <article class="kt-card">
+      <img src="/kontak-bluesky.jpg" alt="QR code profil Bluesky @cyrro.my.id" loading="lazy" decoding="async"/>
+      <b>Bluesky</b>
+      <small>@CYRRO.MY.ID</small>
+      <a class="kt-btn" href="https://bsky.app/profile/cyrro.my.id" target="_blank" rel="noopener">BUKA PROFIL</a>
+    </article>
+  </div>
   </details>
 </section>
 </main>
