@@ -1,1 +1,772 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Kata Silang · Cyrro Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+<script>
+  try {
+    var t = localStorage.getItem('theme');
+    document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+  } catch (e) {}
+  document.documentElement.classList.toggle('embed', /[?&]embed=1/.test(location.search));
+</script>
+<style>
+  :root{
+    --bg:#FCFBF7; --ink:#0A0A0A; --ink-dim:#4B5240; --card:#FFFFFF;
+    --line:#0A0A0A; --shadow:#0A0A0A; --grid:rgba(10,10,10,.12);
+    --lime:#CCFF00; --pink:#FF0055; --locked:#D9D9D2;
+    --ease:cubic-bezier(.2,.8,.2,1);
+  }
+  :root[data-theme="dark"]{
+    --bg:#0A0A0A; --ink:#F4F4F0; --ink-dim:#B9C0A8; --card:#141414;
+    --line:#F4F4F0; --shadow:#CCFF00; --grid:rgba(244,244,240,.12); --locked:#2a2a2a;
+  }
+  *{box-sizing:border-box;margin:0}
+  [hidden]{display:none!important}
+  html{min-height:100%}
+  body{
+    font-family:Outfit,system-ui,sans-serif;color:var(--ink);background-color:var(--bg);
+    background-image:
+      linear-gradient(var(--grid) 1.5px,transparent 1.5px),
+      linear-gradient(90deg,var(--grid) 1.5px,transparent 1.5px);
+    background-size:40px 40px;
+    min-height:100dvh;padding:14px 12px 40px;
+    display:flex;justify-content:center;
+    -webkit-tap-highlight-color:transparent;
+    animation:drift 24s linear infinite;
+  }
+  html.embed body{padding-bottom:120px}
+  @keyframes drift{from{background-position:0 0}to{background-position:40px 40px}}
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
+  .wrap{width:min(100%,440px);display:flex;flex-direction:column;align-items:center;gap:14px}
+
+  /* ---------- header ---------- */
+  .top{width:100%;display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap}
+  .brand{display:flex;flex-direction:column;align-items:flex-start;gap:6px;animation:rise .6s var(--ease) both}
+  .title{
+    font-family:Anton,Impact,sans-serif;font-weight:400;font-size:40px;line-height:1;text-transform:uppercase;
+    background:var(--lime);color:#0A0A0A;border:3px solid #0A0A0A;padding:4px 12px 0;box-shadow:4px 4px 0 var(--shadow);
+  }
+  .cap{font:700 10px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.14em;color:var(--ink-dim)}
+  .scores{display:flex;gap:10px}
+  .box{background:var(--card);border:3px solid var(--line);box-shadow:4px 4px 0 var(--shadow);padding:4px 12px;min-width:84px;text-align:center;animation:rise .6s var(--ease) .1s both}
+  .box + .box{animation-delay:.18s}
+  .lbl{display:block;font:700 10px/1.3 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.12em;color:var(--ink-dim)}
+  .val{display:block;font-family:Anton,Impact,sans-serif;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
+
+  /* ---------- layar pilih level ---------- */
+  .menu{width:100%;display:flex;flex-direction:column;gap:14px;animation:rise .6s var(--ease) .15s both}
+  .menu-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .menu-head h2{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:26px;line-height:1;text-transform:uppercase}
+  .prog{font:700 11px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim)}
+  .levels{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .lv{
+    aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    font-family:Anton,Impact,sans-serif;font-size:28px;line-height:1;color:var(--ink);
+    background:var(--card);border:3px solid var(--line);box-shadow:4px 4px 0 var(--shadow);cursor:pointer;
+    transition:transform .08s ease,box-shadow .08s ease,background-color .2s ease;
+  }
+  .lv small{font:700 9px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.04em;color:var(--ink-dim)}
+  .lv:hover:not(:disabled){transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--shadow)}
+  .lv:active:not(:disabled){transform:translate(2px,2px);box-shadow:0 0 0 var(--shadow)}
+  .lv.done{background:var(--lime);color:#0A0A0A}
+  .lv.done small{color:#0A0A0A}
+  .lv:disabled{background:var(--locked);color:var(--ink-dim);box-shadow:none;cursor:not-allowed;border-style:dashed}
+  .lv:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+
+  /* ---------- layar main ---------- */
+  .play{width:100%;display:flex;flex-direction:column;align-items:center;gap:12px;animation:rise .5s var(--ease) both}
+  .playbar{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .status{font:700 11px/1.3 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);min-height:14px;text-align:center}
+  .status.err{color:var(--pink)}
+
+  /* ---------- papan silang ---------- */
+  .crossbox{width:100%;display:flex;justify-content:center;min-height:120px;align-items:center}
+  .cross{display:grid;gap:4px}
+  .tile{
+    width:var(--cs,40px);height:var(--cs,40px);
+    display:flex;align-items:center;justify-content:center;
+    background:var(--card);border:3px solid var(--line);
+    font-family:Anton,Impact,sans-serif;font-size:calc(var(--cs,40px) * .55);line-height:1;color:var(--ink);
+    transition:background-color .25s ease, transform .25s ease;
+  }
+  .tile.on{background:var(--lime);color:#0A0A0A;box-shadow:3px 3px 0 var(--shadow)}
+  .tile.hint{background:var(--pink);color:#FFFFFF}
+  .tile.pop{animation:pop .4s var(--ease)}
+  @keyframes pop{50%{transform:scale(1.12)}}
+
+  /* ---------- roda huruf ---------- */
+  .preview{
+    min-height:44px;display:flex;align-items:center;justify-content:center;
+    font-family:Anton,Impact,sans-serif;font-size:24px;letter-spacing:.08em;text-transform:uppercase;
+    padding:6px 16px 4px;background:var(--card);border:3px solid var(--line);box-shadow:4px 4px 0 var(--shadow);
+    min-width:120px;
+  }
+  .preview:empty::before{content:"geser huruf";font:700 11px 'JetBrains Mono',monospace;letter-spacing:.1em;color:var(--ink-dim);text-transform:uppercase}
+  .preview.bad{background:var(--pink);color:#fff}
+  .wheel{
+    position:relative;width:clamp(200px,calc(100dvh - 560px),250px);aspect-ratio:1/1;
+    border:3px solid var(--line);border-radius:50%;background:var(--card);box-shadow:6px 6px 0 var(--shadow);
+    touch-action:none;user-select:none;-webkit-user-select:none;
+  }
+  .wheel.shake{animation:shake .35s linear}
+  @keyframes shake{20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+  .wheel svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+  .wheel svg polyline{fill:none;stroke:var(--pink);stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+  .node{
+    position:absolute;width:var(--nd,56px);height:var(--nd,56px);margin:calc(var(--nd,56px) / -2) 0 0 calc(var(--nd,56px) / -2);
+    border-radius:50%;display:flex;align-items:center;justify-content:center;
+    background:var(--ink);color:var(--card);border:3px solid var(--line);
+    font-family:Anton,Impact,sans-serif;font-size:calc(var(--nd,56px) * .46);line-height:1;
+    transition:background-color .1s ease, transform .1s ease;pointer-events:none;
+  }
+  .node.sel{background:var(--pink);color:#FFFFFF;transform:scale(1.08)}
+  .center-mark{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:0;height:0}
+
+  /* ---------- tombol ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    font:700 13px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;
+    color:#0A0A0A;background:#FFFFFF;border:3px solid var(--line);box-shadow:3px 3px 0 var(--shadow);
+    padding:12px 14px;cursor:pointer;white-space:nowrap;
+    transition:transform .08s ease,box-shadow .08s ease,background-color .2s ease;
+  }
+  .btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--shadow)}
+  .btn:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--shadow)}
+  .btn.lime{background:var(--lime)}
+  .btn.pink{background:var(--pink);color:#FFFFFF}
+  .btn:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+  .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+  /* ---------- overlay ---------- */
+  .stage{position:relative;width:100%;display:flex;flex-direction:column;align-items:center}
+  .ov{
+    position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:14px;
+    background:rgba(10,10,10,.4);opacity:0;pointer-events:none;transition:opacity .25s ease;
+  }
+  .ov.show{opacity:1;pointer-events:auto}
+  .ovcard{
+    width:100%;max-width:300px;background:var(--card);color:var(--ink);border:3px solid var(--line);
+    box-shadow:5px 5px 0 var(--shadow);padding:14px 12px;display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center;
+    transform:translateY(12px) scale(.96);transition:transform .35s var(--ease);
+  }
+  .ov.show .ovcard{transform:none}
+  .ovcard h2{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:28px;line-height:1.05;text-transform:uppercase}
+  .statline{font:700 12px/1.5 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase}
+  .sub{font:400 11px/1.4 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-dim);text-align:center}
+  .sub:empty{display:none}
+  .statline b{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:18px;letter-spacing:0}
+
+  @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+  /* ===== intro (sama seperti Library) ===== */
+  .intro{position:fixed;inset:0;z-index:200;background:#0a0a0a;display:grid;place-content:center;justify-items:center;gap:10px;text-align:center;padding:20px;transition:opacity .45s ease,visibility .45s;overflow:hidden}
+  .intro.out{opacity:0;visibility:hidden}
+  .intro::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(204,255,0,.12) 1.5px,transparent 1.5px),linear-gradient(90deg,rgba(204,255,0,.12) 1.5px,transparent 1.5px);background-size:40px 40px;animation:intro-grid 1.6s linear infinite;pointer-events:none}
+  .intro-t{position:relative;font-family:'Anton',Impact,sans-serif;text-transform:uppercase;font-size:clamp(46px,16vw,88px);line-height:1;color:#fff;animation:intro-pop .6s cubic-bezier(.2,.9,.3,1.2) both}
+  .intro-t .hl{color:var(--lime,#ccff00)}
+  .intro-s{position:relative;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;letter-spacing:.2em;color:var(--pink,#ff0055);animation:intro-rise .5s .35s both}
+  .intro-bar{position:relative;width:min(60vw,240px);height:14px;border:3px solid #fff;box-shadow:3px 3px 0 #ccff00;margin-top:12px;overflow:hidden}
+  .intro-bar i{display:block;height:100%;background:#ccff00;transform-origin:left;animation:intro-grow 1.1s .2s cubic-bezier(.6,0,.2,1) both}
+  @keyframes intro-pop{0%{opacity:0;transform:scale(.6)}70%{opacity:1;transform:scale(1.06)}100%{opacity:1;transform:none}}
+  @keyframes intro-rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+  @keyframes intro-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  @keyframes intro-grid{to{background-position:40px 40px}}
+  @media (prefers-reduced-motion: reduce){.intro{display:none}}
+</style>
+</head>
+<body>
+<div class="intro" id="intro" aria-hidden="true">
+  <div class="intro-t">KATA<span class="hl">-</span>SILANG</div>
+  <div class="intro-s">BERSIAP…</div>
+  <div class="intro-bar"><i></i></div>
+</div>
+<main class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1 class="title">Kata Silang</h1>
+      <span class="cap">GAME · CYRRO</span>
+    </div>
+    <div class="scores" id="scores" hidden>
+      <div class="box"><span class="lbl">LEVEL</span><span class="val" id="lvNow">1/30</span></div>
+      <div class="box"><span class="lbl">KATA</span><span class="val" id="found">0/0</span></div>
+    </div>
+  </header>
+
+  <!-- layar pilih level -->
+  <section class="menu" id="menu" aria-label="Pilih level">
+    <div class="menu-head">
+      <h2>Pilih level</h2>
+      <span class="prog" id="prog">0/30 selesai</span>
+    </div>
+    <div class="levels" id="levels" role="group" aria-label="Daftar level"></div>
+  </section>
+
+  <!-- layar main -->
+  <section class="play" id="play" hidden>
+    <div class="playbar">
+      <button class="btn" id="btnBack" type="button">← LEVEL</button>
+      <button class="btn" id="btnHint" type="button">PETUNJUK</button>
+    </div>
+    <div class="crossbox" id="crossbox"><div class="cross" id="cross"></div></div>
+    <div class="status" id="status" aria-live="polite"></div>
+
+    <div class="stage">
+      <div class="preview" id="preview"></div>
+    </div>
+    <div class="wheel" id="wheel" role="group" aria-label="Roda huruf"></div>
+    <div class="row">
+      <button class="btn" id="btnShuffle" type="button">ACAK HURUF</button>
+    </div>
+
+    <div class="ov" id="winOv">
+      <div class="ovcard">
+        <h2 id="winTitle">LEVEL 1 SELESAI</h2>
+        <p class="statline" id="winInfo"></p>
+        <p class="sub" id="winSync"></p>
+        <div class="row">
+          <button class="btn lime" id="btnNext" type="button">LEVEL BERIKUTNYA</button>
+          <button class="btn" id="btnToMenu" type="button">PILIH LEVEL</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const SB_URL = 'https://nmfoshrrflgnuubsxuhk.supabase.co';
+  const SB_KEY = 'sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l';
+  const SAVE_KEY = 'katasilang_save';   // { max: index level terbuka tertinggi (0-based), done: { [index]: true } }
+  const LEVEL_COUNT = 30;
+
+  // ==== CORE (murni) ====
+const POOL = ["ADA", "AIR", "AKAR", "AKTIF", "AKU", "ALAT", "ANAK", "ANGIN", "ANGKA", "API", "ASA", "AYAM", "BACA", "BAGI", "BAJU", "BAK", "BAKSO", "BAN", "BANDARA", "BANTAL", "BATU", "BAU", "BENDERA", "BERAS", "BINTANG", "BIRU", "BUAH", "BUKIT", "BUKU", "BULAN", "BUNGA", "BURUNG", "BUS", "CANGKIR", "DAN", "DANAU", "DESA", "DUA", "GAMBAR", "GARAM", "GAS", "GELAS", "GULA", "GUNUNG", "HAK", "HIJAU", "HITAM", "HUJAN", "HUT", "HUTAN", "IKAN", "INTI", "ISI", "JALAN", "JENDELA", "KACA", "KAIN", "KAKI", "KAMAR", "KAMBING", "KAMERA", "KAMU", "KAMUS", "KANTIN", "KAPAL", "KAS", "KASUR", "KAU", "KAUM", "KEBUN", "KELUARGA", "KEMBALI", "KERETA", "KERJA", "KERUPUK", "KETUA", "KIRIM", "KOMPUTER", "KOPI", "KOTA", "KUAT", "KUCING", "KULKAS", "KUNCI", "KUNING", "KURSI", "LAKU", "LAMPU", "LAP", "LAS", "LAUT", "LEMARI", "LEMBAR", "LUKA", "MAKAN", "MAKANAN", "MAKNA", "MALAM", "MANA", "MANGGA", "MANIS", "MAS", "MATA", "MATAHARI", "MAU", "MEJA", "MERAH", "MIKROFON", "MINAT", "MOBIL", "MOTOR", "MUKA", "MUSIK", "NAIK", "NAKAL", "NAMA", "NAPAS", "NASI", "PAGI", "PAK", "PAKAIAN", "PAKSA", "PAKU", "PANTAI", "PAS", "PASAR", "PASIR", "PELANGI", "PENA", "PENSIL", "PERAHU", "PERMEN", "PESAWAT", "PESTA", "PETA", "PIL", "PINTU", "PIRING", "PISANG", "POHON", "PULANG", "PULAU", "PUTIH", "RAJA", "RAJIN", "RASA", "ROTI", "RUANG", "RUMAH", "RUSA", "SABUN", "SAKIT", "SAKTI", "SAKU", "SAMBAL", "SAPI", "SAPU", "SARI", "SAT", "SATE", "SAU", "SAWAH", "SEKALI", "SEKOLAH", "SELIMUT", "SEPATU", "SEPEDA", "SUARA", "SUKA", "SUNAT", "SUNGAI", "SUSU", "TAHU", "TAK", "TAKUT", "TAMAN", "TAMBAH", "TAMPIL", "TAMU", "TANAMAN", "TANGGA", "TANI", "TAPAK", "TAPE", "TARI", "TAS", "TAU", "TELEPON", "TELUR", "TEMAN", "TEMPAT", "TERIMA", "TIDUR", "TIKAR", "TIKUS", "TIPU", "TIRU", "TOPI", "TUA", "TUAN", "TUKANG", "TUKAR", "TULIS", "TUNAS", "UBI", "ULA", "ULAR", "UNTA", "UNTAI", "UNTUK", "UPAS"];
+const DIRS_OF = (w, dir) => dir === 0 ? [0,1] : [1,0];
+
+function lettersSubset(w, base){
+  const cnt = {};
+  for (const ch of base) cnt[ch] = (cnt[ch] || 0) + 1;
+  for (const ch of w){
+    if (!cnt[ch]) return false;
+    cnt[ch]--;
+  }
+  return true;
+}
+
+// kata-kata yang bisa dieja dari huruf kata dasar (termasuk kata dasar)
+function subwordsOf(base){
+  return POOL.filter(w => w.length >= 3 && w.length <= base.length && lettersSubset(w, base));
+}
+
+// tempatkan kata di grid. cells: Map "r,c" -> {ch, h, v}
+function canPlace(cells, w, r0, c0, dir){
+  const [dr, dc] = dir === 0 ? [0,1] : [1,0];
+  // sel sebelum & sesudah kata harus kosong
+  const before = [r0 - dr, c0 - dc], after = [r0 + dr*w.length, c0 + dc*w.length];
+  if (cells.has(before[0]+','+before[1]) || cells.has(after[0]+','+after[1])) return false;
+  let crossings = 0;
+  for (let k = 0; k < w.length; k++){
+    const r = r0 + dr*k, c = c0 + dc*k, key = r+','+c;
+    const ex = cells.get(key);
+    if (ex){
+      if (ex.ch !== w[k]) return false;
+      // harus bersilangan tegak lurus, bukan menumpuk searah
+      if (dir === 0 && ex.h) return false;
+      if (dir === 1 && ex.v) return false;
+      crossings++;
+    } else {
+      // sel baru: tetangga tegak lurus harus kosong (supaya tidak ada kata tak sengaja)
+      const side = dir === 0 ? [[r-1,c],[r+1,c]] : [[r,c-1],[r,c+1]];
+      for (const [sr, sc] of side){ if (cells.has(sr+','+sc)) return false; }
+    }
+  }
+  return crossings >= 1;
+}
+
+function putWord(cells, w, r0, c0, dir){
+  const [dr, dc] = dir === 0 ? [0,1] : [1,0];
+  for (let k = 0; k < w.length; k++){
+    const r = r0 + dr*k, c = c0 + dc*k, key = r+','+c;
+    const ex = cells.get(key);
+    if (ex){ if (dir === 0) ex.h = true; else ex.v = true; }
+    else cells.set(key, { ch: w[k], h: dir === 0, v: dir === 1 });
+  }
+}
+
+// susun teka-teki silang dari daftar kata (kata pertama = paling panjang, di mendatar)
+function buildCrossword(words){
+  const sorted = words.slice().sort((a,b) => b.length - a.length);
+  const cells = new Map();
+  const placed = [];
+  putWord(cells, sorted[0], 0, 0, 0);
+  placed.push({ word: sorted[0], r: 0, c: 0, dir: 0 });
+  let remaining = sorted.slice(1);
+
+  while (remaining.length){
+    let best = null;
+    for (const w of remaining){
+      for (const p of placed){
+        for (let i = 0; i < w.length; i++){
+          for (let j = 0; j < p.word.length; j++){
+            if (w[i] !== p.word[j]) continue;
+            const dir = 1 - p.dir;
+            const r0 = p.dir === 0 ? p.r - i : p.r + j;
+            const c0 = p.dir === 0 ? p.c + j : p.c - i;
+            if (!canPlace(cells, w, r0, c0, dir)) continue;
+            // pilih yang paling ringkas (area bounding box paling kecil)
+            let minR = Infinity, maxR = -Infinity, minC = Infinity, maxC = -Infinity;
+            const pts = [[r0, c0], [r0 + (dir===1? w.length-1:0), c0 + (dir===0? w.length-1:0)]];
+            for (const [r,c] of pts){ minR=Math.min(minR,r,...placed.map(x=>x.r)); maxR=Math.max(maxR,r,...placed.map(x=>x.r)); minC=Math.min(minC,c,...placed.map(x=>x.c)); maxC=Math.max(maxC,c,...placed.map(x=>x.c)); }
+            const area = (maxR-minR+1)*(maxC-minC+1);
+            const score = area + Math.random()*0.5;
+            if (!best || score < best.score) best = { w, r0, c0, dir, score };
+          }
+        }
+      }
+    }
+    if (!best) return null;
+    putWord(cells, best.w, best.r0, best.c0, best.dir);
+    placed.push({ word: best.w, r: best.r0, c: best.c0, dir: best.dir });
+    remaining = remaining.filter(x => x !== best.w);
+  }
+
+  // normalisasi koordinat ke (0,0)
+  let minR = Infinity, minC = Infinity, maxR = -Infinity, maxC = -Infinity;
+  for (const key of cells.keys()){
+    const [r,c] = key.split(',').map(Number);
+    minR = Math.min(minR, r); minC = Math.min(minC, c);
+    maxR = Math.max(maxR, r); maxC = Math.max(maxC, c);
+  }
+  const grid = new Map();
+  for (const [key, v] of cells){
+    const [r,c] = key.split(',').map(Number);
+    grid.set((r-minR)+','+(c-minC), v.ch);
+  }
+  const outWords = placed.map(p => {
+    const cellKeys = [];
+    const [dr, dc] = p.dir === 0 ? [0,1] : [1,0];
+    for (let k = 0; k < p.word.length; k++){
+      cellKeys.push((p.r - minR + dr*k) + ',' + (p.c - minC + dc*k));
+    }
+    return { word: p.word, dir: p.dir, cells: cellKeys };
+  });
+  return { rows: maxR-minR+1, cols: maxC-minC+1, letters: grid, words: outWords };
+}
+
+// konfigurasi level 1..30: (base length, jumlah kata)
+function levelConfig(k){
+  if (k < 5)  return { base: 5, words: 4 };
+  if (k < 12) return { base: 6, words: 5 };
+  if (k < 20) return { base: 6, words: 6 };
+  if (k < 25) return { base: 7, words: 6 };
+  return { base: 7, words: k < 28 ? 7 : 8 };
+}
+
+// dijamin dapat teka-teki untuk level k (0-based). Dari beberapa percobaan, pilih yang paling ringkas.
+function buildLevel(k){
+  const cfg = levelConfig(k);
+  const bases = POOL.filter(w => w.length === cfg.base && subwordsOf(w).length >= cfg.words - 1);
+  if (!bases.length) return null;
+  let best = null, found = 0;
+  for (let tries = 0; tries < 400 && found < 25; tries++){
+    const base = bases[Math.floor(Math.random() * bases.length)];
+    const subs = subwordsOf(base).filter(w => w !== base);
+    const pick = shuffle(subs).slice(0, cfg.words - 1);
+    const cw = buildCrossword([base, ...pick]);
+    if (cw && cw.words.length === cfg.words){
+      found++;
+      const size = Math.max(cw.rows, cw.cols) * 100 + cw.rows * cw.cols;
+      if (!best || size < best.size) best = { size, L: { k, base, wheel: shuffle(base.split('')), ...cw } };
+    }
+  }
+  return best ? best.L : null;
+}
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length-1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; }
+  return a;
+}
+// ==== END CORE ====
+
+
+  // ==== DOM ====
+  const $ = id => document.getElementById(id);
+  const menuEl = $('menu'), playEl = $('play'), scoresEl = $('scores');
+  const levelsEl = $('levels'), progEl = $('prog');
+  const crossEl = $('cross'), crossBox = $('crossbox');
+  const wheelEl = $('wheel'), previewEl = $('preview');
+  const lvNowEl = $('lvNow'), foundEl = $('found');
+  const statusEl = $('status');
+  const winOv = $('winOv'), winTitleEl = $('winTitle'), winInfoEl = $('winInfo');
+  const btnNext = $('btnNext'), btnToMenu = $('btnToMenu'), btnBack = $('btnBack');
+  const btnHint = $('btnHint'), btnShuffle = $('btnShuffle');
+
+  const REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const SVGNS = 'http://www.w3.org/2000/svg';
+
+  function loadSave(){
+    try {
+      const s = JSON.parse(localStorage.getItem(SAVE_KEY));
+      if (s && typeof s.max === 'number') return { max: Math.min(s.max, LEVEL_COUNT - 1), done: s.done || {} };
+    } catch (e) {}
+    return { max: 0, done: {} };
+  }
+  function saveSave(){ try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} }
+  function setStatus(msg, err){ statusEl.textContent = msg; statusEl.classList.toggle('err', !!err); }
+
+  let save = loadSave();
+  let cur = 0;
+  let L = null;                 // puzzle level sekarang
+  let wheel = [];               // huruf di roda, urutan tampilan
+  let solved = new Set();       // indeks kata yang sudah terjawab
+  let revealed = new Set();     // kunci sel yang terbuka lewat petunjuk
+  let litCells = new Set();     // kunci sel yang sudah terisi (dari kata terjawab)
+  let sel = [];                 // indeks node yang sedang digeser
+  let dragging = false, pointer = null;
+  let nodePos = [];             // pusat node dalam px relatif roda
+
+  // ---------- kirim skor (jumlah level yang sudah diselesaikan, sepanjang masa) ----------
+  function readSession(){
+    try {
+      for (let i = 0; i < localStorage.length; i++){
+        const key = localStorage.key(i);
+        if (key && key.startsWith('sb-') && key.endsWith('-auth-token')){
+          const s = JSON.parse(localStorage.getItem(key));
+          if (s && s.access_token && s.user) return { key, s };
+        }
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  async function freshSession(){
+    const found = readSession();
+    if (!found) return null;
+    const { key, s } = found;
+    const expiring = s.expires_at && s.expires_at * 1000 < Date.now() + 30000;
+    if (!expiring) return s;
+    if (!s.refresh_token) return null;
+    try {
+      const res = await fetch(`${SB_URL}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST',
+        headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: s.refresh_token })
+      });
+      if (!res.ok) return null;
+      const n = await res.json();
+      const updated = { ...s, ...n, expires_at: n.expires_at || Math.floor(Date.now() / 1000) + (n.expires_in || 3600) };
+      try { localStorage.setItem(key, JSON.stringify(updated)); } catch (e) {}
+      return updated;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function displayName(s){
+    const m = s.user.user_metadata || {};
+    return String((m.display_name || '').trim() || 'PEMAIN').slice(0, 30);
+  }
+
+  let sending = false;
+  function setSync(msg, err){
+    const el = $('winSync');
+    el.textContent = msg;
+    el.style.color = err ? 'var(--pink)' : '';
+  }
+
+  async function submitCleared(){
+    const cleared = Object.keys(save.done).length;
+    if (sending || cleared <= (save.sent || 0)) return;
+    sending = true;
+    setSync('Menyimpan skor...');
+    const s = await freshSession();
+    if (!s){
+      sending = false;
+      setSync('Login dulu biar skor masuk leaderboard', true);
+      return;
+    }
+    try {
+      const res = await fetch(`${SB_URL}/rest/v1/silang_scores`, {
+        method: 'POST',
+        headers: {
+          apikey: SB_KEY,
+          Authorization: `Bearer ${s.access_token}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal'
+        },
+        body: JSON.stringify({ user_id: s.user.id, name: displayName(s), score: cleared })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      save.sent = cleared;
+      saveSave();
+      setSync(`Skor terkirim: ${cleared} level`);
+    } catch (e) {
+      setSync('Gagal kirim skor, coba lagi nanti', true);
+    } finally {
+      sending = false;
+    }
+  }
+
+  // ---------- layar pilih level ----------
+  function renderMenu(){
+    levelsEl.innerHTML = '';
+    let done = 0;
+    for (let k = 0; k < LEVEL_COUNT; k++){
+      const isDone = !!save.done[k];
+      if (isDone) done++;
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'lv' + (isDone ? ' done' : '');
+      b.disabled = k > save.max;
+      const num = document.createElement('span'); num.textContent = k + 1;
+      const sub = document.createElement('small');
+      sub.textContent = isDone ? 'SELESAI' : (k > save.max ? '—' : '');
+      b.append(num, sub);
+      b.setAttribute('aria-label', `Level ${k + 1}` + (isDone ? ', selesai' : '') + (k > save.max ? ', terkunci' : ''));
+      b.addEventListener('click', () => startLevel(k));
+      levelsEl.appendChild(b);
+    }
+    progEl.textContent = `${done}/${LEVEL_COUNT} selesai`;
+  }
+
+  function showMenu(){
+    winOv.classList.remove('show');
+    playEl.hidden = true; scoresEl.hidden = true; menuEl.hidden = false;
+    renderMenu();
+    setStatus('');
+  }
+
+  // ---------- papan silang ----------
+  function layoutCross(){
+    if (!L) return;
+    const gap = 4;
+    const avail = Math.min(crossBox.clientWidth || 400, 420);
+    const availH = Math.max(150, Math.min(window.innerHeight * 0.3, 260));
+    const csW = (avail - gap * (L.cols - 1)) / L.cols;
+    const csH = (availH - gap * (L.rows - 1)) / L.rows;
+    const cs = Math.max(26, Math.min(48, Math.floor(Math.min(csW, csH))));
+    crossEl.style.setProperty('--cs', cs + 'px');
+    crossEl.style.gridTemplateColumns = `repeat(${L.cols}, var(--cs))`;
+    crossEl.style.gridTemplateRows = `repeat(${L.rows}, var(--cs))`;
+  }
+
+  function renderCross(popKeys){
+    crossEl.innerHTML = '';
+    for (let r = 0; r < L.rows; r++){
+      for (let c = 0; c < L.cols; c++){
+        const key = r + ',' + c;
+        if (!L.letters.has(key)) { const sp = document.createElement('div'); sp.style.width = 'var(--cs)'; sp.style.height = 'var(--cs)'; crossEl.appendChild(sp); continue; }
+        const t = document.createElement('div');
+        t.className = 'tile';
+        t.dataset.key = key;
+        const shown = litCells.has(key) || revealed.has(key);
+        if (shown){
+          t.textContent = L.letters.get(key);
+          t.classList.add(revealed.has(key) && !litCells.has(key) ? 'hint' : 'on');
+          if (popKeys && popKeys.has(key)) t.classList.add('pop');
+        }
+        crossEl.appendChild(t);
+      }
+    }
+  }
+
+  // ---------- roda huruf ----------
+  function renderWheel(){
+    wheelEl.innerHTML = '';
+    const svg = document.createElementNS(SVGNS, 'svg');
+    svg.setAttribute('viewBox', '0 0 100 100');
+    svg.setAttribute('preserveAspectRatio', 'none');
+    const line = document.createElementNS(SVGNS, 'polyline');
+    line.setAttribute('points', '');
+    svg.appendChild(line);
+    wheelEl.appendChild(svg);
+    wheelEl._line = line;
+
+    const n = wheel.length;
+    const size = wheelEl.clientWidth || 260;
+    const nd = Math.round(size * 0.22);
+    wheelEl.style.setProperty('--nd', nd + 'px');
+    const R = size * 0.34;
+    nodePos = [];
+    for (let i = 0; i < n; i++){
+      const a = -Math.PI / 2 + i * (2 * Math.PI / n);
+      const x = size / 2 + R * Math.cos(a), y = size / 2 + R * Math.sin(a);
+      nodePos.push({ x, y });
+      const d = document.createElement('div');
+      d.className = 'node';
+      d.textContent = wheel[i];
+      d.style.left = x + 'px';
+      d.style.top = y + 'px';
+      wheelEl.appendChild(d);
+    }
+    wheelEl._nodes = Array.from(wheelEl.querySelectorAll('.node'));
+    drawPath(null);
+  }
+
+  function wheelPoint(e){
+    const r = wheelEl.getBoundingClientRect();
+    return { x: e.clientX - r.left - wheelEl.clientLeft, y: e.clientY - r.top - wheelEl.clientTop };
+  }
+
+  function nodeAt(p){
+    const hit = wheelEl.clientWidth * 0.14;
+    for (let i = 0; i < nodePos.length; i++){
+      const dx = p.x - nodePos[i].x, dy = p.y - nodePos[i].y;
+      if (dx * dx + dy * dy <= hit * hit) return i;
+    }
+    return -1;
+  }
+
+  function drawPath(p){
+    const line = wheelEl._line;
+    if (!line) return;
+    const pts = sel.map(i => `${nodePos[i].x / wheelEl.clientWidth * 100},${nodePos[i].y / wheelEl.clientWidth * 100}`);
+    if (p && sel.length) pts.push(`${p.x / wheelEl.clientWidth * 100},${p.y / wheelEl.clientWidth * 100}`);
+    line.setAttribute('points', pts.join(' '));
+    wheelEl._nodes.forEach((el, i) => el.classList.toggle('sel', sel.includes(i)));
+    previewEl.textContent = sel.map(i => wheel[i]).join('');
+    previewEl.classList.remove('bad');
+  }
+
+  function shuffleWheel(){
+    wheel = shuffle(wheel);
+    sel = [];
+    renderWheel();
+  }
+
+  function submitSel(){
+    const typed = sel.map(i => wheel[i]).join('');
+    dragging = false;
+    if (typed.length < 2){ sel = []; drawPath(null); previewEl.textContent=''; return; }
+    // cek kata yang belum terjawab (dibaca sesuai arah penulisan di silang)
+    let hit = -1;
+    for (let w = 0; w < L.words.length; w++){
+      if (!solved.has(w) && L.words[w].word === typed){ hit = w; break; }
+    }
+    if (hit >= 0){
+      solved.add(hit);
+      const popKeys = new Set();
+      for (const key of L.words[hit].cells){
+        if (!litCells.has(key)) popKeys.add(key);
+        litCells.add(key);
+      }
+      renderCross(popKeys);
+      sel = []; drawPath(null);
+      foundEl.textContent = `${solved.size}/${L.words.length}`;
+      setStatus(`Ketemu: ${typed}`);
+      if (solved.size === L.words.length) win();
+    } else {
+      previewEl.classList.add('bad');
+      previewEl.textContent = typed;
+      if (!REDUCED){ wheelEl.classList.remove('shake'); void wheelEl.offsetWidth; wheelEl.classList.add('shake'); }
+      setStatus(typed.length >= 2 ? 'Belum cocok, coba lagi' : '', true);
+      setTimeout(() => { sel = []; drawPath(null); }, 350);
+    }
+  }
+
+  // ---------- level ----------
+  function startLevel(k){
+    cur = k;
+    let p = null;
+    for (let tries = 0; tries < 5 && !p; tries++) p = buildLevel(k);
+    if (!p){ setStatus('Gagal bikin level, coba lagi', true); return; }
+    L = p;
+    wheel = p.wheel.slice();
+    solved = new Set(); revealed = new Set(); litCells = new Set();
+    sel = []; dragging = false;
+    menuEl.hidden = true; playEl.hidden = false; scoresEl.hidden = false;
+    winOv.classList.remove('show');
+    lvNowEl.textContent = `${k + 1}/${LEVEL_COUNT}`;
+    foundEl.textContent = `0/${L.words.length}`;
+    setStatus('Geser huruf di roda buat bentuk kata');
+    layoutCross();
+    renderCross(null);
+    requestAnimationFrame(() => { renderWheel(); });
+  }
+
+  function win(){
+    if (!save.done[cur]) save.done[cur] = true;
+    if (cur + 1 < LEVEL_COUNT && save.max < cur + 1) save.max = cur + 1;
+    saveSave();
+    const last = cur === LEVEL_COUNT - 1;
+    winTitleEl.textContent = `LEVEL ${cur + 1} SELESAI`;
+    winInfoEl.textContent = `${L.words.length} kata ditemukan`;
+    btnNext.textContent = last ? 'MAIN LEVEL 1 LAGI' : 'LEVEL BERIKUTNYA';
+    btnNext.dataset.act = last ? 'first' : 'next';
+    setTimeout(() => winOv.classList.add('show'), 400);
+    setStatus(last ? 'Semua level tamat!' : 'Semua kata ketemu!');
+    setSync('');
+    submitCleared();
+  }
+
+  // ---------- petunjuk: buka satu huruf dari kata yang belum terjawab ----------
+  btnHint.addEventListener('click', () => {
+    if (!L) return;
+    const cands = [];
+    L.words.forEach((w, wi) => { if (!solved.has(wi)) w.cells.forEach(k => { if (!litCells.has(k) && !revealed.has(k)) cands.push(k); }); });
+    if (!cands.length) return;
+    const key = cands[Math.floor(Math.random() * cands.length)];
+    revealed.add(key);
+    renderCross(new Set([key]));
+    setStatus('Petunjuk: satu huruf dibuka');
+  });
+
+  btnShuffle.addEventListener('click', shuffleWheel);
+  btnBack.addEventListener('click', showMenu);
+  btnToMenu.addEventListener('click', showMenu);
+  btnNext.addEventListener('click', () => {
+    if (btnNext.dataset.act === 'first') startLevel(0);
+    else startLevel(Math.min(cur + 1, LEVEL_COUNT - 1));
+  });
+
+  // ---------- input geser di roda ----------
+  wheelEl.addEventListener('pointerdown', e => {
+    if (!L || winOv.classList.contains('show')) return;
+    const p = wheelPoint(e);
+    const i = nodeAt(p);
+    if (i < 0) return;
+    e.preventDefault();
+    try { wheelEl.setPointerCapture(e.pointerId); } catch (err) {}
+    dragging = true;
+    sel = [i];
+    drawPath(p);
+  });
+
+  wheelEl.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const p = wheelPoint(e);
+    const i = nodeAt(p);
+    if (i >= 0){
+      if (sel.length >= 2 && i === sel[sel.length - 2]) sel.pop();    // mundur satu huruf
+      else if (!sel.includes(i)) sel.push(i);
+    }
+    drawPath(p);
+  });
+
+  const endDrag = () => { if (dragging) submitSel(); };
+  wheelEl.addEventListener('pointerup', endDrag);
+  wheelEl.addEventListener('pointercancel', () => { dragging = false; sel = []; drawPath(null); });
+
+  window.addEventListener('resize', () => { if (L){ layoutCross(); renderWheel(); } });
+
+  // ---------- mulai ----------
+  showMenu();
+})();
+</script>
+<script>
+(function(){
+  var el = document.getElementById('intro');
+  if (!el) return;
+  function done(){ el.classList.add('out'); setTimeout(function(){ el.remove(); }, 500); }
+  el.addEventListener('click', done);
+  setTimeout(done, 1600);
+})();
+</script>
+</body>
+</html>
