@@ -136,6 +136,7 @@
   .btn:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--shadow)}
   .btn.lime{background:var(--lime)}
   .btn.pink{background:var(--pink);color:#FFFFFF}
+  .btn:disabled{opacity:.35;cursor:not-allowed;box-shadow:none;transform:none}
   .btn:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
   .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 
@@ -438,6 +439,12 @@
   const btnNext = $('btnNext');
   const btnToMenu = $('btnToMenu');
   const btnBack = $('btnBack');
+  const MAX_HINTS = 3;     // petunjuk maksimal per level
+  let hintsLeft = MAX_HINTS;
+  function updateHintBtn(){
+    btnHint.textContent = 'PETUNJUK (' + hintsLeft + ')';
+    btnHint.disabled = hintsLeft <= 0;
+  }
   const btnHint = $('btnHint');
   const btnNew = $('btnNew');
   const statusEl = $('status');
@@ -670,6 +677,7 @@
   }
 
   function startLevel(k){
+    hintsLeft = MAX_HINTS; updateHintBtn();
     cur = k;
     puzzle = buildPuzzle(k);
     if (!puzzle){ setStatus('Gagal bikin level, coba lagi'); return; }
@@ -791,7 +799,8 @@
 
   // ---------- petunjuk ----------
   btnHint.addEventListener('click', () => {
-    if (won || !puzzle || remaining.length === 0) return;
+    if (won || !puzzle || remaining.length === 0 || hintsLeft <= 0) return;
+    hintsLeft--; updateHintBtn();
     const w = remaining[Math.floor(Math.random() * remaining.length)];
     const entry = puzzle.words.find(x => x.word === w);
     startTimer();
