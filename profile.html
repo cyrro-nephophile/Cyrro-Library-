@@ -137,7 +137,7 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
       </div>
     </section>
 
-    <div class="sh"><h2>Skor tertinggi</h2><i></i><span>7 GAME</span></div>
+    <div class="sh"><h2>Skor tertinggi</h2><i></i><span id="gmCount">10 GAME</span></div>
     <ol class="gg" id="best"></ol>
 
     <section id="friends" hidden>
@@ -210,6 +210,14 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
     {id:'flappy',name:'FLAPPY BEE',table:'flappy_scores',lb:'flappy_leaderboard',wk:'flappy_weekly',cols:'score,created_at',
      main:function(r){return fmt(r.score);},
      sub:function(){return 'PILAR';},
+     cmp:function(a,b){return b.score-a.score;}},
+    {id:'katakata',name:'CARI KATA',table:'katakata_scores',lb:'katakata_leaderboard',wk:null,cols:'score,created_at',
+     main:function(r){return fmt(r.score);},
+     sub:function(){return 'LEVEL';},
+     cmp:function(a,b){return b.score-a.score;}},
+    {id:'silang',name:'KATA SILANG',table:'silang_scores',lb:'silang_leaderboard',wk:null,cols:'score,created_at',
+     main:function(r){return fmt(r.score);},
+     sub:function(){return 'LEVEL';},
      cmp:function(a,b){return b.score-a.score;}}
   ];
 
@@ -255,6 +263,7 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
     var played=GAMES.filter(function(g){return rows[g.id].length;}).length;
     count($('stTotal'),all.length);
     $('stGames').textContent=played+'/'+GAMES.length;
+    $('gmCount').textContent=GAMES.length+' GAME';
     $('stLast').textContent=all.length?when(all[0].r.created_at):'—';
     $('histCount').textContent=fmt(all.length)+' SKOR';
 
@@ -268,7 +277,7 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
         li.appendChild(el('div','big',g.main(top)));
         li.appendChild(el('div','sub',g.sub(top)));
         li.appendChild(el('div','cnt',fmt(list.length)+' SKOR'));
-        var rk=ranks[g.id], rkEl=el('div','rank',(rk.all?'#'+rk.all:'–')+' SEPANJANG MASA · '+(rk.week?'#'+rk.week:'–')+' MINGGU INI');
+        var rk=ranks[g.id], rkEl=el('div','rank',rk.hasWeek?((rk.all?'#'+rk.all:'–')+' SEPANJANG MASA · '+(rk.week?'#'+rk.week:'–')+' MINGGU INI'):((rk.all?'#'+rk.all:'–')+' SEPANJANG MASA'));
         if(rk.all===1||rk.week===1) rkEl.classList.add('gold');
         li.appendChild(rkEl);
       }else{
@@ -341,13 +350,13 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
     show('state');
     $('state').textContent='Memuat profil...';
     var ranksP=Promise.all(GAMES.map(function(g){
-      return Promise.all([pageAll(g.lb,g.cols+',user_id'),pageAll(g.wk,g.cols+',user_id')]);
+      return Promise.all([pageAll(g.lb,g.cols+',user_id'),g.wk?pageAll(g.wk,g.cols+',user_id'):Promise.resolve([])]);
     }));
     return Promise.all([Promise.all(GAMES.map(function(g){return fetchAll(g,uid);})),ranksP]).then(function(out){
       var res=out[0], rk=out[1], ranks={}, rows={}, all=[];
       GAMES.forEach(function(g,i){
         rows[g.id]=res[i];
-        ranks[g.id]={all:rankOf(rk[i][0],g,uid), week:rankOf(rk[i][1],g,uid)};
+        ranks[g.id]={all:rankOf(rk[i][0],g,uid), week:g.wk?rankOf(rk[i][1],g,uid):null, hasWeek:!!g.wk};
         rows[g.id].forEach(function(r){all.push({g:g,r:r});});
       });
       all.sort(function(a,b){return new Date(b.r.created_at)-new Date(a.r.created_at);});
