@@ -140,6 +140,7 @@
   .btn:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--shadow)}
   .btn.lime{background:var(--lime)}
   .btn.pink{background:var(--pink);color:#FFFFFF}
+  .btn:disabled{opacity:.35;cursor:not-allowed;box-shadow:none;transform:none}
   .btn:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
   .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 
@@ -405,6 +406,12 @@ function shuffle(arr){
   const statusEl = $('status');
   const winOv = $('winOv'), winTitleEl = $('winTitle'), winInfoEl = $('winInfo');
   const btnNext = $('btnNext'), btnToMenu = $('btnToMenu'), btnBack = $('btnBack');
+  const MAX_HINTS = 3;     // petunjuk maksimal per level
+  let hintsLeft = MAX_HINTS;
+  function updateHintBtn(){
+    btnHint.textContent = 'PETUNJUK (' + hintsLeft + ')';
+    btnHint.disabled = hintsLeft <= 0;
+  }
   const btnHint = $('btnHint'), btnShuffle = $('btnShuffle');
 
   const REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -672,6 +679,7 @@ function shuffle(arr){
 
   // ---------- level ----------
   function startLevel(k){
+    hintsLeft = MAX_HINTS; updateHintBtn();
     cur = k;
     let p = null;
     for (let tries = 0; tries < 5 && !p; tries++) p = buildLevel(k);
@@ -707,7 +715,8 @@ function shuffle(arr){
 
   // ---------- petunjuk: buka satu huruf dari kata yang belum terjawab ----------
   btnHint.addEventListener('click', () => {
-    if (!L) return;
+    if (!L || hintsLeft <= 0) return;
+    hintsLeft--; updateHintBtn();
     const cands = [];
     L.words.forEach((w, wi) => { if (!solved.has(wi)) w.cells.forEach(k => { if (!litCells.has(k) && !revealed.has(k)) cands.push(k); }); });
     if (!cands.length) return;
