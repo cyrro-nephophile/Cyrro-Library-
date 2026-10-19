@@ -1,1 +1,405 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reaction Test · Cyrro Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FCFBF7;
+    --fg: #0A0A0A;
+    --muted: #4B5240;
+    --card: #FFFFFF;
+    --lime: #CCFF00;
+    --pink: #FF0055;
+    --shadow: #0A0A0A;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0A0A0A; --fg: #F4F4F0; --muted: #B9C0A8;
+      --card: #141414; --shadow: #CCFF00;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0A0A0A; --fg: #F4F4F0; --muted: #B9C0A8;
+    --card: #141414; --shadow: #CCFF00;
+  }
 
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: Outfit, system-ui, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .label {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .title {
+    font-family: Anton, Impact, sans-serif;
+    font-size: 40px;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .stat {
+    background: var(--card);
+    border: 3px solid var(--fg);
+    box-shadow: 4px 4px 0 var(--shadow);
+    padding: 8px 10px;
+  }
+  .stat b {
+    display: block;
+    font-family: Anton, Impact, sans-serif;
+    font-size: 26px;
+    font-weight: 400;
+    margin-top: 2px;
+  }
+
+  .pad {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border: 3px solid var(--fg);
+    box-shadow: 6px 6px 0 var(--shadow);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+    cursor: pointer;
+    background: var(--card);
+    transition: background .08s;
+    touch-action: manipulation;
+  }
+  .pad.ready  { background: var(--card); }
+  .pad.wait   { background: var(--pink); color: #0A0A0A; }
+  .pad.go     { background: var(--lime); color: #0A0A0A; }
+  .pad.early  { background: var(--fg); color: var(--bg); }
+
+  .pad-main {
+    font-family: Anton, Impact, sans-serif;
+    font-size: 52px;
+    text-transform: uppercase;
+    line-height: 1;
+    padding: 0 12px;
+  }
+  .pad-sub {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 0 12px;
+    opacity: .85;
+  }
+  .pad-big {
+    font-family: Anton, Impact, sans-serif;
+    font-size: 96px;
+    line-height: 1;
+  }
+  .pad-big small {
+    font-size: 28px;
+    margin-left: 4px;
+  }
+
+  .btn {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    background: var(--lime);
+    color: #0A0A0A;
+    border: 3px solid var(--fg);
+    box-shadow: 3px 3px 0 var(--shadow);
+    padding: 10px 14px;
+    cursor: pointer;
+  }
+  .btn:hover  { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--shadow); }
+  .btn:active { transform: translate(2px, 2px); box-shadow: none; }
+  .btn.sec    { background: var(--card); color: var(--fg); }
+
+  .row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .status {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--muted);
+    min-height: 16px;
+  }
+
+  .hist {
+    background: var(--card);
+    border: 3px solid var(--fg);
+    box-shadow: 4px 4px 0 var(--shadow);
+    padding: 10px;
+  }
+  .hist ol {
+    list-style: none;
+    display: grid;
+    gap: 4px;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 13px;
+  }
+  .hist li { display: flex; justify-content: space-between; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <div class="label">08 GAME · Reaction Test</div>
+    <div class="title">Reaction Test</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><span class="label">Terbaik</span><b id="best">—</b></div>
+    <div class="stat"><span class="label">Rata-rata</span><b id="avg">—</b></div>
+  </div>
+
+  <div id="pad" class="pad ready" role="button" tabindex="0" aria-label="Area reaction">
+    <div id="padMain" class="pad-main">TAP UNTUK MULAI</div>
+    <div id="padSub" class="pad-sub">Tunggu layar berubah hijau, lalu tap secepatnya</div>
+  </div>
+
+  <div class="row">
+    <div id="status" class="status"></div>
+    <button id="resetBtn" class="btn sec" type="button">RESET</button>
+  </div>
+
+  <div class="hist">
+    <div class="label" style="margin-bottom:6px">Riwayat</div>
+    <ol id="histList"><li><span>Belum ada percobaan</span></li></ol>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ==== Konfigurasi Supabase ====
+  const SB_URL = "https://nmfoshrrflgnuubsxuhk.supabase.co";
+  const SB_KEY = "sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l";
+  const TABLE = "reaction_scores";
+
+  // ==== Elemen ====
+  const pad = document.getElementById("pad");
+  const padMain = document.getElementById("padMain");
+  const padSub = document.getElementById("padSub");
+  const bestEl = document.getElementById("best");
+  const avgEl = document.getElementById("avg");
+  const statusEl = document.getElementById("status");
+  const histList = document.getElementById("histList");
+  const resetBtn = document.getElementById("resetBtn");
+
+  // ==== State ====
+  // idle -> wait -> go -> result (balik ke wait untuk ronde berikutnya)
+  let state = "idle";
+  let timer = null;
+  let goAt = 0;
+  let times = [];        // riwayat ms yang valid
+  let best = null;
+
+  const KEY_BEST = "cyrro_reaction_best";
+  const KEY_HIST = "cyrro_reaction_hist";
+
+  function loadLocal() {
+    try {
+      best = JSON.parse(localStorage.getItem(KEY_BEST)) ?? null;
+      times = JSON.parse(localStorage.getItem(KEY_HIST)) ?? [];
+    } catch { best = null; times = []; }
+  }
+  function saveLocal() {
+    try {
+      localStorage.setItem(KEY_BEST, JSON.stringify(best));
+      localStorage.setItem(KEY_HIST, JSON.stringify(times.slice(-10)));
+    } catch {}
+  }
+
+  function renderStats() {
+    bestEl.textContent = best == null ? "—" : best + " ms";
+    if (times.length) {
+      const avg = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
+      avgEl.textContent = avg + " ms";
+    } else avgEl.textContent = "—";
+  }
+
+  function renderHist() {
+    const items = times.slice(-5).reverse();
+    histList.innerHTML = items.length
+      ? items.map((t, i) => `<li><span>#${times.length - i}</span><span>${t} ms</span></li>`).join("")
+      : `<li><span>Belum ada percobaan</span></li>`;
+  }
+
+  function setPad(cls, main, sub) {
+    pad.className = "pad " + cls;
+    padMain.textContent = main;
+    padSub.textContent = sub;
+  }
+
+  function setStatus(msg) { statusEl.textContent = msg || ""; }
+
+  function clearTimer() {
+    if (timer) { clearTimeout(timer); timer = null; }
+  }
+
+  // ==== Alur permainan ====
+  function startRound() {
+    state = "wait";
+    setPad("wait", "TUNGGU...", "Jangan tap dulu. Sampai layar hijau.");
+    setStatus("");
+    const delay = 1500 + Math.random() * 3500; // 1,5 - 5 detik
+    timer = setTimeout(goSignal, delay);
+  }
+
+  function goSignal() {
+    state = "go";
+    goAt = performance.now();
+    setPad("go", "TAP!", "Sekarang!");
+  }
+
+  function tooEarly() {
+    clearTimer();
+    state = "early";
+    setPad("early", "TERLALU CEPAT", "Tap untuk coba lagi");
+    setStatus("Kepencet duluan. Coba lagi ya.");
+  }
+
+  function recordResult(ms) {
+    state = "result";
+    const rounded = Math.round(ms);
+    times.push(rounded);
+    if (best == null || rounded < best) best = rounded;
+    saveLocal();
+    renderStats();
+    renderHist();
+    setPad("ready", rounded + " ms", "Tap untuk ronde berikutnya");
+    if (best === rounded) setStatus("Rekor baru!");
+    submitScore(rounded);
+  }
+
+  function handleTap(e) {
+    if (e) e.preventDefault();
+    switch (state) {
+      case "idle":
+      case "result":
+      case "early":
+        startRound();
+        break;
+      case "wait":
+        tooEarly();
+        break;
+      case "go":
+        recordResult(performance.now() - goAt);
+        break;
+    }
+  }
+
+  pad.addEventListener("pointerdown", handleTap);
+  pad.addEventListener("keydown", (e) => {
+    if (e.code === "Space" || e.code === "Enter") { e.preventDefault(); handleTap(); }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.code === "Space") { e.preventDefault(); handleTap(); }
+  });
+
+  resetBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    clearTimer();
+    state = "idle";
+    best = null;
+    times = [];
+    saveLocal();
+    renderStats();
+    renderHist();
+    setPad("ready", "TAP UNTUK MULAI", "Tunggu layar berubah hijau, lalu tap secepatnya");
+    setStatus("");
+  });
+
+  // ==== Kirim skor ke Supabase ====
+  // Ambil token login dari localStorage (sama seperti game lain).
+  function getToken() {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith("sb-") && k.endsWith("-auth-token")) {
+          const v = JSON.parse(localStorage.getItem(k));
+          if (v && v.access_token) return { token: v.access_token, uid: v.user?.id };
+        }
+      }
+    } catch {}
+    return null;
+  }
+
+  async function submitScore(ms) {
+    // Skor di bawah 100 ms dianggap tidak valid (hampir mustahil secara manusia)
+    if (ms < 100) { setStatus("Skor tidak valid, tidak disimpan."); return; }
+
+    const auth = getToken();
+    if (!auth || !auth.uid) { setStatus("LOGIN DULU untuk simpan skor"); return; }
+
+    try {
+      const res = await fetch(`${SB_URL}/rest/v1/${TABLE}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SB_KEY,
+          "Authorization": "Bearer " + auth.token,
+          "Prefer": "return=minimal"
+        },
+        body: JSON.stringify({ user_id: auth.uid, score: ms })
+      });
+      if (res.ok) setStatus((statusEl.textContent ? statusEl.textContent + " · " : "") + "TERSIMPAN");
+      else setStatus("GAGAL KIRIM (" + res.status + ")");
+    } catch {
+      setStatus("GAGAL KIRIM");
+    }
+  }
+
+  // ==== Init ====
+  loadLocal();
+  renderStats();
+  renderHist();
+})();
+</script>
+</body>
+</html>
