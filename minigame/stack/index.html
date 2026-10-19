@@ -1,1 +1,532 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stack · Cyrro Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FCFBF7;
+    --fg: #0A0A0A;
+    --muted: #4B5240;
+    --card: #FFFFFF;
+    --lime: #CCFF00;
+    --pink: #FF0055;
+    --shadow: #0A0A0A;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0A0A0A; --fg: #F4F4F0; --muted: #B9C0A8;
+      --card: #141414; --shadow: #CCFF00;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0A0A0A; --fg: #F4F4F0; --muted: #B9C0A8;
+    --card: #141414; --shadow: #CCFF00;
+  }
 
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: Outfit, system-ui, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .label {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .title {
+    font-family: Anton, Impact, sans-serif;
+    font-size: 40px;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .stat {
+    background: var(--card);
+    border: 3px solid var(--fg);
+    box-shadow: 4px 4px 0 var(--shadow);
+    padding: 8px 10px;
+  }
+  .stat b {
+    display: block;
+    font-family: Anton, Impact, sans-serif;
+    font-size: 26px;
+    font-weight: 400;
+    margin-top: 2px;
+  }
+
+  .board {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 360 / 560;
+    border: 3px solid var(--fg);
+    box-shadow: 6px 6px 0 var(--shadow);
+    background: var(--card);
+    cursor: pointer;
+    touch-action: manipulation;
+    overflow: hidden;
+  }
+  .board canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+    pointer-events: none;
+    background: color-mix(in srgb, var(--card) 80%, transparent);
+  }
+  .overlay[hidden] { display: none; }
+  .ov-main {
+    font-family: Anton, Impact, sans-serif;
+    font-size: 44px;
+    text-transform: uppercase;
+    line-height: 1;
+    padding: 0 12px;
+  }
+  .ov-sub {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 0 12px;
+    color: var(--muted);
+  }
+
+  .btn {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    background: var(--lime);
+    color: #0A0A0A;
+    border: 3px solid var(--fg);
+    box-shadow: 3px 3px 0 var(--shadow);
+    padding: 10px 14px;
+    cursor: pointer;
+  }
+  .btn:hover  { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--shadow); }
+  .btn:active { transform: translate(2px, 2px); box-shadow: none; }
+  .btn.sec    { background: var(--card); color: var(--fg); }
+
+  .row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .status {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--muted);
+    min-height: 16px;
+  }
+
+  .hist {
+    background: var(--card);
+    border: 3px solid var(--fg);
+    box-shadow: 4px 4px 0 var(--shadow);
+    padding: 10px;
+  }
+  .hist ol {
+    list-style: none;
+    display: grid;
+    gap: 4px;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 13px;
+  }
+  .hist li { display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <div class="label">10 GAME · Stack</div>
+    <div class="title">Stack</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><span class="label">Terbaik</span><b id="best">—</b></div>
+    <div class="stat"><span class="label">Terakhir</span><b id="last">—</b></div>
+  </div>
+
+  <div class="board" id="board" role="button" tabindex="0" aria-label="Area permainan Stack">
+    <canvas id="cv"></canvas>
+    <div class="overlay" id="ov">
+      <div class="ov-main" id="ovMain">TAP UNTUK MULAI</div>
+      <div class="ov-sub" id="ovSub">Tap saat blok pas di atas tumpukan</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div id="status" class="status"></div>
+    <button id="resetBtn" class="btn sec" type="button">RESET</button>
+  </div>
+
+  <div class="hist">
+    <div class="label" style="margin-bottom:6px">Riwayat</div>
+    <ol id="histList"><li><span>Belum ada percobaan</span></li></ol>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ==== Konfigurasi Supabase ====
+  const SB_URL = "https://nmfoshrrflgnuubsxuhk.supabase.co";
+  const SB_KEY = "sb_publishable_E9ynSVNfTGCzBqFhlg2Huw_UFNxq72l";
+  const TABLE = "stack_scores";
+
+  // ==== Konstanta permainan (koordinat logis) ====
+  const W = 360, H = 560;
+  const BH = 28;            // tinggi satu blok
+  const BASE_W = 220;       // lebar blok dasar
+  const FLOOR = 60;         // jarak dasar tumpukan ke bawah layar
+  const PERFECT = 4;        // toleransi "pas" dalam px
+  const COLORS = ["#CCFF00", "#FF0055", "#FFFFFF", "#00E5FF", "#FFE866"];
+
+  // ==== Elemen ====
+  const board = document.getElementById("board");
+  const cv = document.getElementById("cv");
+  const ctx = cv.getContext("2d");
+  const ov = document.getElementById("ov");
+  const ovMain = document.getElementById("ovMain");
+  const ovSub = document.getElementById("ovSub");
+  const bestEl = document.getElementById("best");
+  const lastEl = document.getElementById("last");
+  const statusEl = document.getElementById("status");
+  const histList = document.getElementById("histList");
+  const resetBtn = document.getElementById("resetBtn");
+
+  // ==== State ====
+  let state = "idle";       // idle | play | over
+  let stack = [];           // blok yang sudah ditumpuk, index 0 = dasar
+  let cur = null;           // blok yang sedang bergerak
+  let debris = [];          // potongan yang jatuh
+  let dir = 1, speed = 0, score = 0;
+  let camY = 0, lastT = 0, overAt = 0;
+  let flash = { text: "", t: 0 };
+  let best = null, lastScore = null, hist = [];
+
+  const KEY_BEST = "cyrro_stack_best";
+  const KEY_HIST = "cyrro_stack_hist";
+
+  function loadLocal() {
+    try {
+      best = JSON.parse(localStorage.getItem(KEY_BEST)) ?? null;
+      hist = JSON.parse(localStorage.getItem(KEY_HIST)) ?? [];
+    } catch { best = null; hist = []; }
+  }
+  function saveLocal() {
+    try {
+      localStorage.setItem(KEY_BEST, JSON.stringify(best));
+      localStorage.setItem(KEY_HIST, JSON.stringify(hist.slice(-10)));
+    } catch {}
+  }
+
+  function renderStats() {
+    bestEl.textContent = best == null ? "—" : best;
+    lastEl.textContent = lastScore == null ? "—" : lastScore;
+    histList.innerHTML = hist.length
+      ? hist.slice(-5).reverse().map(s => `<li><span>Skor</span><span>${s}</span></li>`).join("")
+      : `<li><span>Belum ada percobaan</span></li>`;
+  }
+
+  function setStatus(msg) { statusEl.textContent = msg || ""; }
+
+  // ==== Geometri ====
+  function blockY(i) { return H - FLOOR - (i + 1) * BH; }
+
+  function resize() {
+    const r = cv.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    cv.width = Math.round(r.width * dpr);
+    cv.height = Math.round(r.height * dpr);
+    ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0);
+  }
+
+  function palette() {
+    const cs = getComputedStyle(document.documentElement);
+    return {
+      card: cs.getPropertyValue("--card").trim() || "#FFFFFF",
+      fg: cs.getPropertyValue("--fg").trim() || "#0A0A0A"
+    };
+  }
+
+  // ==== Alur permainan ====
+  function spawn() {
+    const top = stack[stack.length - 1];
+    const i = stack.length;
+    const fromLeft = i % 2 === 1;
+    cur = {
+      x: fromLeft ? 0 : W - top.w,
+      w: top.w,
+      color: COLORS[i % COLORS.length],
+      y: blockY(i)
+    };
+    dir = fromLeft ? 1 : -1;
+  }
+
+  function start() {
+    stack = [{ x: (W - BASE_W) / 2, w: BASE_W, color: COLORS[0] }];
+    debris = [];
+    score = 0;
+    camY = 0;
+    speed = 100;
+    state = "play";
+    ov.hidden = true;
+    setStatus("");
+    spawn();
+  }
+
+  function drop() {
+    if (state === "idle") return start();
+    if (state === "over") {
+      if (performance.now() - overAt > 500) start();
+      return;
+    }
+    if (state !== "play" || !cur) return;
+
+    const top = stack[stack.length - 1];
+    const left = Math.max(cur.x, top.x);
+    const right = Math.min(cur.x + cur.w, top.x + top.w);
+    const overlap = right - left;
+
+    // meleset total: blok jatuh, permainan selesai
+    if (overlap <= 0) {
+      debris.push({ x: cur.x, y: cur.y, w: cur.w, color: cur.color, vy: 0 });
+      return gameOver();
+    }
+
+    if (Math.abs(cur.x - top.x) < PERFECT) {
+      // pas: blok tidak terpotong
+      flash = { text: "PERFECT", t: 0.7 };
+      stack.push({ x: top.x, w: top.w, color: cur.color });
+    } else {
+      // meleset sebagian: bagian yang lewat ikut jatuh
+      if (cur.x < top.x) {
+        debris.push({ x: cur.x, y: cur.y, w: top.x - cur.x, color: cur.color, vy: 0 });
+      }
+      const topRight = top.x + top.w;
+      if (cur.x + cur.w > topRight) {
+        debris.push({ x: topRight, y: cur.y, w: cur.x + cur.w - topRight, color: cur.color, vy: 0 });
+      }
+      stack.push({ x: left, w: overlap, color: cur.color });
+    }
+
+    score = stack.length - 1;
+    speed = Math.min(380, 100 + score * 8);
+    spawn();
+  }
+
+  function gameOver() {
+    state = "over";
+    overAt = performance.now();
+    cur = null;
+    lastScore = score;
+    if (best == null || score > best) best = score;
+    hist.push(score);
+    saveLocal();
+    renderStats();
+    ovMain.textContent = "GAME OVER";
+    ovSub.textContent = "SKOR " + score + " · TAP UNTUK MAIN LAGI";
+    ov.hidden = false;
+    submitScore(score);
+  }
+
+  // ==== Update & gambar ====
+  function update(dt) {
+    if (state === "play" && cur) {
+      cur.x += dir * speed * dt;
+      if (cur.x < 0) { cur.x = 0; dir = 1; }
+      if (cur.x + cur.w > W) { cur.x = W - cur.w; dir = -1; }
+    }
+    for (const d of debris) {
+      d.vy += 1600 * dt;
+      d.y += d.vy * dt;
+    }
+    debris = debris.filter(d => d.y + camY < H + 50);
+
+    // kamera naik pelan mengikuti tumpukan
+    const targetCam = Math.max(0, stack.length * BH - 300);
+    camY += (targetCam - camY) * Math.min(1, dt * 5);
+
+    if (flash.t > 0) flash.t -= dt;
+  }
+
+  function drawBlock(x, y, w, color, stroke) {
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, w, BH);
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 2.5;
+    ctx.strokeRect(x + 1.25, y + 1.25, w - 2.5, BH - 2.5);
+  }
+
+  function draw() {
+    const { card, fg } = palette();
+    ctx.fillStyle = card;
+    ctx.fillRect(0, 0, W, H);
+
+    // grid tipis di latar
+    ctx.strokeStyle = fg;
+    ctx.globalAlpha = 0.08;
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= W; x += 40) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y <= H; y += 40) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.save();
+    ctx.translate(0, camY);
+
+    // lantai
+    ctx.fillStyle = fg;
+    ctx.fillRect(0, H - FLOOR, W, FLOOR + 600);
+
+    stack.forEach((b, i) => drawBlock(b.x, blockY(i), b.w, b.color, fg));
+    debris.forEach(d => drawBlock(d.x, d.y, d.w, d.color, fg));
+    if (state === "play" && cur) drawBlock(cur.x, cur.y, cur.w, cur.color, fg);
+
+    ctx.restore();
+
+    // skor di pojok kiri atas
+    if (state !== "idle") {
+      ctx.fillStyle = fg;
+      ctx.font = "44px Anton, Impact, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(String(score), 16, 52);
+    }
+
+    // tulisan PERFECT sebentar
+    if (flash.t > 0) {
+      ctx.globalAlpha = Math.min(1, flash.t * 2);
+      ctx.fillStyle = "#FF0055";
+      ctx.font = "30px Anton, Impact, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(flash.text, W / 2, 110);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  function frame(t) {
+    const dt = lastT ? Math.min(0.05, (t - lastT) / 1000) : 0;
+    lastT = t;
+    update(dt);
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  // ==== Input ====
+  board.addEventListener("pointerdown", (e) => { e.preventDefault(); drop(); });
+  document.addEventListener("keydown", (e) => {
+    if (e.target === resetBtn) return;
+    if (e.code === "Space" || e.code === "Enter") { e.preventDefault(); drop(); }
+  });
+
+  resetBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    best = null;
+    lastScore = null;
+    hist = [];
+    saveLocal();
+    renderStats();
+    setStatus("");
+  });
+
+  // ==== Kirim skor ke Supabase ====
+  // Ambil token login dari localStorage (pola sama seperti game lain).
+  function getToken() {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith("sb-") && k.endsWith("-auth-token")) {
+          const v = JSON.parse(localStorage.getItem(k));
+          if (v && v.access_token) return { token: v.access_token, uid: v.user?.id };
+        }
+      }
+    } catch {}
+    return null;
+  }
+
+  async function submitScore(s) {
+    if (s <= 0) { setStatus("Skor 0 tidak disimpan"); return; }
+
+    const auth = getToken();
+    if (!auth || !auth.uid) { setStatus("LOGIN DULU untuk simpan skor"); return; }
+
+    try {
+      const res = await fetch(`${SB_URL}/rest/v1/${TABLE}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SB_KEY,
+          "Authorization": "Bearer " + auth.token,
+          "Prefer": "return=minimal"
+        },
+        body: JSON.stringify({ user_id: auth.uid, score: s })
+      });
+      setStatus(res.ok ? "TERSIMPAN" : "GAGAL KIRIM (" + res.status + ")");
+    } catch {
+      setStatus("GAGAL KIRIM");
+    }
+  }
+
+  // ==== Init ====
+  loadLocal();
+  renderStats();
+  resize();
+  window.addEventListener("resize", resize);
+  // tampilkan dasar tumpukan saat idle
+  stack = [{ x: (W - BASE_W) / 2, w: BASE_W, color: COLORS[0] }];
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
