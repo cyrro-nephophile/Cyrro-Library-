@@ -222,7 +222,11 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
     {id:'reaction',name:'REACTION',table:'reaction_scores',lb:'reaction_leaderboard',wk:null,cols:'score,created_at',
      main:function(r){return fmt(r.score);},
      sub:function(){return 'MS';},
-     cmp:function(a,b){return a.score-b.score;}}
+     cmp:function(a,b){return a.score-b.score;}},
+    {id:'stack',name:'STACK',table:'stack_scores',lb:'stack_leaderboard',wk:null,cols:'score,created_at',
+     main:function(r){return fmt(r.score);},
+     sub:function(){return 'TUMPUKAN';},
+     cmp:function(a,b){return b.score-a.score;}}
   ];
 
   // angka naik pelan dari 0 (dilewati kalau user minta gerak dikurangi)
