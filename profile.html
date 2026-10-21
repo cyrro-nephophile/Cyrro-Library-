@@ -226,6 +226,10 @@ main{max-width:1080px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top,
     {id:'stack',name:'STACK',table:'stack_scores',lb:'stack_leaderboard',wk:null,cols:'score,created_at',
      main:function(r){return fmt(r.score);},
      sub:function(){return 'TUMPUKAN';},
+     cmp:function(a,b){return b.score-a.score;}},
+    {id:'shooter',name:'SHOOTER',table:'shooter_scores',lb:'shooter_leaderboard',wk:null,cols:'score,level,created_at',
+     main:function(r){return fmt(r.score);},
+     sub:function(r){return 'LV '+r.level;},
      cmp:function(a,b){return b.score-a.score;}}
   ];
 
