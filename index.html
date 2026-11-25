@@ -661,6 +661,51 @@ body[data-page="profile"] #kontakSec{display:none!important}
 @media(max-width:380px){#cyAuthPanel .pmenu{grid-template-columns:1fr}.profile-notifications,.playlist-panel{padding:10px}}
 </style>
 
+
+<style id="leaderboard-refresh-and-playlist">
+/* Leaderboard: lebih tegas, terstruktur, dan nyaman di layar kecil */
+#lbSec>.lb-box{padding:clamp(14px,3.5vw,22px);background:var(--card);border:3px solid var(--line);box-shadow:7px 7px 0 var(--sh)}
+#lbSec .lb-filters{max-width:none;grid-template-columns:minmax(0,1fr) 48px;gap:9px}
+#lbSec .lb-seg{border-radius:2px;overflow:hidden;box-shadow:3px 3px 0 var(--sh)}
+#lbSec .lb-seg button{min-height:42px;font-size:clamp(9px,2.7vw,12px);padding:8px 4px}
+#lbSec .lbref{width:48px!important;min-height:42px;align-self:stretch}
+#lbSec .lb-tabs{gap:0;background:var(--bg)}
+#lbSec .lb-tabs button{min-height:43px;font-size:clamp(8px,2.4vw,11px);font-weight:800}
+#lbSec #lbList{gap:9px;margin-top:16px}
+#lbSec #lbList li{position:relative;min-height:68px;padding:10px 12px;background:var(--bg);border:2px solid var(--line);box-shadow:3px 3px 0 var(--sh);border-radius:2px;transition:transform .16s ease,background .16s ease}
+#lbSec #lbList li:nth-child(1){background:linear-gradient(110deg,rgba(204,255,0,.19),var(--bg) 58%);border-width:3px}
+#lbSec #lbList li:nth-child(2){background:linear-gradient(110deg,rgba(180,190,205,.18),var(--bg) 58%)}
+#lbSec #lbList li:nth-child(3){background:linear-gradient(110deg,rgba(205,125,70,.16),var(--bg) 58%)}
+#lbSec #lbList li.me{border-color:var(--pink);outline:0;box-shadow:3px 3px 0 var(--pink)}
+#lbSec #lbList .rk{display:grid;place-items:center;width:34px;height:34px;font-size:23px;background:var(--card);border:2px solid var(--line);box-shadow:2px 2px 0 var(--sh)}
+#lbSec #lbList li:nth-child(1) .rk{background:var(--lime);color:#0a0a0a;border-color:#0a0a0a}
+#lbSec #lbList .nm{font-size:clamp(13px,3.6vw,16px);color:var(--fg)}
+#lbSec #lbList .av{width:42px;height:42px;margin-left:0;border:2px solid var(--line);border-radius:50%;object-fit:cover}
+#lbSec #lbList .mt{max-width:40%;padding:5px 8px;background:var(--card);border:2px solid var(--line);box-shadow:2px 2px 0 var(--sh)}
+#lbSec #lbList .sc{font-size:clamp(22px,6vw,29px)}
+#lbSec #lbList .sx{font-size:9px}
+#lbSec .lbreset{padding:9px 11px;background:var(--bg);border-left:3px solid var(--lime);font-size:10px;line-height:1.5}
+#lbSec .lb-hint{display:none!important}
+@media(max-width:380px){
+ #lbSec>.lb-box{padding:11px}
+ #lbSec #lbList li{gap:8px;padding:8px}
+ #lbSec #lbList .rk{width:29px;height:31px;font-size:20px}
+ #lbSec #lbList .av{width:34px;height:34px}
+ #lbSec #lbList .mt{padding:4px 5px}
+}
+.playlist-overlay{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:calc(18px + env(safe-area-inset-top,0px)) 14px calc(18px + env(safe-area-inset-bottom,0px));background:rgba(0,0,0,.76);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.playlist-overlay[hidden]{display:none}
+.playlist-dialog{width:min(560px,100%);max-height:100%;overflow:auto;padding:16px;background:var(--card);color:var(--fg);border:3px solid var(--line);box-shadow:8px 8px 0 var(--sh)}
+.playlist-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.playlist-dialog-head small{font:700 9px 'JetBrains Mono',monospace;letter-spacing:.16em;color:var(--mut)}
+.playlist-dialog-head h2{font:400 30px/1 'Anton',Impact,sans-serif;text-transform:uppercase}
+.playlist-dialog-head button{width:40px;height:40px;background:var(--pink);color:white;border:3px solid #0a0a0a;box-shadow:3px 3px 0 #0a0a0a;font-size:26px;line-height:1;cursor:pointer}
+.playlist-dialog #playlistSec{display:block!important;margin:0}
+.playlist-dialog #playlistSec>.sh{display:none}
+.playlist-dialog .playlist-panel{padding:0;border:0;box-shadow:none;background:transparent}
+.playlist-dialog .playlist-note{margin-bottom:12px}
+</style>
+
 </head>
 <body data-page="home">
 <div id="intro" class="pre" aria-hidden="true">
@@ -676,9 +721,10 @@ body[data-page="profile"] #kontakSec{display:none!important}
   <div class="hwrap" id="menuWrap">
     <button class="mode" id="cyAuthBtn" type="button" aria-label="Pengaturan" aria-expanded="false"><svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true"><path d="M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6ZM19.2 13.7l1.1.9-1.6 2.8-1.4-.5a7.8 7.8 0 0 1-1.7 1l-.2 1.5h-3.2l-.3-1.5a7.8 7.8 0 0 1-1.7-1l-1.4.5-1.6-2.8 1.1-.9a7.2 7.2 0 0 1 0-2l-1.1-.9 1.6-2.8 1.4.5a7.8 7.8 0 0 1 1.7-1l.3-1.5h3.2l.2 1.5a7.8 7.8 0 0 1 1.7 1l1.4-.5 1.6 2.8-1.1.9a7.2 7.2 0 0 1 0 2Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
     <div class="hmenu" id="hdrMenu" hidden>
+      <button class="mi" id="playlistOpenBtn" type="button"><span>PLAYLIST</span><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" fill="none" stroke="#0a0a0a" stroke-width="2.5" stroke-linecap="square"/></svg></button>
       <button class="mi" id="fxBtn" type="button" aria-pressed="false" title="Pengaturan efek visual"><span>PENGATURAN EFEK</span><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 8h11M6 12h15M3 16h9" fill="none" stroke="#0a0a0a" stroke-width="2.6" stroke-linecap="square"/></svg></button>
       <button class="mi" id="modeBtn" type="button"><span>GANTI TEMA</span><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="#0a0a0a"/></svg></button>
-      <hr class="nsep"/><button class="clog-btn" id="clogBtn" type="button" aria-expanded="false" aria-controls="clogList"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.4" fill="currentColor"/></svg><span>CHANGE LOG</span><span class="chev" aria-hidden="true">+</span></button><ul class="clog" id="clogList" hidden><li>Perbaikan: tab Profil tidak muncul karena struktur HTML menempatkannya di dalam section Mini Game. Section dipisahkan agar Profil tampil normal.</li><li>Profil dirapikan: edit profil, lihat profil, notifikasi, instal aplikasi, dan logout kini langsung tersedia di tab Profil. Playlist dibungkus panel di bagian paling bawah. Menu kanan atas kini hanya berisi ganti tema, pengaturan efek, dan Change Log.</li><li>Navigasi utama disederhanakan menjadi tiga tab bawah: Home (Game), Leaderboard, dan Profil. Player musik serta Tools dihapus, sementara tautan playlist tetap tersedia.</li><li>Mini game baru: Shooter (pesawat tembak, 10 level bertema + boss, lalu level tanpa batas). Skor tertinggi di leaderboard SHOOTER sepanjang masa, level tertinggi ikut tampil</li><li>Mini game baru: Stack (tumpuk blok pas, skor = jumlah tumpukan), ada di leaderboard STACK sepanjang masa</li><li>Mini game baru: Reaction Test (tes refleks, skor ms terkecil), ada di leaderboard REACTION sepanjang masa</li><li>Game baru: Kata Silang (30 level, susun kata dari huruf roda). Leaderboard sepanjang masa</li><li>Game baru: Cari Kata (31 level, termasuk level spesial). Leaderboard sepanjang masa</li><li>Mini game baru: Flappy Bee (kepak terbang, lewati celah pilar), ada di leaderboard FLAPPY BEE</li><li>Perbaikan baris leaderboard yang melebar ke kanan di HP</li><li>Tombol muat ulang di leaderboard (ikon panah melingkar, di kanan)</li><li>Change log pindah ke menu foto profil, lonceng khusus notifikasi</li><li>Change log bisa digulir kalau sudah banyak catatan</li><li>Perbaikan keamanan database (tanpa perubahan tampilan)</li><li>Perbaikan struktur halaman dan batas ukuran foto profil (maks 2 MB, JPG/PNG/WebP)</li><li>Mode edit profil di panel akun lebih ringkas, menu disembunyikan saat edit</li><li>Panel akun lebih ringkas: EDIT PROFIL membuka form, dan tawaran pasang ke layar utama</li><li>Profil dibuka sebagai layar penuh di dalam Library, tanpa pindah halaman</li><li>Bagikan profil lewat link, dan undo saat menghapus teman</li><li>Baris kamu di leaderboard ditandai KAMU, plus hitung mundur reset mingguan</li><li>Notifikasi push: teman nyalip skor dan permintaan teman langsung masuk ke HP, walau app ditutup</li><li>Bisa dipasang ke layar utama HP, dibuka tanpa browser</li><li>Tambah teman langsung dari profil publik</li><li>Notifikasi saat teman nyalip skor kamu</li><li>Menu foto profil di header, notifikasi permintaan teman, konfirmasi sebelum hapus teman</li><li>Teman lewat kode 6 karakter, plus leaderboard TEMAN</li><li>Peringkat sepanjang masa dan mingguan (reset tiap Jumat)</li><li>Bio di panel akun</li><li>Profil publik: klik nama di leaderboard</li><li>Halaman profil dengan skor tertinggi per game dan riwayat</li></ul>
+      <hr class="nsep"/><button class="clog-btn" id="clogBtn" type="button" aria-expanded="false" aria-controls="clogList"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.4" fill="currentColor"/></svg><span>CHANGE LOG</span><span class="chev" aria-hidden="true">+</span></button><ul class="clog" id="clogList" hidden><li>Profil: label AKUN CYRRO dihapus. Playlist dipindahkan ke menu kanan atas. Tampilan leaderboard diperbarui dengan kartu peringkat, skor, dan filter yang lebih rapi.</li><li>Perbaikan: tab Profil tidak muncul karena struktur HTML menempatkannya di dalam section Mini Game. Section dipisahkan agar Profil tampil normal.</li><li>Profil dirapikan: edit profil, lihat profil, notifikasi, instal aplikasi, dan logout kini langsung tersedia di tab Profil. Playlist dibungkus panel di bagian paling bawah. Menu kanan atas kini hanya berisi ganti tema, pengaturan efek, dan Change Log.</li><li>Navigasi utama disederhanakan menjadi tiga tab bawah: Home (Game), Leaderboard, dan Profil. Player musik serta Tools dihapus, sementara tautan playlist tetap tersedia.</li><li>Mini game baru: Shooter (pesawat tembak, 10 level bertema + boss, lalu level tanpa batas). Skor tertinggi di leaderboard SHOOTER sepanjang masa, level tertinggi ikut tampil</li><li>Mini game baru: Stack (tumpuk blok pas, skor = jumlah tumpukan), ada di leaderboard STACK sepanjang masa</li><li>Mini game baru: Reaction Test (tes refleks, skor ms terkecil), ada di leaderboard REACTION sepanjang masa</li><li>Game baru: Kata Silang (30 level, susun kata dari huruf roda). Leaderboard sepanjang masa</li><li>Game baru: Cari Kata (31 level, termasuk level spesial). Leaderboard sepanjang masa</li><li>Mini game baru: Flappy Bee (kepak terbang, lewati celah pilar), ada di leaderboard FLAPPY BEE</li><li>Perbaikan baris leaderboard yang melebar ke kanan di HP</li><li>Tombol muat ulang di leaderboard (ikon panah melingkar, di kanan)</li><li>Change log pindah ke menu foto profil, lonceng khusus notifikasi</li><li>Change log bisa digulir kalau sudah banyak catatan</li><li>Perbaikan keamanan database (tanpa perubahan tampilan)</li><li>Perbaikan struktur halaman dan batas ukuran foto profil (maks 2 MB, JPG/PNG/WebP)</li><li>Mode edit profil di panel akun lebih ringkas, menu disembunyikan saat edit</li><li>Panel akun lebih ringkas: EDIT PROFIL membuka form, dan tawaran pasang ke layar utama</li><li>Profil dibuka sebagai layar penuh di dalam Library, tanpa pindah halaman</li><li>Bagikan profil lewat link, dan undo saat menghapus teman</li><li>Baris kamu di leaderboard ditandai KAMU, plus hitung mundur reset mingguan</li><li>Notifikasi push: teman nyalip skor dan permintaan teman langsung masuk ke HP, walau app ditutup</li><li>Bisa dipasang ke layar utama HP, dibuka tanpa browser</li><li>Tambah teman langsung dari profil publik</li><li>Notifikasi saat teman nyalip skor kamu</li><li>Menu foto profil di header, notifikasi permintaan teman, konfirmasi sebelum hapus teman</li><li>Teman lewat kode 6 karakter, plus leaderboard TEMAN</li><li>Peringkat sepanjang masa dan mingguan (reset tiap Jumat)</li><li>Bio di panel akun</li><li>Profil publik: klik nama di leaderboard</li><li>Halaman profil dengan skor tertinggi per game dan riwayat</li></ul>
     </div>
   </div>
 </header>
@@ -1086,7 +1132,7 @@ body[data-page="profile"] #kontakSec{display:none!important}
   </section>
 
   <section class="sec" id="profileSec" aria-labelledby="h-profile">
-    <div class="sh"><h2 id="h-profile">Profil</h2><i></i><span>AKUN CYRRO</span></div>
+    <div class="sh"><h2 id="h-profile">Profil</h2><i></i></div>
     <div id="cyAuthPanel" role="region" aria-label="Pengaturan akun">
       <div id="cyGuest">
         <p class="msg">Belum login.</p>
@@ -1129,7 +1175,31 @@ body[data-page="profile"] #kontakSec{display:none!important}
         <div class="hmenu" id="notifMenu" hidden><div class="nlist" id="notifList"></div></div>
       </div>
     </section>
-    <section class="sec" id="playlistSec" aria-labelledby="h-playlist">
+
+  </section>
+
+<section class="sec lb" id="kontakSec" aria-labelledby="h-kt">
+  <details class="lb-box">
+  <summary class="sh"><h2 id="h-kt">Kontak</h2><i></i><span>LAPOR BUG · REQUEST</span></summary>
+  <p class="kt-intro">Nemu bug atau punya request? Bisa hubungi lewat salah satu ini.</p>
+  <div class="kt-grid" style="grid-template-columns:minmax(0,420px)">
+    <article class="kt-card">
+      <b>Bluesky</b>
+      <small>@CYRRO.MY.ID</small>
+      <a class="kt-btn" href="https://bsky.app/profile/cyrro.my.id" target="_blank" rel="noopener">BUKA PROFIL</a>
+    </article>
+  </div>
+  </details>
+</section>
+</main>
+</div></div>
+<div class="playlist-overlay" id="playlistOverlay" hidden>
+  <section class="playlist-dialog" role="dialog" aria-modal="true" aria-labelledby="playlistDialogTitle">
+    <div class="playlist-dialog-head">
+      <div><small>CYRRO // EXTRA</small><h2 id="playlistDialogTitle">Playlist</h2></div>
+      <button type="button" id="playlistCloseBtn" aria-label="Tutup playlist">×</button>
+    </div>
+        <section class="sec" id="playlistSec" aria-labelledby="h-playlist">
     <div class="sh"><h2 id="h-playlist">Playlist Musik</h2><i></i><span>LINK PILIHAN</span></div>
     <div class="playlist-panel"><p class="playlist-note">Koleksi playlist favorit. Buka langsung di platform pilihanmu.</p>
     <ol class="items g2">
@@ -1153,22 +1223,7 @@ body[data-page="profile"] #kontakSec{display:none!important}
     </div>
   </section>
   </section>
-
-<section class="sec lb" id="kontakSec" aria-labelledby="h-kt">
-  <details class="lb-box">
-  <summary class="sh"><h2 id="h-kt">Kontak</h2><i></i><span>LAPOR BUG · REQUEST</span></summary>
-  <p class="kt-intro">Nemu bug atau punya request? Bisa hubungi lewat salah satu ini.</p>
-  <div class="kt-grid" style="grid-template-columns:minmax(0,420px)">
-    <article class="kt-card">
-      <b>Bluesky</b>
-      <small>@CYRRO.MY.ID</small>
-      <a class="kt-btn" href="https://bsky.app/profile/cyrro.my.id" target="_blank" rel="noopener">BUKA PROFIL</a>
-    </article>
-  </div>
-  </details>
-</section>
-</main>
-</div></div>
+</div>
 <nav class="bottom-nav" aria-label="Navigasi utama">
   <button type="button" class="bn-item is-active" data-page="home" aria-current="page">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h6.5v6.5H4zM13.5 5.5H20v6.5h-6.5zM4 14H10.5v6.5H4zM13.5 14H20v6.5h-6.5z" fill="currentColor"/></svg>
@@ -2026,6 +2081,24 @@ body[data-page="profile"] #kontakSec{display:none!important}
     clogList.hidden=!clogList.hidden;
     clogBtn.setAttribute('aria-expanded',String(!clogList.hidden));
   });
+})();
+</script>
+
+<script>
+(function(){
+  var openBtn=document.getElementById('playlistOpenBtn');
+  var closeBtn=document.getElementById('playlistCloseBtn');
+  var overlay=document.getElementById('playlistOverlay');
+  var menu=document.getElementById('hdrMenu');
+  var menuBtn=document.getElementById('cyAuthBtn');
+  function closePlaylist(){overlay.hidden=true;document.body.style.overflow='';}
+  openBtn.addEventListener('click',function(){
+    menu.hidden=true;menuBtn.setAttribute('aria-expanded','false');
+    overlay.hidden=false;document.body.style.overflow='hidden';
+  });
+  closeBtn.addEventListener('click',closePlaylist);
+  overlay.addEventListener('click',function(e){if(e.target===overlay)closePlaylist();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!overlay.hidden)closePlaylist();});
 })();
 </script>
 
