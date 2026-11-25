@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <script>document.documentElement.classList.add('js');if(!matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.classList.add('intro-on');try{var _t=localStorage.getItem('theme');if(_t==='dark'||_t==='light')document.documentElement.setAttribute('data-theme',_t);else if(matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}</script>
-<meta name="description" content="Library — game, leaderboard, dan playlist favorit Cyrro."/>
+<meta name="description" content="Library — game, leaderboard, dan profil pemain Cyrro."/>
 <meta name="theme-color" content="#ccff00"/>
 <link rel="manifest" href="manifest.json"/>
 <link rel="apple-touch-icon" href="icon-192.png"/>
@@ -19,11 +19,11 @@
 <meta property="og:site_name" content="Cyrro"/>
 <meta property="og:url" content="https://cyr-library.vercel.app/"/>
 <meta property="og:title" content="Library — Cyrro"/>
-<meta property="og:description" content="Library — game, leaderboard, dan playlist favorit Cyrro."/>
+<meta property="og:description" content="Library — game, leaderboard, dan profil pemain Cyrro."/>
 <meta property="og:locale" content="id_ID"/>
 <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Library — Cyrro"/>
-<meta name="twitter:description" content="Library — game, leaderboard, dan playlist favorit Cyrro."/>
+<meta name="twitter:description" content="Library — game, leaderboard, dan profil pemain Cyrro."/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -630,6 +630,36 @@ body[data-page="profile"] #miniGameSec{display:none!important}
 @media (prefers-reduced-motion:reduce){.bottom-nav *,.profile-login,.profile-home-actions button{transition:none!important}}
 </style>
 
+
+<style id="profile-tab-account-layout">
+/* Profile tab owns account actions and notifications */
+#cyAuthPanel{position:relative;top:auto;right:auto;z-index:1;width:100%;max-width:none;max-height:none;overflow:visible;transform:none;opacity:1;pointer-events:auto;margin:0;padding:16px;background:var(--card);color:var(--fg);border:3px solid #0a0a0a;box-shadow:5px 5px 0 #0a0a0a}
+#cyAuthPanel.open{transform:none;opacity:1;pointer-events:auto}
+#cyAuthPanel #cyGuest .msg{margin:0 0 10px}
+#cyAuthPanel .pview{align-items:center}
+#cyAuthPanel .pmenu{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+#cyAuthPanel .pm{min-height:46px;text-align:center;padding:10px 8px}
+#cyAuthPanel .pm.dng{grid-column:1/-1}
+#cyAuthPanel .pedit{margin-top:14px;border-top:3px solid var(--line);padding-top:10px}
+#cyAuthPanel #cyMember:has(#cyEdit:not([hidden])) .pview,
+#cyAuthPanel #cyMember:has(#cyEdit:not([hidden])) .pmenu,
+#cyAuthPanel #cyMember:has(#cyEdit:not([hidden])) .pushhint{display:none}
+.profile-notifications{position:relative;margin:0 0 14px;padding:12px;background:var(--card);border:3px solid #0a0a0a;box-shadow:4px 4px 0 #0a0a0a}
+.profile-subhead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:9px;font:700 11px 'JetBrains Mono',monospace}
+.profile-subhead span{font-size:9px;color:var(--mut);letter-spacing:.08em}
+.profile-notifications .hwrap{width:100%}
+.profile-notif-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--lime);color:#0a0a0a;border:3px solid #0a0a0a;box-shadow:3px 3px 0 #0a0a0a;font:700 11px 'JetBrains Mono',monospace;cursor:pointer}
+.profile-notif-count{min-width:22px;padding:3px 6px;background:#0a0a0a;color:#fff;border-radius:99px;text-align:center}
+.profile-notifications #notifMenu{position:relative;top:auto;right:auto;width:100%;max-width:none;margin-top:10px;box-shadow:none}
+.playlist-panel{padding:14px;background:var(--card);border:3px solid #0a0a0a;box-shadow:5px 5px 0 #0a0a0a}
+.playlist-note{margin:0 0 12px;color:var(--mut);font-size:12px;line-height:1.5}
+#playlistSec{margin-top:24px}
+:root[data-theme="dark"] #cyAuthPanel,
+:root[data-theme="dark"] .profile-notifications,
+:root[data-theme="dark"] .playlist-panel{border-color:#cdd2c2}
+@media(max-width:380px){#cyAuthPanel .pmenu{grid-template-columns:1fr}.profile-notifications,.playlist-panel{padding:10px}}
+</style>
+
 </head>
 <body data-page="home">
 <div id="intro" class="pre" aria-hidden="true">
@@ -642,51 +672,16 @@ body[data-page="profile"] #miniGameSec{display:none!important}
 </div>
 <header class="top">
   <a class="wm disp glitch" href="/">C-<i>LIBRARY</i></a>
-  <div class="hwrap" id="notifWrap">
-    <button class="mode" id="notifBtn" type="button" aria-label="Notifikasi" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6zM10 19a2 2 0 0 0 4 0" fill="none" stroke="#0a0a0a" stroke-width="2.4" stroke-linejoin="round"/></svg><span class="nbadge" id="notifCount" hidden>0</span></button>
-    <div class="hmenu" id="notifMenu" hidden><div class="nlist" id="notifList"></div></div>
-  </div>
   <div class="hwrap" id="menuWrap">
-    <button class="mode" id="cyAuthBtn" type="button" aria-label="Menu" aria-expanded="false"></button>
+    <button class="mode" id="cyAuthBtn" type="button" aria-label="Pengaturan" aria-expanded="false"><svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true"><path d="M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6ZM19.2 13.7l1.1.9-1.6 2.8-1.4-.5a7.8 7.8 0 0 1-1.7 1l-.2 1.5h-3.2l-.3-1.5a7.8 7.8 0 0 1-1.7-1l-1.4.5-1.6-2.8 1.1-.9a7.2 7.2 0 0 1 0-2l-1.1-.9 1.6-2.8 1.4.5a7.8 7.8 0 0 1 1.7-1l.3-1.5h3.2l.2 1.5a7.8 7.8 0 0 1 1.7 1l1.4-.5 1.6 2.8-1.1.9a7.2 7.2 0 0 1 0 2Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
     <div class="hmenu" id="hdrMenu" hidden>
-      <button class="mi" id="fxBtn" type="button" aria-pressed="false" title="Efek gerak: penuh"><span>EFEK GERAK</span><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 8h11M6 12h15M3 16h9" fill="none" stroke="#0a0a0a" stroke-width="2.6" stroke-linecap="square"/></svg></button>
+      <button class="mi" id="fxBtn" type="button" aria-pressed="false" title="Pengaturan efek visual"><span>PENGATURAN EFEK</span><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 8h11M6 12h15M3 16h9" fill="none" stroke="#0a0a0a" stroke-width="2.6" stroke-linecap="square"/></svg></button>
       <button class="mi" id="modeBtn" type="button"><span>GANTI TEMA</span><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="#0a0a0a"/></svg></button>
-      <button class="mi" id="menuAccount" type="button"><span>AKUN</span></button>
-      <hr class="nsep"/><button class="clog-btn" id="clogBtn" type="button" aria-expanded="false" aria-controls="clogList"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.4" fill="currentColor"/></svg><span>CHANGE LOG</span><span class="chev" aria-hidden="true">+</span></button><ul class="clog" id="clogList" hidden><li>Mini game baru: Shooter (pesawat tembak, 10 level bertema + boss, lalu level tanpa batas). Skor tertinggi di leaderboard SHOOTER sepanjang masa, level tertinggi ikut tampil</li><li>Mini game baru: Stack (tumpuk blok pas, skor = jumlah tumpukan), ada di leaderboard STACK sepanjang masa</li><li>Mini game baru: Reaction Test (tes refleks, skor ms terkecil), ada di leaderboard REACTION sepanjang masa</li><li>Game baru: Kata Silang (30 level, susun kata dari huruf roda). Leaderboard sepanjang masa</li><li>Game baru: Cari Kata (31 level, termasuk level spesial). Leaderboard sepanjang masa</li><li>Mini game baru: Flappy Bee (kepak terbang, lewati celah pilar), ada di leaderboard FLAPPY BEE</li><li>Perbaikan baris leaderboard yang melebar ke kanan di HP</li><li>Tombol muat ulang di leaderboard (ikon panah melingkar, di kanan)</li><li>Change log pindah ke menu foto profil, lonceng khusus notifikasi</li><li>Change log bisa digulir kalau sudah banyak catatan</li><li>Perbaikan keamanan database (tanpa perubahan tampilan)</li><li>Perbaikan struktur halaman dan batas ukuran foto profil (maks 2 MB, JPG/PNG/WebP)</li><li>Mode edit profil di panel akun lebih ringkas, menu disembunyikan saat edit</li><li>Panel akun lebih ringkas: EDIT PROFIL membuka form, dan tawaran pasang ke layar utama</li><li>Profil dibuka sebagai layar penuh di dalam Library, tanpa pindah halaman</li><li>Bagikan profil lewat link, dan undo saat menghapus teman</li><li>Baris kamu di leaderboard ditandai KAMU, plus hitung mundur reset mingguan</li><li>Notifikasi push: teman nyalip skor dan permintaan teman langsung masuk ke HP, walau app ditutup</li><li>Bisa dipasang ke layar utama HP, dibuka tanpa browser</li><li>Tambah teman langsung dari profil publik</li><li>Notifikasi saat teman nyalip skor kamu</li><li>Menu foto profil di header, notifikasi permintaan teman, konfirmasi sebelum hapus teman</li><li>Teman lewat kode 6 karakter, plus leaderboard TEMAN</li><li>Peringkat sepanjang masa dan mingguan (reset tiap Jumat)</li><li>Bio di panel akun</li><li>Profil publik: klik nama di leaderboard</li><li>Halaman profil dengan skor tertinggi per game dan riwayat</li></ul>
+      <hr class="nsep"/><button class="clog-btn" id="clogBtn" type="button" aria-expanded="false" aria-controls="clogList"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.4" fill="currentColor"/></svg><span>CHANGE LOG</span><span class="chev" aria-hidden="true">+</span></button><ul class="clog" id="clogList" hidden><li>Profil dirapikan: edit profil, lihat profil, notifikasi, instal aplikasi, dan logout kini langsung tersedia di tab Profil. Playlist dibungkus panel tersendiri di bagian paling bawah.</li><li>Navigasi utama disederhanakan menjadi tiga tab bawah: Home (Game), Leaderboard, dan Profil. Player musik serta Tools dihapus, sementara tautan playlist tetap tersedia.</li><li>Mini game baru: Shooter (pesawat tembak, 10 level bertema + boss, lalu level tanpa batas). Skor tertinggi di leaderboard SHOOTER sepanjang masa, level tertinggi ikut tampil</li><li>Mini game baru: Stack (tumpuk blok pas, skor = jumlah tumpukan), ada di leaderboard STACK sepanjang masa</li><li>Mini game baru: Reaction Test (tes refleks, skor ms terkecil), ada di leaderboard REACTION sepanjang masa</li><li>Game baru: Kata Silang (30 level, susun kata dari huruf roda). Leaderboard sepanjang masa</li><li>Game baru: Cari Kata (31 level, termasuk level spesial). Leaderboard sepanjang masa</li><li>Mini game baru: Flappy Bee (kepak terbang, lewati celah pilar), ada di leaderboard FLAPPY BEE</li><li>Perbaikan baris leaderboard yang melebar ke kanan di HP</li><li>Tombol muat ulang di leaderboard (ikon panah melingkar, di kanan)</li><li>Change log pindah ke menu foto profil, lonceng khusus notifikasi</li><li>Change log bisa digulir kalau sudah banyak catatan</li><li>Perbaikan keamanan database (tanpa perubahan tampilan)</li><li>Perbaikan struktur halaman dan batas ukuran foto profil (maks 2 MB, JPG/PNG/WebP)</li><li>Mode edit profil di panel akun lebih ringkas, menu disembunyikan saat edit</li><li>Panel akun lebih ringkas: EDIT PROFIL membuka form, dan tawaran pasang ke layar utama</li><li>Profil dibuka sebagai layar penuh di dalam Library, tanpa pindah halaman</li><li>Bagikan profil lewat link, dan undo saat menghapus teman</li><li>Baris kamu di leaderboard ditandai KAMU, plus hitung mundur reset mingguan</li><li>Notifikasi push: teman nyalip skor dan permintaan teman langsung masuk ke HP, walau app ditutup</li><li>Bisa dipasang ke layar utama HP, dibuka tanpa browser</li><li>Tambah teman langsung dari profil publik</li><li>Notifikasi saat teman nyalip skor kamu</li><li>Menu foto profil di header, notifikasi permintaan teman, konfirmasi sebelum hapus teman</li><li>Teman lewat kode 6 karakter, plus leaderboard TEMAN</li><li>Peringkat sepanjang masa dan mingguan (reset tiap Jumat)</li><li>Bio di panel akun</li><li>Profil publik: klik nama di leaderboard</li><li>Halaman profil dengan skor tertinggi per game dan riwayat</li></ul>
     </div>
   </div>
 </header>
-<div id="cyAuthPanel" role="dialog" aria-label="Akun">
-  <div id="cyGuest">
-    <p class="msg">Belum login.</p>
-    <div class="btns"><button class="pri" type="button" onclick="location.href='login.html'">Login</button></div>
-  </div>
-  <div id="cyMember" hidden>
-    <div class="pview">
-      <img id="cyViewAv" class="pav" alt="" hidden>
-      <div class="pinfo"><div class="who" id="cyWho">Tamu</div><div class="pbio" id="cyBioView"></div></div>
-    </div>
-    <div class="pmenu">
-      <button type="button" id="cyEditBtn" class="pm">EDIT PROFIL</button>
-      <button type="button" id="menuProfileOpen" class="pm">LIHAT PROFIL</button>
-      <button type="button" id="pushBtn" class="pm">AKTIFKAN NOTIFIKASI</button>
-      <button type="button" id="installBtn" class="pm" hidden>PASANG KE LAYAR UTAMA</button>
-      <button type="button" id="cyLogout" class="pm dng">LOGOUT</button>
-    </div>
-    <p class="pushhint">Dapat kabar kalau teman nyalip skormu atau ngirim permintaan teman.</p>
-    <div id="cyEdit" class="pedit" hidden>
-      <label for="cyName">NAMA</label>
-      <input id="cyName" type="text" maxlength="24" placeholder="Nama kamu">
-      <label for="cyBio">BIO</label>
-      <textarea id="cyBio" maxlength="120" rows="3" placeholder="Ceritain dikit tentang kamu"></textarea>
-      <label>FOTO</label>
-      <div class="fpick"><img id="cyPreview" alt="" hidden><label class="fbtn" for="cyFile">PILIH FOTO</label><input id="cyFile" type="file" accept="image/*"></div>
-      <details class="flink"><summary>Pakai link gambar</summary><input id="cyAvatar" type="url" placeholder="https://..."></details>
-      <div class="btns"><button class="pri" id="cySave" type="button">Simpan</button><button id="cyCancel" type="button">Batal</button></div>
-    </div>
-  </div>
-  <div class="msg" id="cyMsg"></div>
-</div>
+
 <div class="pf-ov" id="pfOv" hidden>
   <div class="pf-bar"><button class="back" id="pfBack" type="button">← TUTUP</button><span class="pf-title">Profil</span></div>
   <iframe class="pf-frame" id="pfFrame" title="Profil"></iframe>
@@ -1087,33 +1082,23 @@ body[data-page="profile"] #miniGameSec{display:none!important}
         <span class="tx"><b>SHOOTER</b><small>TEMBAK MUSUH, LEWATI BANYAK LEVEL &amp; BOSS</small></span>
       </a></li>
     </ol>
-  </section>
+
 
   
   <section class="sec" id="profileSec" aria-labelledby="h-profile">
     <div class="sh"><h2 id="h-profile">Profil</h2><i></i><span>AKUN CYRRO</span></div>
-    <article class="profile-home-card">
-      <div class="profile-home-kicker mono">PLAYER ID // CYRRO</div>
-      <div class="profile-home-main">
-        <div class="profile-home-avatar">
-          <img id="tabProfileAvatar" alt="" hidden/>
-          <span id="tabProfileFallback" aria-hidden="true">T</span>
-        </div>
-        <div class="profile-home-copy">
-          <b id="tabProfileName">Tamu</b>
-          <p id="tabProfileBio">Masuk untuk mengatur profil dan menyimpan progres game.</p>
-        </div>
+    <section class="profile-notifications" aria-label="Notifikasi">
+      <div class="profile-subhead"><b>NOTIFIKASI</b><span class="mono" id="notifCountLabel">AKTIVITAS</span></div>
+      <div class="hwrap" id="notifWrap">
+        <button class="profile-notif-toggle" id="notifBtn" type="button" aria-label="Buka notifikasi" aria-expanded="false">
+          <span>LIHAT NOTIFIKASI</span>
+          <span class="profile-notif-count" id="notifCount" hidden>0</span>
+        </button>
+        <div class="hmenu" id="notifMenu" hidden><div class="nlist" id="notifList"></div></div>
       </div>
-      <a class="profile-login" id="profileLoginBtn" href="login.html">LOGIN / BUAT AKUN <span aria-hidden="true">↗</span></a>
-      <div class="profile-home-actions" id="profileAccountActions" hidden>
-        <button type="button" id="profileEditBtn">EDIT PROFIL</button>
-        <button type="button" id="profileViewBtn">LIHAT PROFIL</button>
-      </div>
-    </article>
-  </section>
-
-  <section class="sec" id="playlistSec" aria-labelledby="h-playlist">
+    <section class="sec" id="playlistSec" aria-labelledby="h-playlist">
     <div class="sh"><h2 id="h-playlist">Playlist Musik</h2><i></i><span>LINK PILIHAN</span></div>
+    <div class="playlist-panel"><p class="playlist-note">Koleksi playlist favorit. Buka langsung di platform pilihanmu.</p>
     <ol class="items g2">
       <li><a class="card pl p2" href="https://music.youtube.com/playlist?list=PLawOvByz18PU&amp;si=MDmpCU9IhHpjT03b" target="_blank" rel="noopener" aria-label="Cyrrokestra, buka di YouTube Music (tab baru)">
         <span class="n">04</span>
@@ -1132,7 +1117,45 @@ body[data-page="profile"] #miniGameSec{display:none!important}
         <span class="go ext" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M6 14L14 6M7.5 6H14v6.5"/></svg></span>
       </a></li>
     </ol>
+    </div>
   </section>
+  </section>
+  </section>
+
+    <div id="cyAuthPanel" role="dialog" aria-label="Akun">
+      <div id="cyGuest">
+        <p class="msg">Belum login.</p>
+        <div class="btns"><button class="pri" type="button" onclick="location.href='login.html'">Login</button></div>
+      </div>
+      <div id="cyMember" hidden>
+        <div class="pview">
+          <img id="cyViewAv" class="pav" alt="" hidden>
+          <div class="pinfo"><div class="who" id="cyWho">Tamu</div><div class="pbio" id="cyBioView"></div></div>
+        </div>
+        <div class="pmenu">
+          <button type="button" id="cyEditBtn" class="pm">EDIT PROFIL</button>
+          <button type="button" id="menuProfileOpen" class="pm">LIHAT PROFIL</button>
+          <button type="button" id="pushBtn" class="pm">AKTIFKAN NOTIFIKASI</button>
+          <button type="button" id="installBtn" class="pm" hidden>PASANG KE LAYAR UTAMA</button>
+          <button type="button" id="cyLogout" class="pm dng">LOGOUT</button>
+        </div>
+        <p class="pushhint">Dapat kabar kalau teman nyalip skormu atau ngirim permintaan teman.</p>
+        <div id="cyEdit" class="pedit" hidden>
+          <label for="cyName">NAMA</label>
+          <input id="cyName" type="text" maxlength="24" placeholder="Nama kamu">
+          <label for="cyBio">BIO</label>
+          <textarea id="cyBio" maxlength="120" rows="3" placeholder="Ceritain dikit tentang kamu"></textarea>
+          <label>FOTO</label>
+          <div class="fpick"><img id="cyPreview" alt="" hidden><label class="fbtn" for="cyFile">PILIH FOTO</label><input id="cyFile" type="file" accept="image/*"></div>
+          <details class="flink"><summary>Pakai link gambar</summary><input id="cyAvatar" type="url" placeholder="https://..."></details>
+          <div class="btns"><button class="pri" id="cySave" type="button">Simpan</button><button id="cyCancel" type="button">Batal</button></div>
+        </div>
+      </div>
+      <div class="msg" id="cyMsg"></div>
+    </div>
+  </section>
+
+
 <section class="sec lb" id="kontakSec" aria-labelledby="h-kt">
   <details class="lb-box">
   <summary class="sh"><h2 id="h-kt">Kontak</h2><i></i><span>LAPOR BUG · REQUEST</span></summary>
@@ -1351,31 +1374,12 @@ body[data-page="profile"] #miniGameSec{display:none!important}
     var m=(user&&user.user_metadata)||{};
     var name=m.display_name||(user?user.email.split('@')[0]:'Tamu');
     who.textContent=name;
-    var tabName=document.getElementById('tabProfileName');
-    var tabBio=document.getElementById('tabProfileBio');
-    var tabAvatar=document.getElementById('tabProfileAvatar');
-    var tabFallback=document.getElementById('tabProfileFallback');
-    var profileLogin=document.getElementById('profileLoginBtn');
-    var profileActions=document.getElementById('profileAccountActions');
-    if(tabName) tabName.textContent=name;
-    if(tabBio) tabBio.textContent=user?(m.bio||'Bio belum diisi.'): 'Masuk untuk mengatur profil dan menyimpan progres game.';
-    if(tabAvatar){tabAvatar.src=m.avatar_url||'';tabAvatar.hidden=!(user&&m.avatar_url);}
-    if(tabFallback){tabFallback.textContent=(name[0]||'T').toUpperCase();tabFallback.hidden=!!(user&&m.avatar_url);}
-    if(profileLogin) profileLogin.hidden=!!user;
-    if(profileActions) profileActions.hidden=!user;
     guest.hidden=!!user; member.hidden=!user;
     bioView.textContent=m.bio||'';
     nameIn.value=m.display_name||''; bioIn.value=m.bio||''; avIn.value=m.avatar_url||'';
     prevEl.src=m.avatar_url||''; prevEl.hidden=!m.avatar_url;
     viewAv.src=m.avatar_url||''; viewAv.hidden=!m.avatar_url;
-    btn.textContent='';
-    if(user&&m.avatar_url){
-      var img=document.createElement('img'); img.alt=''; img.src=m.avatar_url;
-      img.onerror=function(){ btn.textContent=(name[0]||'?').toUpperCase(); };
-      btn.appendChild(img);
-    }else{
-      btn.textContent=(name[0]||'?').toUpperCase();
-    }
+
   }
 
   editBtn.addEventListener('click',function(){ editBox.hidden=false; editBtn.hidden=true; });
@@ -1419,10 +1423,6 @@ body[data-page="profile"] #miniGameSec{display:none!important}
     await sb.auth.signOut(); setOpen(false); paint(null);
   });
 
-  // menu header: AKUN membuka panel
-  document.getElementById('menuAccount').addEventListener('click',function(e){
-    e.stopPropagation(); document.getElementById('hdrMenu').hidden=true; setOpen(true);
-  });
   document.addEventListener('click',function(e){
     if(open && !panel.contains(e.target) && e.target!==btn && !btn.contains(e.target)) setOpen(false);
   });
@@ -1433,12 +1433,6 @@ body[data-page="profile"] #miniGameSec{display:none!important}
   function closeProfile(){ if(ov.hidden) return; ov.hidden=true; frame.src='about:blank'; }
   document.getElementById('pfBack').addEventListener('click',closeProfile);
   document.getElementById('menuProfileOpen').addEventListener('click',function(){ openProfile('profile.html?embed=1'); });
-  document.getElementById('profileEditBtn').addEventListener('click',function(){
-    setOpen(true); editBox.hidden=false; editBtn.hidden=true;
-  });
-  document.getElementById('profileViewBtn').addEventListener('click',function(){
-    openProfile('profile.html?embed=1');
-  });
   document.addEventListener('click',function(e){
     var a=e.target.closest&&e.target.closest('a[href^="profile.html"]');
     if(!a) return;
