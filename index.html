@@ -1445,8 +1445,9 @@ body[data-page="profile"] #kontakSec{display:none!important}
     guest.hidden=!!user; member.hidden=!user;
     bioView.textContent=m.bio||'';
     nameIn.value=m.display_name||''; bioIn.value=m.bio||''; avIn.value=m.avatar_url||'';
-    prevEl.src=m.avatar_url||''; prevEl.hidden=!m.avatar_url;
-    viewAv.src=m.avatar_url||''; viewAv.hidden=!m.avatar_url;
+    if(m.avatar_url){ prevEl.src=m.avatar_url; viewAv.src=m.avatar_url; }
+    else { prevEl.removeAttribute('src'); viewAv.removeAttribute('src'); }
+    prevEl.hidden=!m.avatar_url; viewAv.hidden=!m.avatar_url;
 
   }
 
