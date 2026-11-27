@@ -1,6 +1,14 @@
 # Dependencies
 node_modules/
 
+# Android / Capacitor generated files
+android/
+www/
+.gradle/
+local.properties
+*.jks
+*.keystore
+
 # Logs
 *.log
 npm-debug.log*
@@ -16,6 +24,6 @@ Thumbs.db
 *.swo
 *~
 
-# Build output (if any in the future)
+# Build output
 dist/
 build/
