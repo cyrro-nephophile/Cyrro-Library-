@@ -331,11 +331,13 @@ for (let i = 0; i <= 20; i++) $level.add(new Option('Level ' + i, i, false, i ==
 
 // ---------- Stockfish (Web Worker, file lokal) ----------
 let usedUndo = false;
+console.info('[C-LIB][ANDROID] chess-worker:create', { script: 'stockfish.js', framed: FRAMED });
 const engine = new Worker('stockfish.js');
 engine.onmessage = (e) => {
   const line = String(e.data);
   if (line === 'readyok' && !engineReady) {
     engineReady = true;
+    console.info('[C-LIB][ANDROID] chess-worker:ready');
     setLevel();
     enterSetup();
     return;
@@ -347,7 +349,10 @@ engine.onmessage = (e) => {
     if (cb) cb(mv);
   }
 };
-engine.onerror = () => { $status.textContent = 'Gagal load stockfish.js'; };
+engine.onerror = (event) => {
+  console.error('[C-LIB][ANDROID] chess-worker:error', { message: event && event.message, filename: event && event.filename, lineno: event && event.lineno, colno: event && event.colno });
+  $status.textContent = 'Gagal load stockfish.js';
+};
 engine.postMessage('uci');
 engine.postMessage('isready');
 
@@ -792,5 +797,24 @@ update();
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
+
+<script>
+(function(){
+  if(window.self===window.top)return;
+  document.addEventListener('click',function(event){
+    var target=event.target;
+    var link=target&&target.closest?target.closest('a[href]'):null;
+    if(!link)return;
+    var url;
+    try{url=new URL(link.getAttribute('href'),location.href);}catch(_){return;}
+    if(url.origin!==location.origin||url.pathname!=='/'||url.search||url.hash)return;
+    event.preventDefault();
+    event.stopPropagation();
+    console.info('[C-LIB][ANDROID] game:request-close',{from:location.pathname});
+    window.parent.postMessage({type:'cyrro:close-game'},location.origin);
+  },true);
+})();
+</script>
+
 </body>
 </html>
