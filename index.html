@@ -1395,7 +1395,28 @@ body[data-page="profile"] #kontakSec{display:none!important}
     ov.hidden=true;
     go('about:blank');   /* hentikan game (dan suaranya) saat ditutup */
     document.body.classList.remove('gm-open');
+
+    /* Bersihkan elemen yang mungkin dipindahkan game ke bar induk. */
+    ttl.textContent='';
+    ov.querySelectorAll('.gm-bar > .tpick').forEach(function(el){el.remove();});
+    var pickCss=document.getElementById('cfPickCss');
+    if(pickCss) pickCss.remove();
   }
+
+  /* Tombol "← BALIK" di dalam game memakai href="/".
+     Karena game berjalan di iframe, navigasi itu harus menutup overlay,
+     bukan memuat Library baru di dalam iframe (yang bisa bertumpuk). */
+  fr.addEventListener('load',function(){
+    if(!open) return;
+    try{
+      var u=new URL(fr.contentWindow.location.href);
+      if(u.origin===location.origin &&
+         (u.pathname==='/' || u.pathname.endsWith('/index.html')) &&
+         !u.search && !u.hash){
+        close();
+      }
+    }catch(_){}
+  });
   function close(){
     if(!open)return;
     if(history.state&&history.state.gm){history.back();}else{hide();}
