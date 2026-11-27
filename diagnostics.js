@@ -37,15 +37,22 @@
   }
   function add(level, type, message, source) {
     var items = read();
+    var text = redact(message).slice(0, 4000);
+    var src = source || 'app';
     items.push({
       time: new Date().toISOString(),
       level: level,
       type: type,
-      message: redact(message).slice(0, 4000),
+      message: text,
       page: location.pathname,
-      source: source || 'app'
+      source: src
     });
     write(items);
+    // Salinan ke console agar bisa dilihat lewat chrome://inspect; isi sudah diredaksi di atas.
+    try {
+      var logFn = level === 'error' ? console.error : (level === 'warning' ? console.warn : console.info);
+      logFn.call(console, '[C-LIB][ANDROID] ' + type + ': ' + text.split('\n')[0], src);
+    } catch (_) {}
   }
   window.CLibraryLog = {
     add: add,
@@ -84,6 +91,13 @@
   watch(window, 'main');
   add('info', 'session', 'Aplikasi dibuka');
 
+  // Jika file ini berjalan di dalam frame (misalnya Library terbuka di iframe overlay), catat itu.
+  var nested = true;
+  try { nested = window.top !== window.self; } catch (_) {}
+  if (nested) {
+    add('warning', 'nested-boot', 'Dokumen Library dimuat di dalam frame: ' + location.pathname + location.search, 'frame');
+  }
+
   function describeTarget(el) {
     if (!el || !el.closest) return 'Elemen tidak dikenal';
     var control = el.closest('button, a, [role="button"], [role="tab"], input[type="button"], input[type="submit"]');
@@ -121,30 +135,58 @@
     add('info', 'game-close', 'Game ditutup: ' + (detail.name || 'Game'), 'game');
   });
 
-  // Catat panel/menu penting saat benar-benar terbuka atau tertutup.
-  var panelNames = {
-    gmOverlay: 'Game overlay',
-    pfOv: 'Profil overlay',
-    playlistOverlay: 'Playlist',
-    hdrMenu: 'Menu pengaturan',
-    notifMenu: 'Menu notifikasi',
-    clogList: 'Change Log'
-  };
-  var panelState = new WeakMap();
-  function panelSnapshot(el) {
-    var open = !el.hidden && getComputedStyle(el).display !== 'none';
-    var previous = panelState.get(el);
-    panelState.set(el, open);
-    if (previous !== undefined && previous !== open) {
-      add('info', 'ui-state', (panelNames[el.id] || el.id) + (open ? ' dibuka' : ' ditutup'), 'ui');
+  // Pantau URL dan panjang riwayat iframe game selama overlay terbuka.
+  // Hanya mencatat saat berubah; interval dihentikan saat overlay ditutup.
+  var gmWatch = { timer: null, lastHref: '', lastLen: -1, lastErr: false };
+  function pollGameFrame() {
+    var frame = document.getElementById('gmFrame');
+    if (!frame) return;
+    var href = '', len = -1, err = '';
+    try {
+      href = frame.contentWindow.location.href;
+      len = frame.contentWindow.history.length;
+    } catch (_) {
+      err = 'tidak bisa dibaca (beda origin atau belum siap)';
     }
+    if (err) {
+      if (!gmWatch.lastErr) add('warning', 'iframe-location', 'URL iframe ' + err, 'iframe-gmFrame');
+      gmWatch.lastErr = true;
+      return;
+    }
+    gmWatch.lastErr = false;
+    if (href !== gmWatch.lastHref) {
+      var from = gmWatch.lastHref || '(awal)';
+      var to = href;
+      try { if (gmWatch.lastHref) from = new URL(gmWatch.lastHref).pathname; } catch (_) {}
+      try { to = new URL(href).pathname; } catch (_) {}
+      add(to === '/' ? 'warning' : 'info', 'iframe-location', 'URL iframe berubah: ' + from + ' → ' + to + '; riwayat=' + len, 'iframe-gmFrame');
+      gmWatch.lastHref = href;
+    } else if (gmWatch.lastLen !== -1 && len !== gmWatch.lastLen) {
+      add('info', 'iframe-history', 'Panjang riwayat iframe: ' + gmWatch.lastLen + ' → ' + len, 'iframe-gmFrame');
+    }
+    gmWatch.lastLen = len;
   }
-  Object.keys(panelNames).forEach(function (id) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    panelSnapshot(el);
-    new MutationObserver(function () { panelSnapshot(el); })
-      .observe(el, { attributes: true, attributeFilter: ['hidden', 'class', 'style'] });
+  window.addEventListener('cyrro:gameopen', function () {
+    if (gmWatch.timer) clearInterval(gmWatch.timer);
+    gmWatch.lastHref = ''; gmWatch.lastLen = -1; gmWatch.lastErr = false;
+    gmWatch.timer = setInterval(pollGameFrame, 400);
+  });
+  window.addEventListener('cyrro:gameclose', function () {
+    if (gmWatch.timer) clearInterval(gmWatch.timer);
+    gmWatch.timer = null;
+  });
+
+  // Permintaan tutup dari game (postMessage). Hanya diterima dari iframe overlay yang sedang terbuka,
+  // dan memakai tombol BALIK yang sudah ada agar jalur penutupannya sama dengan tap biasa.
+  window.addEventListener('message', function (event) {
+    var frame = document.getElementById('gmFrame');
+    var data = event.data;
+    if (!frame || !data || data.type !== 'cyrro:close-game') return;
+    if (event.origin !== location.origin) return;
+    if (event.source !== frame.contentWindow) return;
+    add('info', 'iframe-close-request', 'Game meminta overlay ditutup', 'iframe-gmFrame');
+    var back = document.getElementById('gmBack');
+    if (back) back.click();
   });
 
   function attachFrames() {
@@ -189,6 +231,32 @@
   }
   attachFrames();
   new MutationObserver(attachFrames).observe(document.documentElement, { childList: true, subtree: true });
+
+  // Catat panel/menu penting saat benar-benar terbuka atau tertutup.
+  var panelNames = {
+    gmOverlay: 'Game overlay',
+    pfOv: 'Profil overlay',
+    playlistOverlay: 'Playlist',
+    hdrMenu: 'Menu pengaturan',
+    notifMenu: 'Menu notifikasi',
+    clogList: 'Change Log'
+  };
+  var panelState = new WeakMap();
+  function panelSnapshot(el) {
+    var open = !el.hidden && getComputedStyle(el).display !== 'none';
+    var previous = panelState.get(el);
+    panelState.set(el, open);
+    if (previous !== undefined && previous !== open) {
+      add('info', 'ui-state', (panelNames[el.id] || el.id) + (open ? ' dibuka' : ' ditutup'), 'ui');
+    }
+  }
+  Object.keys(panelNames).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    panelSnapshot(el);
+    new MutationObserver(function () { panelSnapshot(el); })
+      .observe(el, { attributes: true, attributeFilter: ['hidden', 'class', 'style'] });
+  });
 
   window.addEventListener('cyrro:pagechange', function () {
     add('info', 'navigation', 'Tab berubah: ' + (document.body.dataset.page || 'unknown'));
