@@ -740,6 +740,7 @@ if (FRAMED) {
     const bar = pd.querySelector('.gm-bar');
     const ttl = pd.getElementById('gmTitle');
     if (bar && ttl) {
+      const originalTitle = ttl.innerHTML;
       const st = pd.createElement('style');
       st.id = 'cfPickCss';
       st.textContent = PICK_CSS;
@@ -755,11 +756,16 @@ if (FRAMED) {
       };
       pd.addEventListener('click', onParentClick);
 
-      window.addEventListener('pagehide', () => {
+      let cleaned = false;
+      const cleanupParent = () => {
+        if (cleaned) return;
+        cleaned = true;
         pd.removeEventListener('click', onParentClick);
         $pick.remove();
         st.remove();
-      });
+        if (ttl.isConnected) ttl.innerHTML = originalTitle;
+      };
+      window.addEventListener('pagehide', cleanupParent, { once: true });
 
       document.body.classList.add('framed');
     }
