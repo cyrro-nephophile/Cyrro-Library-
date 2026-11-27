@@ -90,23 +90,22 @@ jobs:
       - name: Sync web assets with Android
         run: npx cap sync android
 
-      - name: Configure Maven Central fallback
+      - name: Configure Maven repository mirror
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
+          mirror = "maven { url 'https://maven.aliyun.com/repository/central' }; mavenCentral()"
           for name in ("build.gradle", "settings.gradle"):
               path = Path("android") / name
               if path.exists():
                   source = path.read_text()
-                  mirror = "maven { url 'https://repo1.maven.org/maven2' }; mavenCentral()"
                   source = source.replace("mavenCentral()", mirror)
                   path.write_text(source)
           PY
-          echo "Checking Maven Central mirrors..."
-          curl -fsSI --retry 2 https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/2.2.0/kotlin-stdlib-2.2.0.pom
-          curl -fsSI --retry 2 https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/2.2.0/kotlin-stdlib-2.2.0.pom
+          echo "Checking alternate Maven mirror..."
+          curl -fsSI --retry 2 https://maven.aliyun.com/repository/central/org/jetbrains/kotlin/kotlin-stdlib/2.2.0/kotlin-stdlib-2.2.0.pom
 
       - name: Build Debug and Release APKs
         working-directory: android
