@@ -1376,7 +1376,11 @@ body[data-page="profile"] #kontakSec{display:none!important}
     ov.style.setProperty('--gm-b',Math.max(0,window.innerHeight-t+12)+'px');
   }
   function go(href){
-    try{fr.contentWindow.location.replace(href);}catch(e){fr.src=href;}
+    try{
+      fr.src=new URL(href,window.location.origin).href;
+    }catch(e){
+      fr.src=href;
+    }
   }
   function show(href,name){
     fit();
@@ -1403,7 +1407,8 @@ body[data-page="profile"] #kontakSec{display:none!important}
       var href=a.getAttribute('href');
       var b=a.querySelector('b');
       show(href,b?b.textContent:'Mini game');
-      try{history.pushState({gm:1},'',href);}catch(_){}
+      /* Simpan status game tanpa mengganti pathname aplikasi. */
+      try{history.pushState({gm:1},'',location.pathname+location.search+'#game');}catch(_){}
     });
   });
   bk.addEventListener('click',close);
