@@ -76,20 +76,55 @@
   watch(window, 'main');
   add('info', 'session', 'Aplikasi dibuka');
 
+  function describeTarget(el) {
+    if (!el || !el.closest) return 'Elemen tidak dikenal';
+    var control = el.closest('button, a, [role="button"], [role="tab"], input[type="button"], input[type="submit"]');
+    if (!control) return '';
+    var tag = (control.tagName || '').toLowerCase();
+    var label = control.getAttribute('aria-label') || control.getAttribute('title') ||
+      control.getAttribute('data-page') || control.id || control.textContent || control.value || tag;
+    label = String(label).replace(/\\s+/g, ' ').trim().slice(0, 90);
+    if (!label) label = tag || 'kontrol';
+    if (tag === 'a' && control.getAttribute('href')) {
+      try { label += ' → ' + new URL(control.getAttribute('href'), location.href).pathname; } catch (_) {}
+    }
+    return label;
+  }
+
+  // Rekam tindakan UI tanpa pernah membaca nilai input atau isi formulir.
+  document.addEventListener('click', function (event) {
+    var label = describeTarget(event.target);
+    if (label) add('info', 'tap', 'Ditekan: ' + label, 'ui');
+  }, true);
+
   function attachFrames() {
     document.querySelectorAll('iframe').forEach(function (frame, index) {
       if (frame.dataset.clogWatch) return;
       frame.dataset.clogWatch = '1';
+      var lastSrc = frame.getAttribute('src') || '';
+      if (lastSrc && lastSrc !== 'about:blank') {
+        var initialPath = lastSrc;
+        try { initialPath = new URL(lastSrc, location.href).pathname; } catch (_) {}
+        add('info', 'iframe-start', 'Mulai memuat: ' + initialPath, 'iframe-' + (frame.id || index));
+      }
       frame.addEventListener('load', function () {
         var label = 'iframe-' + (frame.id || index);
         var rawSrc = frame.getAttribute('src') || frame.src || '';
         if (!rawSrc || rawSrc === 'about:blank') return;
         var framePath = rawSrc;
         try { framePath = new URL(rawSrc, location.href).pathname; } catch (_) {}
-        add('info', 'iframe-load', 'Frame dimuat: ' + framePath, label);
+        add('info', 'iframe-load', 'Frame selesai dimuat: ' + framePath, label);
         try { watch(frame.contentWindow, label); }
         catch (_) { add('warning', 'iframe', 'Frame tidak dapat dipantau (mungkin beda origin)', label); }
       });
+      new MutationObserver(function () {
+        var nextSrc = frame.getAttribute('src') || '';
+        if (!nextSrc || nextSrc === lastSrc || nextSrc === 'about:blank') return;
+        lastSrc = nextSrc;
+        var nextPath = nextSrc;
+        try { nextPath = new URL(nextSrc, location.href).pathname; } catch (_) {}
+        add('info', 'iframe-start', 'Mulai memuat: ' + nextPath, 'iframe-' + (frame.id || index));
+      }).observe(frame, { attributes: true, attributeFilter: ['src'] });
       frame.addEventListener('error', function () {
         add('error', 'iframe-load', 'Gagal memuat iframe: ' + (frame.getAttribute('src') || frame.src || 'unknown'), 'main');
       });
