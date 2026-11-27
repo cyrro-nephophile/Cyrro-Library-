@@ -21,13 +21,19 @@
       return JSON.stringify(value);
     } catch (_) { return String(value); }
   }
+  function redact(value) {
+    return String(value || '')
+      .replace(/(authorization\\s*[:=]\\s*)([^\\s,;]+)/ig, '$1[REDACTED]')
+      .replace(/(bearer\\s+)[A-Za-z0-9._~+\\/-]+=*/ig, '$1[REDACTED]')
+      .replace(/([?&](?:access_token|refresh_token|token|apikey|api_key|key|password)=)[^&#\\s]*/ig, '$1[REDACTED]');
+  }
   function add(level, type, message, source) {
     var items = read();
     items.push({
       time: new Date().toISOString(),
       level: level,
       type: type,
-      message: String(message || '').slice(0, 4000),
+      message: redact(message).slice(0, 4000),
       page: location.pathname,
       source: source || 'app'
     });
