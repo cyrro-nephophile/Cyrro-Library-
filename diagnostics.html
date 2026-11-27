@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101510">
+<title>Diagnostics — C-Library</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0a0a0a;color:#f4f4f0;font:15px/1.5 system-ui,sans-serif;padding:env(safe-area-inset-top) 16px calc(24px + env(safe-area-inset-bottom));}
+main{max-width:760px;margin:auto}.top{display:flex;align-items:center;gap:12px;padding:18px 0;border-bottom:2px solid #ccff00}.back{color:#0a0a0a;background:#ccff00;border:2px solid #ccff00;padding:9px 12px;font-weight:800;text-decoration:none}.title{font-size:22px;font-weight:900;flex:1}
+p{color:#b9c0a8}.stats{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.stat{border:1px solid #454545;padding:8px 12px;border-radius:8px;color:#ccff00}
+.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0}.actions button{min-height:46px;border:0;border-radius:8px;background:#ccff00;color:#0a0a0a;font-weight:800;font-size:14px}.actions .secondary{background:#222;color:#fff;border:1px solid #555}.actions .danger{background:#5a1a25;color:#fff}
+#status{min-height:24px;color:#ccff00;font-size:13px}.entry{border:1px solid #333;border-left:4px solid #777;border-radius:8px;padding:10px 12px;margin:9px 0;overflow-wrap:anywhere}.entry.error{border-left-color:#ff5368}.entry.warning{border-left-color:#ffbd4a}.entry.info{border-left-color:#ccff00}.meta{font:11px ui-monospace,monospace;color:#9da58e;margin-bottom:5px}.message{white-space:pre-wrap;font:12px/1.5 ui-monospace,monospace}
+.empty{padding:24px;text-align:center;color:#9da58e;border:1px dashed #555;border-radius:8px}
+@media(max-width:380px){.actions{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<header class="top"><a class="back" href="index.html">← KEMBALI</a><div class="title">DIAGNOSTICS</div></header>
+<p>Log tersimpan lokal di perangkat. Tekan SALIN LOG untuk menyalin seluruh laporan dan kirimkan hasilnya saat melaporkan bug.</p>
+<div class="stats"><span class="stat" id="total">0 log</span><span class="stat" id="errors">0 error</span></div>
+<div class="actions">
+<button id="copy">SALIN LOG</button>
+<button id="refresh" class="secondary">SEGARKAN</button>
+<button id="clear" class="danger">HAPUS LOG</button>
+<button id="back" class="secondary">KEMBALI</button>
+</div>
+<div id="status" role="status" aria-live="polite"></div>
+<section id="logs" aria-label="Riwayat log"></section>
+</main>
+<script src="diagnostics.js"></script>
+<script>
+(function(){
+  var list=document.getElementById('logs'),status=document.getElementById('status');
+  function logs(){try{return JSON.parse(localStorage.getItem('clibrary_diagnostics_v1')||'[]')}catch(e){return[]}}
+  function render(){
+    var data=logs(), errors=data.filter(function(x){return x.level==='error'}).length;
+    document.getElementById('total').textContent=data.length+' log';
+    document.getElementById('errors').textContent=errors+' error';
+    list.replaceChildren();
+    if(!data.length){list.innerHTML='<div class="empty">Belum ada log yang tercatat.</div>';return}
+    data.slice().reverse().forEach(function(x){
+      var item=document.createElement('article');item.className='entry '+(x.level||'info');
+      var meta=document.createElement('div');meta.className='meta';meta.textContent=new Date(x.time).toLocaleString('id-ID')+' · '+(x.level||'info').toUpperCase()+' · '+(x.type||'event')+' · '+(x.source||'app');
+      var msg=document.createElement('div');msg.className='message';msg.textContent=x.message||'';
+      item.append(meta,msg);list.appendChild(item);
+    });
+  }
+  function report(){
+    var data=logs();
+    return ['C-LIBRARY DIAGNOSTICS','Dibuat: '+new Date().toISOString(),'Versi format: 1','Jumlah log: '+data.length,'','--- LOG ---'].concat(data.map(function(x){
+      return '['+x.time+'] ['+(x.level||'INFO').toUpperCase()+'] ['+x.type+'] ['+x.source+']\n'+x.message;
+    })).join('\n');
+  }
+  document.getElementById('copy').addEventListener('click',async function(){
+    var text=report();
+    try{
+      if(navigator.clipboard&&window.isSecureContext) await navigator.clipboard.writeText(text);
+      else{
+        var area=document.createElement('textarea');area.value=text;area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();
+        if(!document.execCommand('copy')) throw new Error('Clipboard tidak tersedia');
+        area.remove();
+      }
+      status.textContent='✓ Log berhasil disalin. Tinggal tempel di chat.';
+    }catch(e){status.textContent='Gagal menyalin. Coba buka halaman ini melalui aplikasi lagi.';}
+  });
+  document.getElementById('refresh').addEventListener('click',render);
+  document.getElementById('clear').addEventListener('click',function(){
+    if(!confirm('Hapus semua log diagnostik?'))return;
+    if(window.CLibraryLog)window.CLibraryLog.clear();else localStorage.removeItem('clibrary_diagnostics_v1');
+    status.textContent='Log dihapus.';render();
+  });
+  document.getElementById('back').addEventListener('click',function(){location.href='index.html'});
+  render();
+})();
+</script>
+</body>
+</html>
