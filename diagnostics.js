@@ -160,6 +160,7 @@
       try { if (gmWatch.lastHref) from = new URL(gmWatch.lastHref).pathname; } catch (_) {}
       try { to = new URL(href).pathname; } catch (_) {}
       add(to === '/' ? 'warning' : 'info', 'iframe-location', 'URL iframe berubah: ' + from + ' → ' + to + '; riwayat=' + len, 'iframe-gmFrame');
+      console.info('[C-LIB][ANDROID] iframe:location', { from: from, to: to, historyLength: len });
       gmWatch.lastHref = href;
     } else if (gmWatch.lastLen !== -1 && len !== gmWatch.lastLen) {
       add('info', 'iframe-history', 'Panjang riwayat iframe: ' + gmWatch.lastLen + ' → ' + len, 'iframe-gmFrame');
@@ -184,6 +185,7 @@
     if (!frame || !data || data.type !== 'cyrro:close-game') return;
     if (event.origin !== location.origin) return;
     if (event.source !== frame.contentWindow) return;
+    console.info('[C-LIB][ANDROID] iframe:close-request', { origin: event.origin });
     add('info', 'iframe-close-request', 'Game meminta overlay ditutup', 'iframe-gmFrame');
     var back = document.getElementById('gmBack');
     if (back) back.click();
@@ -212,6 +214,7 @@
         }
         if (!framePath) return;
         var title = frame.id === 'gmFrame' ? (document.getElementById('gmTitle') || {}).textContent : '';
+        console.info('[C-LIB][ANDROID] iframe:load', { frame: frame.id || index, path: framePath });
         add('info', 'iframe-load', (title ? 'Game selesai dimuat: ' + title + ' (' + framePath + ')' : 'Frame selesai dimuat: ' + framePath), label);
         try { watch(frame.contentWindow, label); }
         catch (_) { add('warning', 'iframe', 'Frame tidak dapat dipantau (mungkin beda origin)', label); }
@@ -222,9 +225,11 @@
         lastSrc = nextSrc;
         var nextPath = nextSrc;
         try { nextPath = new URL(nextSrc, location.href).pathname; } catch (_) {}
+        console.info('[C-LIB][ANDROID] iframe:src-change', { frame: frame.id || index, path: nextPath });
         add('info', 'iframe-start', 'Mulai memuat: ' + nextPath, 'iframe-' + (frame.id || index));
       }).observe(frame, { attributes: true, attributeFilter: ['src'] });
       frame.addEventListener('error', function () {
+        console.error('[C-LIB][ANDROID] iframe:error', { frame: frame.id || index, src: frame.getAttribute('src') || frame.src || 'unknown' });
         add('error', 'iframe-load', 'Gagal memuat iframe: ' + (frame.getAttribute('src') || frame.src || 'unknown'), 'main');
       });
     });
