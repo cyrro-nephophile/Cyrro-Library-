@@ -316,5 +316,24 @@ h1{
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
+
+<script>
+(function(){
+  if(window.self===window.top)return;
+  document.addEventListener('click',function(event){
+    var target=event.target;
+    var link=target&&target.closest?target.closest('a[href]'):null;
+    if(!link)return;
+    var url;
+    try{url=new URL(link.getAttribute('href'),location.href);}catch(_){return;}
+    if(url.origin!==location.origin||url.pathname!=='/'||url.search||url.hash)return;
+    event.preventDefault();
+    event.stopPropagation();
+    console.info('[C-LIB][ANDROID] game:request-close',{from:location.pathname});
+    window.parent.postMessage({type:'cyrro:close-game'},location.origin);
+  },true);
+})();
+</script>
+
 </body>
 </html>
