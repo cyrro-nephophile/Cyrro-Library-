@@ -1384,11 +1384,11 @@ body[data-page="profile"] #kontakSec{display:none!important}
   }
   function show(href,name){
     fit();
+    open=true;
     ttl.textContent=name;
-    go(href);
     ov.hidden=false;
     document.body.classList.add('gm-open');
-    open=true;
+    go(href);
   }
   function hide(){
     open=false;
@@ -1421,17 +1421,20 @@ body[data-page="profile"] #kontakSec{display:none!important}
     if(!open)return;
     if(history.state&&history.state.gm){history.back();}else{hide();}
   }
-  document.querySelectorAll('a.card.mg').forEach(function(a){
-    a.addEventListener('click',function(e){
-      if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey||e.button===1)return;
-      e.preventDefault();
-      var href=a.getAttribute('href');
-      var b=a.querySelector('b');
-      show(href,b?b.textContent:'Mini game');
-      /* Simpan status game tanpa mengganti pathname aplikasi. */
-      try{history.pushState({gm:1},'',location.pathname+location.search+'#game');}catch(_){}
-    });
-  });
+  /* Tangkap klik game sebelum handler lain atau navigasi bawaan tautan berjalan. */
+  document.addEventListener('click',function(e){
+    var a=e.target&&e.target.closest?e.target.closest('a.card.mg'):null;
+    if(!a)return;
+    if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey||e.button===1)return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    var href=a.getAttribute('href');
+    var b=a.querySelector('b');
+    show(href,b?b.textContent:'Mini game');
+    /* Simpan status game tanpa mengganti pathname aplikasi. */
+    try{history.pushState({gm:1},'',location.pathname+location.search+'#game');}catch(_){}
+  },true);
   bk.addEventListener('click',close);
   document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
   window.addEventListener('popstate',function(){if(open)hide();});
