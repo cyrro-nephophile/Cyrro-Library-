@@ -18,7 +18,15 @@
     try {
       if (value instanceof Error) return value.name + ': ' + value.message + (value.stack ? '\n' + value.stack : '');
       if (typeof value === 'string') return value;
-      return JSON.stringify(value);
+      if (value && typeof value === 'object') {
+        var parts = [];
+        ['name', 'message', 'code', 'reason', 'stack'].forEach(function (key) {
+          if (value[key] !== undefined && value[key] !== null) parts.push(key + ': ' + String(value[key]));
+        });
+        if (parts.length) return parts.join('\n');
+        try { return JSON.stringify(value, Object.getOwnPropertyNames(value)); } catch (_) {}
+      }
+      return String(value);
     } catch (_) { return String(value); }
   }
   function redact(value) {
@@ -83,7 +91,7 @@
     var tag = (control.tagName || '').toLowerCase();
     var gameLabel = control.matches && control.matches('a.card.mg') && control.querySelector('b');
     var label = (gameLabel && gameLabel.textContent) || control.getAttribute('aria-label') || control.getAttribute('title') ||
-      control.getAttribute('data-page') || control.id || control.textContent || control.value || tag;
+      control.getAttribute('data-page') || control.textContent || control.value || control.id || tag;
     label = String(label).replace(/\\s+/g, ' ').trim().slice(0, 90);
     if (!label) label = tag || 'kontrol';
     if (tag === 'a' && control.getAttribute('href')) {
@@ -95,7 +103,10 @@
   // Rekam tindakan UI tanpa pernah membaca nilai input atau isi formulir.
   document.addEventListener('click', function (event) {
     var label = describeTarget(event.target);
-    if (label) add('info', 'tap', 'Ditekan: ' + label, 'ui');
+    if (label) {
+      var isBack = /(?:back|kembali|balik|tutup)/i.test(label) || /(?:gmBack|pfBack)/i.test(event.target && event.target.id || '');
+      add('info', isBack ? 'back-control' : 'tap', (isBack ? 'Kontrol kembali ditekan: ' : 'Ditekan: ') + label, 'ui');
+    }
   }, true);
 
   // Catat aksi game secara eksplisit; tidak bergantung pada perubahan atribut iframe.
@@ -182,8 +193,27 @@
   window.addEventListener('cyrro:pagechange', function () {
     add('info', 'navigation', 'Tab berubah: ' + (document.body.dataset.page || 'unknown'));
   });
-  window.addEventListener('popstate', function () {
-    add('info', 'navigation', 'Navigasi riwayat: ' + location.pathname);
+  // Popstate dapat berasal dari tombol/gesture Back Android atau navigasi riwayat;
+  // browser tidak selalu menyediakan sumber fisiknya.
+  window.addEventListener('popstate', function (event) {
+    var state = event.state || {};
+    var overlay = !document.getElementById('gmOverlay')?.hidden ? 'Game overlay' :
+      (!document.getElementById('pfOv')?.hidden ? 'Profil overlay' : 'tidak ada overlay');
+    add('info', 'back-navigation', 'Riwayat mundur/Back terdeteksi; halaman: ' + location.pathname + '; state: ' + safeText(state) + '; konteks: ' + overlay, 'navigation');
+  });
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' || event.key === 'Backspace') {
+      add('info', 'back-key', 'Tombol keyboard kembali: ' + event.key + '; target: ' + describeTarget(event.target), 'navigation');
+    }
+  }, true);
+  document.addEventListener('visibilitychange', function () {
+    add('info', 'visibility', 'Aplikasi ' + (document.hidden ? 'masuk latar belakang' : 'kembali terlihat'), 'lifecycle');
+  });
+  window.addEventListener('pagehide', function (event) {
+    add('info', 'lifecycle', 'Halaman akan ditinggalkan; persisted=' + !!event.persisted, 'lifecycle');
+  });
+  window.addEventListener('pageshow', function (event) {
+    add('info', 'lifecycle', 'Halaman ditampilkan; persisted=' + !!event.persisted, 'lifecycle');
   });
   window.addEventListener('online', function () { add('info', 'network', 'Koneksi kembali online'); });
   window.addEventListener('offline', function () { add('warning', 'network', 'Koneksi offline'); });
