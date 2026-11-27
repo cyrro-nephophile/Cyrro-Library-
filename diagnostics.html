@@ -50,7 +50,7 @@ p{color:#b9c0a8}.stats{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.stat{
   function report(){
     var data=logs();
     return ['C-LIBRARY DIAGNOSTICS','Dibuat: '+new Date().toISOString(),'Versi format: 1','Jumlah log: '+data.length,'','--- LOG ---'].concat(data.map(function(x){
-      return '['+x.time+'] ['+(x.level||'INFO').toUpperCase()+'] ['+x.type+'] ['+x.source+']\n'+x.message;
+      return '['+x.time+'] ['+(x.level||'INFO').toUpperCase()+'] ['+x.type+'] ['+x.source+'] ['+(x.page||'/')+']\n'+x.message;
     })).join('\n');
   }
   document.getElementById('copy').addEventListener('click',async function(){
