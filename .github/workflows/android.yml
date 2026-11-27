@@ -159,18 +159,64 @@ jobs:
         working-directory: android
         run: ./gradlew --no-daemon assembleDebug assembleRelease
 
+      - name: Sign Debug and Release APKs
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ] || [ -z "$ANDROID_KEYSTORE_PASSWORD" ] || [ -z "$ANDROID_KEY_ALIAS" ]; then
+            echo "::error::One or more Android signing secrets are missing."
+            exit 1
+          fi
+
+          KEYSTORE_PATH="$RUNNER_TEMP/c-library-release.jks"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
+          chmod 600 "$KEYSTORE_PATH"
+          test -s "$KEYSTORE_PATH"
+
+          APKSIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          test -x "$APKSIGNER"
+
+          DEBUG_INPUT="android/app/build/outputs/apk/debug/app-debug.apk"
+          RELEASE_INPUT="android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          DEBUG_OUTPUT="android/app/build/outputs/apk/debug/c-library-debug-signed.apk"
+          RELEASE_OUTPUT="android/app/build/outputs/apk/release/c-library-release-signed.apk"
+
+          "$APKSIGNER" sign \
+            --ks "$KEYSTORE_PATH" \
+            --ks-key-alias "$ANDROID_KEY_ALIAS" \
+            --ks-pass env:ANDROID_KEYSTORE_PASSWORD \
+            --key-pass env:ANDROID_KEYSTORE_PASSWORD \
+            --out "$DEBUG_OUTPUT" "$DEBUG_INPUT"
+
+          "$APKSIGNER" sign \
+            --ks "$KEYSTORE_PATH" \
+            --ks-key-alias "$ANDROID_KEY_ALIAS" \
+            --ks-pass env:ANDROID_KEYSTORE_PASSWORD \
+            --key-pass env:ANDROID_KEYSTORE_PASSWORD \
+            --out "$RELEASE_OUTPUT" "$RELEASE_INPUT"
+
+          "$APKSIGNER" verify --verbose --print-certs "$DEBUG_OUTPUT"
+          "$APKSIGNER" verify --verbose --print-certs "$RELEASE_OUTPUT"
+
+          rm -f "$KEYSTORE_PATH"
+
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: c-library-debug-apk
-          path: android/app/build/outputs/apk/debug/*.apk
+          path: android/app/build/outputs/apk/debug/c-library-debug-signed.apk
           if-no-files-found: error
           retention-days: 14
 
-      - name: Upload Release APK (unsigned)
+      - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: c-library-release-apk-unsigned
-          path: android/app/build/outputs/apk/release/*-unsigned.apk
+          name: c-library-release-apk
+          path: android/app/build/outputs/apk/release/c-library-release-signed.apk
           if-no-files-found: error
           retention-days: 14
