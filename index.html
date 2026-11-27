@@ -1387,9 +1387,12 @@ body[data-page="profile"] #kontakSec{display:none!important}
     ov.hidden=false;
     document.body.classList.add('gm-open');
     open=true;
+    window.dispatchEvent(new CustomEvent('cyrro:gameopen',{detail:{name:name||'Mini game',href:href}}));
   }
   function hide(){
+    var closedName=ttl.textContent||'Game';
     open=false;
+    window.dispatchEvent(new CustomEvent('cyrro:gameclose',{detail:{name:closedName}}));
     ov.hidden=true;
     go('about:blank');   /* hentikan game (dan suaranya) saat ditutup */
     document.body.classList.remove('gm-open');
