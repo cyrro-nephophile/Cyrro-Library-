@@ -1426,7 +1426,7 @@ body[data-page="profile"] #kontakSec{display:none!important}
       var href=a.getAttribute('href');
       var b=a.querySelector('b');
       show(href,b?b.textContent:'Mini game');
-      try{history.pushState({gm:1},'',absoluteGameUrl(href));}catch(_){}
+      try{history.pushState({gm:1},'',location.href);}catch(_){}
     });
   });
   bk.addEventListener('click',close);
@@ -2159,6 +2159,14 @@ body[data-page="profile"] #kontakSec{display:none!important}
 })();
 </script>
 
-<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');</script>
+<script>
+(function(){
+  /* Service Worker hanya untuk dokumen utama, bukan halaman game di iframe. */
+  if(window.top!==window.self||!('serviceWorker' in navigator))return;
+  var scriptUrl=new URL('/sw.js',location.origin).href;
+  navigator.serviceWorker.register(scriptUrl,{scope:'/'})
+    .catch(function(error){console.warn('[C-Library] Service Worker gagal didaftarkan:',error);});
+})();
+</script>
 </body>
 </html>
