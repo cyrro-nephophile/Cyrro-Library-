@@ -1382,6 +1382,7 @@ body[data-page="profile"] #kontakSec{display:none!important}
   function setGameUrl(href){
     var target=absoluteGameUrl(href);
     activeHref=target;
+    console.info('[C-LIB][ANDROID] iframe:src', { game: ttl.textContent, url: target });
     /* Assign src directly: this is more reliable than navigating an about:blank
        contentWindow in Android System WebView. */
     fr.src=target;
@@ -1391,6 +1392,7 @@ body[data-page="profile"] #kontakSec{display:none!important}
     var target=absoluteGameUrl(href);
     ttl.textContent=name||'Mini game';
     fr.title=ttl.textContent;
+    console.info('[C-LIB][ANDROID] overlay:open', { game: ttl.textContent, url: target });
     ov.hidden=false;
     document.body.classList.add('gm-open');
     open=true;
@@ -1408,6 +1410,7 @@ body[data-page="profile"] #kontakSec{display:none!important}
     var closedName=ttl.textContent||'Game';
     open=false;
     if(loadTimer){clearTimeout(loadTimer);loadTimer=null;}
+    console.info('[C-LIB][ANDROID] overlay:close', { game: closedName, url: activeHref });
     window.dispatchEvent(new CustomEvent('cyrro:gameclose',{detail:{name:closedName,href:activeHref}}));
     ov.hidden=true;
     document.body.classList.remove('gm-open');
@@ -1429,6 +1432,11 @@ body[data-page="profile"] #kontakSec{display:none!important}
       try{history.pushState({gm:1},'',location.href);}catch(_){}
     });
   });
+  fr.addEventListener('load',function(){
+    try{console.info('[C-LIB][ANDROID] iframe:load',{src:fr.src,location:fr.contentWindow.location.href});}
+    catch(e){console.warn('[C-LIB][ANDROID] iframe:load-location-unavailable',String(e));}
+  });
+  fr.addEventListener('error',function(e){console.error('[C-LIB][ANDROID] iframe:error',e);});
   bk.addEventListener('click',close);
   document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
   window.addEventListener('popstate',function(){if(open)hide();});
@@ -2161,8 +2169,13 @@ body[data-page="profile"] #kontakSec{display:none!important}
 
 <script>
 (function(){
-  /* Service Worker hanya untuk dokumen utama, bukan halaman game di iframe. */
+  /* Service Worker hanya untuk dokumen utama web; native Capacitor tidak membutuhkannya. */
   if(window.top!==window.self||!('serviceWorker' in navigator))return;
+  var cap=window.Capacitor;
+  if(cap&&typeof cap.isNativePlatform==='function'&&cap.isNativePlatform()){
+    console.info('[C-LIB][ANDROID] service-worker:skip-native');
+    return;
+  }
   var scriptUrl=new URL('/sw.js',location.origin).href;
   navigator.serviceWorker.register(scriptUrl,{scope:'/'})
     .catch(function(error){console.warn('[C-Library] Service Worker gagal didaftarkan:',error);});
