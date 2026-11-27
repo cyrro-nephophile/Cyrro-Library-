@@ -90,6 +90,54 @@ jobs:
       - name: Sync web assets with Android
         run: npx cap sync android
 
+      - name: Set Android status bar appearance
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          candidates = list(Path("android/app/src/main").rglob("MainActivity.java"))
+          if not candidates:
+              raise SystemExit("MainActivity.java not found in generated Capacitor project")
+          path = candidates[0]
+          source = path.read_text()
+          if "applyCyrroStatusBar" not in source:
+              source = source.replace(
+                  "import com.getcapacitor.BridgeActivity;",
+                  "import com.getcapacitor.BridgeActivity;\n"
+                  "import android.graphics.Color;\n"
+                  "import android.os.Build;\n"
+                  "import android.view.View;\n"
+              )
+              source = source.replace(
+                  "public class MainActivity extends BridgeActivity {}",
+                  """public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(android.os.Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  applyCyrroStatusBar();
+              }
+
+              private void applyCyrroStatusBar() {
+                  getWindow().setStatusBarColor(Color.rgb(16, 21, 16));
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                      getWindow().getInsetsController().setSystemBarsAppearance(
+                          0, android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                      );
+                  } else {
+                      View decor = getWindow().getDecorView();
+                      decor.setSystemUiVisibility(
+                          decor.getSystemUiVisibility() & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                      );
+                  }
+              }
+          }"""
+              )
+              path.write_text(source)
+          print(f"Configured dark status bar in {path}")
+          PY
+
       - name: Configure Maven repository mirror
         shell: bash
         run: |
