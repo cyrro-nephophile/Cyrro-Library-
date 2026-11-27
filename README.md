@@ -33,6 +33,7 @@ Menu di kanan atas menyediakan akses ke playlist, pengaturan efek, tema, dan cha
 - [Supabase](https://supabase.com/) untuk layanan autentikasi dan data aplikasi.
 - Service Worker dan Web App Manifest untuk kemampuan Progressive Web App (PWA).
 - [Vercel](https://vercel.com/) untuk hosting dan deployment.
+- [Capacitor](https://capacitorjs.com/) untuk membungkus aplikasi web menjadi aplikasi Android.
 
 ## Menjalankan secara lokal
 
@@ -44,18 +45,31 @@ Contoh menggunakan Python:
 python -m http.server 8000
 ```
 
-Lalu buka http://localhost:8000 di browser.
+Lalu buka http://localhost:8000.
 
-> Beberapa fitur yang terhubung ke Supabase atau layanan push memerlukan konfigurasi backend dan kredensial yang sesuai. Menjalankan file secara lokal saja tidak otomatis menyiapkan layanan tersebut.
+## Build APK Android
 
-## Struktur proyek
+Repository sudah disiapkan dengan Capacitor dan GitHub Actions.
 
-File utama aplikasi:
+1. Buka tab **Actions** di repository GitHub.
+2. Pilih workflow **Android APK**.
+3. Tekan **Run workflow** untuk memulai build manual.
+4. Setelah workflow berhasil, buka hasil run dan unduh artifact:
+   - `c-library-debug-apk` — APK debug untuk pengujian.
+   - `c-library-release-apk-unsigned` — APK release yang belum ditandatangani.
 
-- `index.html` — antarmuka dan logika utama aplikasi.
-- `manifest.json` — metadata instalasi PWA.
-- `sw.js` — service worker.
-- `icon-192.png` — ikon aplikasi.
+Workflow juga berjalan otomatis saat ada push ke branch `main` atau branch dengan awalan `setup/`.
+
+### Konfigurasi Android
+
+- Nama aplikasi: **C-Library**
+- Application ID sementara: `id.cyrro.library`
+- Orientation: mengikuti pengaturan default aplikasi Android.
+- Notifikasi native Android: belum diaktifkan.
+- Web assets disiapkan dari file statis repository ke folder `www/` saat workflow berjalan.
+- Folder `android/` dihasilkan oleh Capacitor pada runner GitHub Actions dan tidak perlu disimpan di repository.
+
+**Catatan signing:** APK release saat ini dihasilkan dalam bentuk unsigned. Untuk distribusi dan pembaruan aplikasi secara konsisten, siapkan keystore Android dan GitHub Actions Secrets sebelum mengaktifkan signing release. Jangan commit file keystore atau password ke repository.
 
 ## Deployment
 
@@ -63,4 +77,4 @@ Repository ini terhubung ke Vercel. Perubahan pada branch produksi `main` dapat 
 
 ## Catatan
 
-Cyrro Library merupakan proyek yang terus dikembangkan. Fitur dan tampilan dapat berubah seiring pembaruan berikutnya.
+Beberapa fitur yang terhubung ke Supabase atau layanan eksternal memerlukan koneksi internet dan konfigurasi backend yang sesuai. Build APK tidak memindahkan database Supabase ke perangkat; aplikasi tetap menggunakan layanan Supabase yang sudah ada.
