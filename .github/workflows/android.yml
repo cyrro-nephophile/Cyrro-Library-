@@ -17,7 +17,7 @@ concurrency:
 jobs:
   build:
     name: Build Debug and Release APK
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 35
 
     steps:
@@ -40,45 +40,27 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
           SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
           if [ ! -d "$SDK_ROOT" ]; then
             for candidate in /usr/local/lib/android/sdk /opt/android-sdk /usr/lib/android-sdk; do
-              if [ -d "$candidate" ]; then
-                SDK_ROOT="$candidate"
-                break
-              fi
+              if [ -d "$candidate" ]; then SDK_ROOT="$candidate"; break; fi
             done
           fi
-
           SDKMANAGER=""
-          for candidate in \
-            "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" \
-            "$SDK_ROOT/cmdline-tools/bin/sdkmanager" \
-            "$SDK_ROOT/tools/bin/sdkmanager"; do
-            if [ -x "$candidate" ]; then
-              SDKMANAGER="$candidate"
-              break
-            fi
+          for candidate in "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "$SDK_ROOT/cmdline-tools/bin/sdkmanager" "$SDK_ROOT/tools/bin/sdkmanager"; do
+            if [ -x "$candidate" ]; then SDKMANAGER="$candidate"; break; fi
           done
-
           if [ -z "$SDKMANAGER" ]; then
-            SDKMANAGER="$(find "$SDK_ROOT" /usr/local/lib/android /opt/android-sdk /usr/lib/android-sdk \
-              -type f -name sdkmanager -print -quit 2>/dev/null || true)"
+            SDKMANAGER="$(find "$SDK_ROOT" /usr/local/lib/android /opt/android-sdk /usr/lib/android-sdk -type f -name sdkmanager -print -quit 2>/dev/null || true)"
           fi
-
           if [ -z "$SDKMANAGER" ]; then
             echo "::error::sdkmanager was not found. Checked SDK root: $SDK_ROOT"
-            ls -la /usr/local/lib/android /usr/local/lib/android/sdk "$SDK_ROOT" 2>/dev/null || true
             exit 1
           fi
-
-          SDKMANAGER_DIR="$(dirname "$SDKMANAGER")"
           echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
           echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
-          echo "$SDKMANAGER_DIR" >> "$GITHUB_PATH"
+          echo "$(dirname "$SDKMANAGER")" >> "$GITHUB_PATH"
           echo "$SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
-
           yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses || true
           "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
@@ -98,7 +80,6 @@ jobs:
             --exclude='/package*.json' \
             --exclude='/capacitor.config.json' \
             ./ www/
-
           test -f www/index.html
           test -f www/manifest.json
           test -f www/sw.js
@@ -108,6 +89,24 @@ jobs:
 
       - name: Sync web assets with Android
         run: npx cap sync android
+
+      - name: Configure Maven Central fallback
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          for name in ("build.gradle", "settings.gradle"):
+              path = Path("android") / name
+              if path.exists():
+                  source = path.read_text()
+                  mirror = "maven { url 'https://repo1.maven.org/maven2' }; mavenCentral()"
+                  source = source.replace("mavenCentral()", mirror)
+                  path.write_text(source)
+          PY
+          echo "Checking Maven Central mirrors..."
+          curl -fsSI --retry 2 https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/2.2.0/kotlin-stdlib-2.2.0.pom
+          curl -fsSI --retry 2 https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/2.2.0/kotlin-stdlib-2.2.0.pom
 
       - name: Build Debug and Release APKs
         working-directory: android
