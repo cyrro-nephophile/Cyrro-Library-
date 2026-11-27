@@ -81,7 +81,8 @@
     var control = el.closest('button, a, [role="button"], [role="tab"], input[type="button"], input[type="submit"]');
     if (!control) return '';
     var tag = (control.tagName || '').toLowerCase();
-    var label = control.getAttribute('aria-label') || control.getAttribute('title') ||
+    var gameLabel = control.matches && control.matches('a.card.mg') && control.querySelector('b');
+    var label = (gameLabel && gameLabel.textContent) || control.getAttribute('aria-label') || control.getAttribute('title') ||
       control.getAttribute('data-page') || control.id || control.textContent || control.value || tag;
     label = String(label).replace(/\\s+/g, ' ').trim().slice(0, 90);
     if (!label) label = tag || 'kontrol';
@@ -96,6 +97,18 @@
     var label = describeTarget(event.target);
     if (label) add('info', 'tap', 'Ditekan: ' + label, 'ui');
   }, true);
+
+  // Catat aksi game secara eksplisit; tidak bergantung pada perubahan atribut iframe.
+  window.addEventListener('cyrro:gameopen', function (event) {
+    var detail = event.detail || {};
+    var path = detail.href || '';
+    try { path = new URL(path, location.href).pathname; } catch (_) {}
+    add('info', 'game-open', 'Game dibuka: ' + (detail.name || 'Game') + ' (' + path + ')', 'game');
+  });
+  window.addEventListener('cyrro:gameclose', function (event) {
+    var detail = event.detail || {};
+    add('info', 'game-close', 'Game ditutup: ' + (detail.name || 'Game'), 'game');
+  });
 
   // Catat panel/menu penting saat benar-benar terbuka atau tertutup.
   var panelNames = {
@@ -136,10 +149,17 @@
       frame.addEventListener('load', function () {
         var label = 'iframe-' + (frame.id || index);
         var rawSrc = frame.getAttribute('src') || frame.src || '';
-        if (!rawSrc || rawSrc === 'about:blank') return;
-        var framePath = rawSrc;
-        try { framePath = new URL(rawSrc, location.href).pathname; } catch (_) {}
-        add('info', 'iframe-load', 'Frame selesai dimuat: ' + framePath, label);
+        var framePath = '';
+        try {
+          var frameHref = frame.contentWindow.location.href;
+          if (frameHref && frameHref !== 'about:blank') framePath = new URL(frameHref).pathname;
+        } catch (_) {}
+        if (!framePath && rawSrc && rawSrc !== 'about:blank') {
+          try { framePath = new URL(rawSrc, location.href).pathname; } catch (_) { framePath = rawSrc; }
+        }
+        if (!framePath) return;
+        var title = frame.id === 'gmFrame' ? (document.getElementById('gmTitle') || {}).textContent : '';
+        add('info', 'iframe-load', (title ? 'Game selesai dimuat: ' + title + ' (' + framePath + ')' : 'Frame selesai dimuat: ' + framePath), label);
         try { watch(frame.contentWindow, label); }
         catch (_) { add('warning', 'iframe', 'Frame tidak dapat dipantau (mungkin beda origin)', label); }
       });
