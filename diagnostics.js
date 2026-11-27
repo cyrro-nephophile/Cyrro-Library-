@@ -97,6 +97,32 @@
     if (label) add('info', 'tap', 'Ditekan: ' + label, 'ui');
   }, true);
 
+  // Catat panel/menu penting saat benar-benar terbuka atau tertutup.
+  var panelNames = {
+    gmOverlay: 'Game overlay',
+    pfOv: 'Profil overlay',
+    playlistOverlay: 'Playlist',
+    hdrMenu: 'Menu pengaturan',
+    notifMenu: 'Menu notifikasi',
+    clogList: 'Change Log'
+  };
+  var panelState = new WeakMap();
+  function panelSnapshot(el) {
+    var open = !el.hidden && getComputedStyle(el).display !== 'none';
+    var previous = panelState.get(el);
+    panelState.set(el, open);
+    if (previous !== undefined && previous !== open) {
+      add('info', 'ui-state', (panelNames[el.id] || el.id) + (open ? ' dibuka' : ' ditutup'), 'ui');
+    }
+  }
+  Object.keys(panelNames).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    panelSnapshot(el);
+    new MutationObserver(function () { panelSnapshot(el); })
+      .observe(el, { attributes: true, attributeFilter: ['hidden', 'class', 'style'] });
+  });
+
   function attachFrames() {
     document.querySelectorAll('iframe').forEach(function (frame, index) {
       if (frame.dataset.clogWatch) return;
