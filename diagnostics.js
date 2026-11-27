@@ -23,9 +23,9 @@
   }
   function redact(value) {
     return String(value || '')
-      .replace(/(authorization\\s*[:=]\\s*)([^\\s,;]+)/ig, '$1[REDACTED]')
-      .replace(/(bearer\\s+)[A-Za-z0-9._~+\\/-]+=*/ig, '$1[REDACTED]')
-      .replace(/([?&](?:access_token|refresh_token|token|apikey|api_key|key|password)=)[^&#\\s]*/ig, '$1[REDACTED]');
+      .replace(/(authorization\s*[:=]\s*)([^\s,;]+)/ig, '$1[REDACTED]')
+      .replace(/(bearer\s+)[A-Za-z0-9._~+\/-]+=*/ig, '$1[REDACTED]')
+      .replace(/([?&](?:access_token|refresh_token|token|apikey|api_key|key|password)=)[^&#\s]*/ig, '$1[REDACTED]');
   }
   function add(level, type, message, source) {
     var items = read();
@@ -89,7 +89,7 @@
     add('info', 'navigation', 'Tab berubah: ' + (document.body.dataset.page || 'unknown'));
   });
   window.addEventListener('popstate', function () {
-    add('info', 'navigation', 'Navigasi riwayat: ' + location.href);
+    add('info', 'navigation', 'Navigasi riwayat: ' + location.pathname);
   });
   window.addEventListener('online', function () { add('info', 'network', 'Koneksi kembali online'); });
   window.addEventListener('offline', function () { add('warning', 'network', 'Koneksi offline'); });
