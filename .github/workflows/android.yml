@@ -1,0 +1,223 @@
+name: Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - "setup/**"
+      - "fix/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Debug and Release APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          if [ ! -d "$SDK_ROOT" ]; then
+            for candidate in /usr/local/lib/android/sdk /opt/android-sdk /usr/lib/android-sdk; do
+              if [ -d "$candidate" ]; then SDK_ROOT="$candidate"; break; fi
+            done
+          fi
+          SDKMANAGER=""
+          for candidate in "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "$SDK_ROOT/cmdline-tools/bin/sdkmanager" "$SDK_ROOT/tools/bin/sdkmanager"; do
+            if [ -x "$candidate" ]; then SDKMANAGER="$candidate"; break; fi
+          done
+          if [ -z "$SDKMANAGER" ]; then
+            SDKMANAGER="$(find "$SDK_ROOT" /usr/local/lib/android /opt/android-sdk /usr/lib/android-sdk -type f -name sdkmanager -print -quit 2>/dev/null || true)"
+          fi
+          if [ -z "$SDKMANAGER" ]; then
+            echo "::error::sdkmanager was not found. Checked SDK root: $SDK_ROOT"
+            exit 1
+          fi
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "$(dirname "$SDKMANAGER")" >> "$GITHUB_PATH"
+          echo "$SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
+          yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses || true
+          "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Prepare local web assets
+        shell: bash
+        run: |
+          mkdir -p www
+          rsync -a --delete \
+            --exclude='/www/' \
+            --exclude='/android/' \
+            --exclude='/.git/' \
+            --exclude='/.github/' \
+            --exclude='/node_modules/' \
+            --exclude='/package*.json' \
+            --exclude='/capacitor.config.json' \
+            ./ www/
+          test -f www/index.html
+          test -f www/manifest.json
+          test -f www/sw.js
+
+      - name: Generate Android project
+        run: npx cap add android
+
+      - name: Sync web assets with Android
+        run: npx cap sync android
+
+      - name: Set Android status bar appearance
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          candidates = list(Path("android/app/src/main").rglob("MainActivity.java"))
+          if not candidates:
+              raise SystemExit("MainActivity.java not found in generated Capacitor project")
+          path = candidates[0]
+          source = path.read_text()
+          if "applyCyrroStatusBar" not in source:
+              source = source.replace(
+                  "import com.getcapacitor.BridgeActivity;",
+                  "import com.getcapacitor.BridgeActivity;\n"
+                  "import android.graphics.Color;\n"
+                  "import android.os.Build;\n"
+                  "import android.view.View;\n"
+              )
+              source = source.replace(
+                  "public class MainActivity extends BridgeActivity {}",
+                  """public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(android.os.Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  applyCyrroStatusBar();
+              }
+
+              private void applyCyrroStatusBar() {
+                  getWindow().setStatusBarColor(Color.rgb(16, 21, 16));
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                      getWindow().getInsetsController().setSystemBarsAppearance(
+                          0, android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                      );
+                  } else {
+                      View decor = getWindow().getDecorView();
+                      decor.setSystemUiVisibility(
+                          decor.getSystemUiVisibility() & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                      );
+                  }
+              }
+          }"""
+              )
+              path.write_text(source)
+          print(f"Configured dark status bar in {path}")
+          PY
+
+      - name: Configure Maven repository mirror
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          mirror = "maven { url 'https://maven.aliyun.com/repository/central' }; mavenCentral()"
+          for name in ("build.gradle", "settings.gradle"):
+              path = Path("android") / name
+              if path.exists():
+                  source = path.read_text()
+                  source = source.replace("mavenCentral()", mirror)
+                  path.write_text(source)
+          PY
+          echo "Checking alternate Maven mirror..."
+          curl -fsSI --retry 2 https://maven.aliyun.com/repository/central/org/jetbrains/kotlin/kotlin-stdlib/2.2.0/kotlin-stdlib-2.2.0.pom
+
+      - name: Build Debug and Release APKs
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug assembleRelease
+
+      - name: Sign Debug and Release APKs
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ] || [ -z "$ANDROID_KEYSTORE_PASSWORD" ] || [ -z "$ANDROID_KEY_ALIAS" ]; then
+            echo "::error::One or more Android signing secrets are missing."
+            exit 1
+          fi
+
+          KEYSTORE_PATH="$RUNNER_TEMP/c-library-release.jks"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
+          chmod 600 "$KEYSTORE_PATH"
+          test -s "$KEYSTORE_PATH"
+
+          APKSIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          test -x "$APKSIGNER"
+
+          DEBUG_INPUT="android/app/build/outputs/apk/debug/app-debug.apk"
+          RELEASE_INPUT="android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          DEBUG_OUTPUT="android/app/build/outputs/apk/debug/c-library-debug-signed.apk"
+          RELEASE_OUTPUT="android/app/build/outputs/apk/release/c-library-release-signed.apk"
+
+          "$APKSIGNER" sign \
+            --ks "$KEYSTORE_PATH" \
+            --ks-key-alias "$ANDROID_KEY_ALIAS" \
+            --ks-pass env:ANDROID_KEYSTORE_PASSWORD \
+            --key-pass env:ANDROID_KEYSTORE_PASSWORD \
+            --out "$DEBUG_OUTPUT" "$DEBUG_INPUT"
+
+          "$APKSIGNER" sign \
+            --ks "$KEYSTORE_PATH" \
+            --ks-key-alias "$ANDROID_KEY_ALIAS" \
+            --ks-pass env:ANDROID_KEYSTORE_PASSWORD \
+            --key-pass env:ANDROID_KEYSTORE_PASSWORD \
+            --out "$RELEASE_OUTPUT" "$RELEASE_INPUT"
+
+          "$APKSIGNER" verify --verbose --print-certs "$DEBUG_OUTPUT"
+          "$APKSIGNER" verify --verbose --print-certs "$RELEASE_OUTPUT"
+
+          rm -f "$KEYSTORE_PATH"
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: c-library-debug-apk
+          path: android/app/build/outputs/apk/debug/c-library-debug-signed.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: c-library-release-apk
+          path: android/app/build/outputs/apk/release/c-library-release-signed.apk
+          if-no-files-found: error
+          retention-days: 14

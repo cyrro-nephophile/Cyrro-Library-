@@ -21,7 +21,7 @@ body{
   background-size:120px 120px;
 }
 :root[data-theme="dark"] body{background-image:linear-gradient(rgba(244,244,240,.1) 1.5px,transparent 1.5px),linear-gradient(90deg,rgba(244,244,240,.1) 1.5px,transparent 1.5px)}
-.framed .top{display:none}
+
 [hidden]{display:none!important}
 
 /* header */
@@ -174,7 +174,7 @@ try{
   if(th==='dark'||th==='light')root.setAttribute('data-theme',th);
   else if(matchMedia('(prefers-color-scheme: dark)').matches)root.setAttribute('data-theme','dark');
 }catch(e){}
-if(window.top!==window.self)document.body.classList.add('framed');
+
 document.addEventListener('touchmove',function(e){e.preventDefault();},{passive:false});
 document.addEventListener('gesturestart',function(e){e.preventDefault();});
 
@@ -667,5 +667,9 @@ requestAnimationFrame(frame);
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
+
+<script>
+</script>
+
 </body>
 </html>

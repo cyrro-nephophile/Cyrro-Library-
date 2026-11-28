@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<script>try{if(window.self!==window.top)document.documentElement.classList.add("framed");}catch(e){document.documentElement.classList.add("framed");}</script>
 <title>Kata Silang · Cyrro Library</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,7 +13,7 @@
     var t = localStorage.getItem('theme');
     document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
   } catch (e) {}
-  document.documentElement.classList.toggle('embed', /[?&]embed=1/.test(location.search));
+
 </script>
 <style>
   :root{
@@ -39,7 +40,7 @@
     -webkit-tap-highlight-color:transparent;
     animation:drift 24s linear infinite;
   }
-  html.embed body{padding-bottom:120px}
+
   @keyframes drift{from{background-position:0 0}to{background-position:40px 40px}}
   @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 

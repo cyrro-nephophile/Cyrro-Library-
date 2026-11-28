@@ -20,7 +20,7 @@ body{
   background-size:120px 120px;
 }
 :root[data-theme="dark"] body{background-image:linear-gradient(rgba(244,244,240,.1) 1.5px,transparent 1.5px),linear-gradient(90deg,rgba(244,244,240,.1) 1.5px,transparent 1.5px)}
-.framed .top{display:none}
+
 [hidden]{display:none!important}
 
 /* header */
@@ -143,7 +143,6 @@ try{
   if(th==='dark'||th==='light')root.setAttribute('data-theme',th);
   else if(matchMedia('(prefers-color-scheme: dark)').matches)root.setAttribute('data-theme','dark');
 }catch(e){}
-if(window.top!==window.self)document.body.classList.add('framed');
 
 var COLS=10,ROWS=20,CELL=20,W=COLS*CELL,H=ROWS*CELL;
 var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
@@ -652,5 +651,9 @@ function msSubmit(lv, sec){ lbSubmit('minesweeper_scores', { level: lv, secs: se
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
+
+<script>
+</script>
+
 </body>
 </html>
