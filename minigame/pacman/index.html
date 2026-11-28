@@ -21,7 +21,7 @@ body{
   background-size:120px 120px;
 }
 :root[data-theme="dark"] body{background-image:linear-gradient(rgba(244,244,240,.1) 1.5px,transparent 1.5px),linear-gradient(90deg,rgba(244,244,240,.1) 1.5px,transparent 1.5px)}
-.framed .top{display:none}
+
 [hidden]{display:none!important}
 
 /* header */
@@ -174,7 +174,7 @@ try{
   if(th==='dark'||th==='light')root.setAttribute('data-theme',th);
   else if(matchMedia('(prefers-color-scheme: dark)').matches)root.setAttribute('data-theme','dark');
 }catch(e){}
-if(window.top!==window.self)document.body.classList.add('framed');
+
 document.addEventListener('touchmove',function(e){e.preventDefault();},{passive:false});
 document.addEventListener('gesturestart',function(e){e.preventDefault();});
 
@@ -669,21 +669,6 @@ requestAnimationFrame(frame);
 <script defer src="/_vercel/insights/script.js"></script>
 
 <script>
-(function(){
-  if(window.self===window.top)return;
-  document.addEventListener('click',function(event){
-    var target=event.target;
-    var link=target&&target.closest?target.closest('a[href]'):null;
-    if(!link)return;
-    var url;
-    try{url=new URL(link.getAttribute('href'),location.href);}catch(_){return;}
-    if(url.origin!==location.origin||url.pathname!=='/'||url.search||url.hash)return;
-    event.preventDefault();
-    event.stopPropagation();
-    console.info('[C-LIB][ANDROID] game:request-close',{from:location.pathname});
-    window.parent.postMessage({type:'cyrro:close-game'},location.origin);
-  },true);
-})();
 </script>
 
 </body>

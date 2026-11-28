@@ -22,9 +22,8 @@ body{
   background-size:120px 120px;
 }
 :root[data-theme="dark"] body{background-image:linear-gradient(rgba(244,244,240,.1) 1.5px,transparent 1.5px),linear-gradient(90deg,rgba(244,244,240,.1) 1.5px,transparent 1.5px)}
-.framed .top{display:none}
-.framed{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))!important}
-.framed #board{width:min(94vw,440px,max(220px,calc(100dvh - 360px)))}
+
+
 
 /* header */
 .top{width:100%;max-width:440px;display:flex;align-items:center;gap:12px;background:#101510;border:3px solid #0a0a0a;padding:8px 12px;box-shadow:6px 6px 0 var(--sh);flex:none}
@@ -83,7 +82,7 @@ select:disabled{opacity:.5;cursor:not-allowed}
 .toast .confirm-box{pointer-events:auto;max-width:440px;width:100%;padding:14px 14px}
 .toast .confirm-box h3{font-size:26px;margin-bottom:6px}
 .toast .confirm-box p{margin-bottom:12px}
-.framed .toast{bottom:calc(120px + env(safe-area-inset-bottom,0px))}
+
 .confirm-box.win{border-color:var(--lime);box-shadow:5px 5px 0 var(--lime)}
 .confirm-box.lose{border-color:var(--pink);box-shadow:5px 5px 0 var(--pink)}
 /* langkah */
@@ -799,21 +798,6 @@ update();
 <script defer src="/_vercel/insights/script.js"></script>
 
 <script>
-(function(){
-  if(window.self===window.top)return;
-  document.addEventListener('click',function(event){
-    var target=event.target;
-    var link=target&&target.closest?target.closest('a[href]'):null;
-    if(!link)return;
-    var url;
-    try{url=new URL(link.getAttribute('href'),location.href);}catch(_){return;}
-    if(url.origin!==location.origin||url.pathname!=='/'||url.search||url.hash)return;
-    event.preventDefault();
-    event.stopPropagation();
-    console.info('[C-LIB][ANDROID] game:request-close',{from:location.pathname});
-    window.parent.postMessage({type:'cyrro:close-game'},location.origin);
-  },true);
-})();
 </script>
 
 </body>
