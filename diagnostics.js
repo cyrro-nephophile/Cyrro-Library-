@@ -89,7 +89,11 @@
   }
 
   watch(window, 'main');
-  add('info', 'session', 'Aplikasi dibuka');
+  if (location.pathname === '/' || location.pathname === '/index.html' || location.pathname === '/diagnostics.html') {
+    add('info', 'session', 'Aplikasi dibuka');
+  } else {
+    add('info', 'page-open', 'Halaman dibuka: ' + location.pathname + (document.title ? ' · ' + document.title : ''), 'navigation');
+  }
 
   // Jika file ini berjalan di dalam frame (misalnya Library terbuka di iframe overlay), catat itu.
   var nested = true;
@@ -280,10 +284,12 @@
     }
   }, true);
   document.addEventListener('visibilitychange', function () {
-    add('info', 'visibility', 'Aplikasi ' + (document.hidden ? 'masuk latar belakang' : 'kembali terlihat'), 'lifecycle');
+    add('info', 'visibility', document.hidden
+      ? 'Dokumen menjadi tersembunyi; bisa karena navigasi halaman atau aplikasi ke latar belakang'
+      : 'Dokumen kembali terlihat', 'lifecycle');
   });
   window.addEventListener('pagehide', function (event) {
-    add('info', 'lifecycle', 'Halaman akan ditinggalkan; persisted=' + !!event.persisted, 'lifecycle');
+    add('info', 'lifecycle', 'Halaman ditinggalkan: ' + location.pathname + '; persisted=' + !!event.persisted, 'lifecycle');
   });
   window.addEventListener('pageshow', function (event) {
     add('info', 'lifecycle', 'Halaman ditampilkan; persisted=' + !!event.persisted, 'lifecycle');
